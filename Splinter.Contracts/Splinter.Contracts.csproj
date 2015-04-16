@@ -39,7 +39,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ITestRunner.cs" />
     <Compile Include="ICoverageRunner.cs" />
+    <Compile Include="ITestRunnerMetadata.cs" />
     <Compile Include="ICoverageRunnerMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

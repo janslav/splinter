@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Contracts", "Splin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.CoverageRunner.OpenCover", "Splinter.CoverageRunner.OpenCover\Splinter.CoverageRunner.OpenCover.csproj", "{50357A48-E309-4606-901B-03A35D84AFB0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Subject", "Subject", "{BA1956ED-660E-4D47-B9EB-83D1A09C4641}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,5 +55,9 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A22542A7-F213-4EF5-B265-9C5CA03105C3} = {BA1956ED-660E-4D47-B9EB-83D1A09C4641}
+		{D731B87B-E20C-4173-8B0A-D63506C2C0E0} = {BA1956ED-660E-4D47-B9EB-83D1A09C4641}
 	EndGlobalSection
 EndGlobal

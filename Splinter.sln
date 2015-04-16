@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter", "Splinter\Splinter.csproj", "{C2780CD6-FA70-4D1C-8ECF-A53FF2A7445E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Runner.MSTest", "Splinter.Runner.MSTest\Splinter.Runner.MSTest.csproj", "{6A477967-BA47-4AC1-979F-58342F41BE12}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.TestRunner.MSTest", "Splinter.TestRunner.MSTest\Splinter.TestRunner.MSTest.csproj", "{6A477967-BA47-4AC1-979F-58342F41BE12}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Test.Subject.MSTest", "Splinter.Test.Subject.MSTest\Splinter.Test.Subject.MSTest.csproj", "{A22542A7-F213-4EF5-B265-9C5CA03105C3}"
 EndProject
@@ -16,7 +16,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{FC8AFF
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.CoverageRunner.OpenCover", "Splinter.CoverageRunner.OpenCover\Splinter.CoverageRunner.OpenCover.csproj", "{2EEFAE2E-D41B-410B-8037-EE0C49301C4C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Contracts", "Splinter.Contracts\Splinter.Contracts.csproj", "{1CF528D8-C0EC-4960-BD65-D0E4248225C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.CoverageRunner.OpenCover", "Splinter.CoverageRunner.OpenCover\Splinter.CoverageRunner.OpenCover.csproj", "{50357A48-E309-4606-901B-03A35D84AFB0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,10 +42,14 @@ Global
 		{D731B87B-E20C-4173-8B0A-D63506C2C0E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D731B87B-E20C-4173-8B0A-D63506C2C0E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D731B87B-E20C-4173-8B0A-D63506C2C0E0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2EEFAE2E-D41B-410B-8037-EE0C49301C4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2EEFAE2E-D41B-410B-8037-EE0C49301C4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2EEFAE2E-D41B-410B-8037-EE0C49301C4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2EEFAE2E-D41B-410B-8037-EE0C49301C4C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CF528D8-C0EC-4960-BD65-D0E4248225C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CF528D8-C0EC-4960-BD65-D0E4248225C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CF528D8-C0EC-4960-BD65-D0E4248225C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CF528D8-C0EC-4960-BD65-D0E4248225C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{50357A48-E309-4606-901B-03A35D84AFB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{50357A48-E309-4606-901B-03A35D84AFB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{50357A48-E309-4606-901B-03A35D84AFB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{50357A48-E309-4606-901B-03A35D84AFB0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

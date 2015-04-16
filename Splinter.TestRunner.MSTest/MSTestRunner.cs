@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using System.Composition;
 
-namespace Splinter.Runner.MSTest
+namespace Splinter.TestRunner.MSTest
 {
     public class MSTestRunner
     {

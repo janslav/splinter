@@ -20,5 +20,14 @@ namespace Splinter
     {
 
 
+        public IReadOnlyCollection<ICoverageRunner> CoverageRunners
+        {
+            get { throw new NotImplementedException(); }
+        }
+
+        public IReadOnlyCollection<ICoverageRunner> TestRunners
+        {
+            get { throw new NotImplementedException(); }
+        }
     }
 }

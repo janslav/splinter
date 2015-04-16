@@ -17,6 +17,6 @@ namespace Splinter.Model
             this.SessionSettings = settings;
         }
 
-        SessionSettings SessionSettings { get; private set; }
+        public SessionSettings SessionSettings { get; private set; }
     }
 }

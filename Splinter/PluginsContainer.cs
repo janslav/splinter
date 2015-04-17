@@ -12,32 +12,32 @@ namespace Splinter
 {
     public interface IPluginsContainer
     {
-        IReadOnlyDictionary<string, ICoverageRunner> CoverageRunners { get; }
+        IReadOnlyCollection<ICoverageRunner> CoverageRunners { get; }
 
-        IReadOnlyDictionary<string, ITestRunner> TestRunners { get; }
+        IReadOnlyCollection<ITestRunner> TestRunners { get; }
     }
 
     public class PluginsContainer : IPluginsContainer
     {
         [ImportMany]
-        IEnumerable<Lazy<ICoverageRunner, ICoverageRunnerMetadata>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
+        IEnumerable<Lazy<IPluginFactory<ICoverageRunner>, ICoverageRunnerMetadata>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
 
         [ImportMany]
-        IEnumerable<Lazy<ITestRunner, ITestRunnerMetadata>> lazyTestRunners = null; //assigning null to avoid compiler warning
+        IEnumerable<Lazy<IPluginFactory<ITestRunner>, ITestRunnerMetadata>> lazyTestRunners = null; //assigning null to avoid compiler warning
 
-        public PluginsContainer()
+        public PluginsContainer(log4net.ILog log)
         {
             var catalog = new ApplicationCatalog();
 
             var compositionContainer = new CompositionContainer(catalog);
             compositionContainer.ComposeParts(this);
 
-            this.CoverageRunners = this.lazyCoverageRunners.ToDictionary(l => l.Metadata.Name, l => l.Value);
-            this.TestRunners = this.lazyTestRunners.ToDictionary(l => l.Metadata.Name, l => l.Value);
+            this.CoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.TestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
         }
 
-        public IReadOnlyDictionary<string, ICoverageRunner> CoverageRunners { get; private set; }
+        public IReadOnlyCollection<ICoverageRunner> CoverageRunners { get; private set; }
 
-        public IReadOnlyDictionary<string, ITestRunner> TestRunners { get; private set; }
+        public IReadOnlyCollection<ITestRunner> TestRunners { get; private set; }
     }
 }

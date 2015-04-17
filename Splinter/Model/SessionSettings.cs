@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Splinter.Contracts;
+
 namespace Splinter.Model
 {
     /// <summary>
@@ -12,7 +14,8 @@ namespace Splinter.Model
     /// </summary>
     public class SessionSettings
     {
+        public IReadOnlyCollection<ITestRunner> TestRunners { get; set; }
 
-        
+        public IReadOnlyCollection<ICoverageRunner> CoverageRunners { get; set; }
     }
 }

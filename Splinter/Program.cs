@@ -16,7 +16,7 @@ namespace Splinter
 
             var log = iocContainer.Resolve<log4net.ILog>();
             
-            log.Debug("Splinter starting.");
+            log.Info("Splinter starting.");
 
             AppDomain.CurrentDomain.UnhandledException += (_, e) => log.Fatal("Unhandled exception outside the main thread.", e.ExceptionObject as Exception);
 
@@ -26,10 +26,18 @@ namespace Splinter
 
                 var sessionSettings = splinterSession.Initialize(args);
 
+
             }
             catch (Exception e)
             {
-                log.Fatal("Unhandled exception in the main thread.", e);
+                if (log.IsDebugEnabled)
+                {
+                    log.Fatal("Unhandled exception in the main thread.", e);
+                }
+                else
+                {
+                    log.Fatal(e.Message);
+                }
             }
             finally
             {

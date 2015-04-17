@@ -9,13 +9,32 @@ using Splinter.Contracts;
 
 namespace Splinter.TestRunner.MSTest
 {
-    [Export(typeof(ITestRunner))]
-    [ExportMetadata("Name", "MsTest")]
-    public class MSTestRunner : ITestRunner
+    [Export(typeof(IPluginFactory<ITestRunner>))]
+    public class MSTestRunner : ITestRunner, IPluginFactory<ITestRunner>
     {
+        private log4net.ILog log;
+
+        ITestRunner IPluginFactory<ITestRunner>.GetPlugin(log4net.ILog log)
+        {
+            this.log = log;
+            return this;
+        }
+
         public bool IsAvailable()
         {
             throw new NotImplementedException("not there yet");
+        }
+
+        public bool IsReady(out string unavailableMessage)
+        {
+            unavailableMessage = "MSTestRunner not implemented yet";
+
+            return false;
+        }
+
+        public string Name
+        {
+            get { return "MsTest"; }
         }
     }
 }

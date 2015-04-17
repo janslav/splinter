@@ -9,13 +9,27 @@ using Splinter.Contracts;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
-    [Export(typeof(ICoverageRunner))]
-    [ExportMetadata("Name", "OpenCover")]
-    public class OpenCoverRunner : ICoverageRunner
+    [Export(typeof(IPluginFactory<ICoverageRunner>))]
+    public class OpenCoverRunner : ICoverageRunner, IPluginFactory<ICoverageRunner>
     {
-        public bool IsAvailable()
+        private log4net.ILog log;
+
+        ICoverageRunner IPluginFactory<ICoverageRunner>.GetPlugin(log4net.ILog log)
         {
-            throw new NotImplementedException("not there yet");
+            this.log = log;
+            return this;
+        }
+
+        public bool IsReady(out string unavailableMessage)
+        {
+            unavailableMessage = "OpenCoverRunner not implemented yet";
+
+            return false;
+        }
+
+        public string Name
+        {
+            get { return "OpenCover"; }
         }
     }
 }

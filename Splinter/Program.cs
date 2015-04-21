@@ -15,33 +15,49 @@ namespace Splinter
             var iocContainer = UnityBootstrapper.CreateContainer();
 
             var log = iocContainer.Resolve<log4net.ILog>();
-            
-            log.Info("Splinter starting.");
+
+            log.Debug("Splinter starting.");
 
             AppDomain.CurrentDomain.UnhandledException += (_, e) => log.Fatal("Unhandled exception outside the main thread.", e.ExceptionObject as Exception);
 
             try
             {
+                var cmdLine = clipr.CliParser.Parse<ManualConfiguration>(args); //new [] {"-h"}
+
                 var splinterSession = iocContainer.Resolve<ISplinterSession>();
-
-                var sessionSettings = splinterSession.Initialize(args);
-
-
+                splinterSession.Start(cmdLine);
+            }
+            catch (clipr.Core.ParserExit)
+            {
+                //this means we wrote out help. I think.
+            }
+            catch (clipr.ParseException e)
+            {
+                RenderFatalException("Error while parsing command line arguments: ", log, e);
+            }
+            catch (clipr.ArgumentIntegrityException e)
+            {
+                RenderFatalException("Error while parsing command line arguments: ", log, e);
             }
             catch (Exception e)
             {
-                if (log.IsDebugEnabled)
-                {
-                    log.Fatal("Unhandled exception in the main thread.", e);
-                }
-                else
-                {
-                    log.Fatal(e.Message);
-                }
+                RenderFatalException("Fatal exception:", log, e);
             }
             finally
             {
                 log.Debug("Splinter terminating.");
+            }
+        }
+
+        private static void RenderFatalException(string message, log4net.ILog log, Exception e)
+        {
+            if (log.IsDebugEnabled)
+            {
+                log.Fatal(message, e);
+            }
+            else
+            {
+                log.Fatal(message + e.Message);
             }
         }
     }

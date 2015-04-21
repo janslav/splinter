@@ -12,11 +12,11 @@ namespace Splinter.Model
     /// </summary>
     public class InitialCoverage
     {
-        public InitialCoverage(SessionSettings settings)
+        public InitialCoverage(TestsToRun tests)
         {
-            this.SessionSettings = settings;
+            this.TestsToRun = tests;
         }
 
-        public SessionSettings SessionSettings { get; private set; }
+        public TestsToRun TestsToRun { get; private set; }
     }
 }

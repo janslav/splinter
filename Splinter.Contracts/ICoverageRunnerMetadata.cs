@@ -8,6 +8,6 @@ namespace Splinter.Contracts
 {
     public interface ICoverageRunnerMetadata
     {
-
+        //empty for now
     }
 }

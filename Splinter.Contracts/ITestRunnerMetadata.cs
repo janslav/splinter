@@ -8,6 +8,6 @@ namespace Splinter.Contracts
 {
     public interface ITestRunnerMetadata
     {
-
+        //empty for now
     }
 }

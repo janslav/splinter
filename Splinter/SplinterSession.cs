@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.IO;
+using System.Reflection;
 
-using Splinter.Model;
 using Splinter.Contracts;
+using Splinter.Model;
 
 using log4net;
 
@@ -12,8 +14,7 @@ namespace Splinter
 {
     public interface ISplinterSession
     {
-
-        SessionSettings Initialize(string[] args);
+        void Start(ManualConfiguration cmdLine);
     }
 
     public class SplinterSession : ISplinterSession
@@ -22,27 +23,34 @@ namespace Splinter
 
         IPluginsContainer plugins;
 
-        public SplinterSession(ILog log, IPluginsContainer plugins)
+        ITestsDiscoverer discoverer;
+
+        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer)
         {
             this.plugins = plugins;
+            this.discoverer = discoverer;
             this.log = log;
         }
 
-        public SessionSettings Initialize(string[] args)
+        public void Start(ManualConfiguration cmdLine)
         {
             if (!plugins.TestRunners.EmptyIfNull().Any())
             {
-                this.log.Error("No test runners available.");
-                return null;
+                throw new Exception("No test runners available.");
             }
 
-            var settings = new SessionSettings
+            if (!plugins.CoverageRunners.EmptyIfNull().Any())
             {
-                TestRunners = this.CheckPluginReadyness(plugins.TestRunners, "test runner"),
-                CoverageRunners = this.CheckPluginReadyness(plugins.CoverageRunners, "coverage runner"),
-            };
+                throw new Exception("No coverage runners available.");
+            }
 
-            return settings;
+            var testRunners = this.CheckPluginReadyness(plugins.TestRunners, "test runner");
+            var coverageRunners = this.CheckPluginReadyness(plugins.CoverageRunners, "coverage runner");
+
+            var ttr = this.discoverer.DiscoverTestBinaries(cmdLine, testRunners);
+
+            log.Info("Test runner: " + ttr.TestRunner.Name);
+            log.Info("Test binaries: " + string.Join(", ", ttr.TestBinaries.Select(fi => fi.Name)));
         }
 
         private IReadOnlyCollection<T> CheckPluginReadyness<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin
@@ -65,8 +73,12 @@ namespace Splinter
             }
             else
             {
-                var msgs = string.Join(Environment.NewLine, readiness.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
+                var notReady = readiness.Where(r => !r.Ready);
+                if (notReady.Any())
+                {
+                    var msgs = string.Join(Environment.NewLine, notReady.Select(tr => tr.Runner.Name + ": " + tr.Msg));
+                    this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
+                }
             }
 
             var coverageRunnerReadiness = plugins.Select(tr =>

@@ -24,7 +24,7 @@ namespace Splinter.CoverageRunner.OpenCover
         {
             unavailableMessage = "OpenCoverRunner not implemented yet";
 
-            return false;
+            return true;
         }
 
         public string Name

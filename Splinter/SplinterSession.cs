@@ -64,7 +64,7 @@ namespace Splinter
                     Ready = tr.IsReady(out msg),
                     Msg = msg
                 };
-            });
+            }).ToArray();
 
             if (!readiness.Any(tr => tr.Ready))
             {
@@ -80,17 +80,6 @@ namespace Splinter
                     this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
                 }
             }
-
-            var coverageRunnerReadiness = plugins.Select(tr =>
-            {
-                string msg;
-                return new
-                {
-                    Runner = tr,
-                    Ready = tr.IsReady(out msg),
-                    Msg = msg
-                };
-            });
 
             return readiness.Where(tr => tr.Ready).Select(tr => tr.Runner).ToArray();
         }

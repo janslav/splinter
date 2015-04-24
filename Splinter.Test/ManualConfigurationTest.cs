@@ -32,18 +32,18 @@ namespace Splinter.Test
         }
 
         [TestMethod, ExpectedException(typeof(Exception), AllowDerivedTypes=true)]
-        public void BinariesWithoutRunnerAreInvalid()
+        public void SpecifyingBinariesWithoutRunnerIsInvalid()
         {
-            var cmdLine = CliParser.Parse<ManualConfiguration>(new[] { "testlib.dll", "secondtes.dll" });
+            var cmdLine = CliParser.Parse<ManualConfiguration>(new[] { "testlib.dll", "secondtest.dll" });
         }
 
         [TestMethod]
         public void ParseTestFilesNames()
         {
-            var cmdLine = CliParser.Parse<ManualConfiguration>(new[] { "--testRunner", "mstest", "testlib.dll", "secondtes.dll" });
+            var cmdLine = CliParser.Parse<ManualConfiguration>(new[] { "--testRunner", "mstest", "testlib.dll", "secondtest.dll" });
 
             cmdLine.TestRunner.ShouldBeEqualTo("mstest");
-            cmdLine.TestBinaries.ShouldContainAllInOrder(new[] { "testlib.dll", "secondtes.dll" });
+            cmdLine.TestBinaries.ShouldContainAllInOrder(new[] { "testlib.dll", "secondtest.dll" });
         }
     }
 }

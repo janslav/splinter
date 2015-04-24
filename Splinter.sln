@@ -4,6 +4,10 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter", "Splinter\Splinter.csproj", "{C2780CD6-FA70-4D1C-8ECF-A53FF2A7445E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{50357A48-E309-4606-901B-03A35D84AFB0} = {50357A48-E309-4606-901B-03A35D84AFB0}
+		{6A477967-BA47-4AC1-979F-58342F41BE12} = {6A477967-BA47-4AC1-979F-58342F41BE12}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.TestRunner.MSTest", "Splinter.TestRunner.MSTest\Splinter.TestRunner.MSTest.csproj", "{6A477967-BA47-4AC1-979F-58342F41BE12}"
 EndProject
@@ -25,6 +29,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Test", "Splinter.Test\Splinter.Test.csproj", "{A64DEAD6-83E9-4474-BB39-AA030AD20887}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{8FA375FD-A2B5-4847-905B-017A8D3F0E01}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Utils", "Splinter.Utils\Splinter.Utils.csproj", "{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,6 +66,10 @@ Global
 		{A64DEAD6-83E9-4474-BB39-AA030AD20887}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A64DEAD6-83E9-4474-BB39-AA030AD20887}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A64DEAD6-83E9-4474-BB39-AA030AD20887}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

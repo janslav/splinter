@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Splinter.Model
+namespace Splinter.Contracts.DTOs
 {
     /// <summary>
     /// This represents the coverage as we sniffed it from the first run. This is created/filled by the "CoverageRunner" component.

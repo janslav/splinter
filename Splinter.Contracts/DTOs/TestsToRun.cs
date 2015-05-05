@@ -5,9 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-using Splinter.Contracts;
-
-namespace Splinter.Model
+namespace Splinter.Contracts.DTOs
 {
     /// <summary>
     /// Represents the initial situation - configuration that has either gone in via cmd line or we inferred it from files that are present.

@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{8FA375FD-A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Utils", "Splinter.Utils\Splinter.Utils.csproj", "{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Utils.Test", "Splinter.Utils.Test\Splinter.Utils.Test.csproj", "{42B0E1F8-8D01-4820-A9A1-E4F96DFE93AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,10 @@ Global
 		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7DDB4CA7-9BFE-48B7-A2F0-99DF8E654D72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42B0E1F8-8D01-4820-A9A1-E4F96DFE93AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42B0E1F8-8D01-4820-A9A1-E4F96DFE93AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42B0E1F8-8D01-4820-A9A1-E4F96DFE93AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42B0E1F8-8D01-4820-A9A1-E4F96DFE93AB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,5 +85,6 @@ Global
 		{D731B87B-E20C-4173-8B0A-D63506C2C0E0} = {BA1956ED-660E-4D47-B9EB-83D1A09C4641}
 		{BA1956ED-660E-4D47-B9EB-83D1A09C4641} = {8FA375FD-A2B5-4847-905B-017A8D3F0E01}
 		{A64DEAD6-83E9-4474-BB39-AA030AD20887} = {8FA375FD-A2B5-4847-905B-017A8D3F0E01}
+		{42B0E1F8-8D01-4820-A9A1-E4F96DFE93AB} = {8FA375FD-A2B5-4847-905B-017A8D3F0E01}
 	EndGlobalSection
 EndGlobal

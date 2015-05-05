@@ -11,6 +11,13 @@ namespace Splinter
 {
     public class UnityBootstrapper
     {
+        private log4net.ILog log;
+
+        public UnityBootstrapper(log4net.ILog log)
+        {
+            this.log = log;
+        }
+
         public IUnityContainer CreateContainer()
         {
             var container = new UnityContainer();
@@ -22,23 +29,14 @@ namespace Splinter
                 WithName.Default,
                 WithLifetime.ContainerControlled);
 
-            BootstrapLogging(container);
+            this.BootstrapLogging(container);
 
             return container;
         }
 
         protected virtual void BootstrapLogging(UnityContainer container)
         {
-            if (ConfigurationManager.GetSection("log4net") == null)
-            {
-                log4net.Config.BasicConfigurator.Configure();
-            }
-            else
-            {
-                log4net.Config.XmlConfigurator.Configure();
-            }
-
-            container.RegisterInstance<log4net.ILog>(log4net.LogManager.GetLogger("namelessLogger"));
+            container.RegisterInstance(this.log);
         }
     }
 }

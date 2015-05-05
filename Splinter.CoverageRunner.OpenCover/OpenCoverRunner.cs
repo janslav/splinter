@@ -8,27 +8,30 @@ using System.Threading.Tasks;
 using System.ComponentModel.Composition;
 using Microsoft.Win32;
 
+using log4net;
+
 using NinjaTurtles;
 
 using Splinter.Contracts;
+using Splinter.Contracts.DTOs;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
-    [Export(typeof(IPluginFactory<ICoverageRunner>))]
-    public class OpenCoverRunner : ICoverageRunner, IPluginFactory<ICoverageRunner>
+    public class OpenCoverRunner : ICoverageRunner
     {
         private const string OpenCoverRegKey = @"SOFTWARE\OpenCover\";
         private const string OpenCoverRegKeyWow6432 = @"SOFTWARE\Wow6432Node\OpenCover\";
         private const string OpenCoverRegValue = "Path";
         private const string OpenCoverExeName = "OpenCover.Console.exe";
 
+        private readonly ILog log;
 
-        private log4net.ILog log;
+        private readonly IByTestMappingRunner byTestRunner;
 
-        ICoverageRunner IPluginFactory<ICoverageRunner>.GetPlugin(log4net.ILog log)
+        public OpenCoverRunner(ILog log, IByTestMappingRunner byTestRunner)
         {
             this.log = log;
-            return this;
+            this.byTestRunner = byTestRunner;
         }
 
         public bool IsReady(out string unavailableMessage)
@@ -92,19 +95,24 @@ namespace Splinter.CoverageRunner.OpenCover
 
                 if (key == null)
                 {
-                    this.log.Error("Could not find OpenCover installation registry key. Please install OpenCover or repair installation.");
-                    return null;
+                    throw new Exception("Could not find OpenCover installation registry key. Please install OpenCover or repair installation.");
                 }
 
                 path = (string)key.GetValue(OpenCoverRegValue);
                 if (string.IsNullOrEmpty(path))
                 {
-                    this.log.Error("Could not find OpenCover installation path. Please repair OpenCover installation.");
-                    return null;
+                    throw new Exception("Could not find OpenCover installation path. Please repair OpenCover installation.");
                 }
             }
 
             return Path.GetFullPath(path);
+        }
+
+        public InitialCoverage GetInitialCoverage(TestsToRun testsToRun)
+        {
+            var r = this.byTestRunner.RunTestsAndMapMethods(testsToRun);
+
+                return r;
         }
 
         ///// <summary>

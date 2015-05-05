@@ -34,54 +34,23 @@ namespace Splinter
 
         public void Start(ManualConfiguration cmdLine)
         {
-            if (!plugins.TestRunners.EmptyIfNull().Any())
+            if (!plugins.DiscoveredTestRunners.EmptyIfNull().Any())
             {
                 throw new Exception("No test runners available.");
             }
 
-            if (!plugins.CoverageRunners.EmptyIfNull().Any())
+            if (!plugins.DiscoveredCoverageRunners.EmptyIfNull().Any())
             {
                 throw new Exception("No coverage runners available.");
             }
 
-            var testRunners = this.CheckPluginReadyness(plugins.TestRunners, "test runner");
-            var coverageRunners = this.CheckPluginReadyness(plugins.CoverageRunners, "coverage runner");
+            var testRunners = plugins.FilterByAvailability(plugins.DiscoveredTestRunners, "test runner");
+            var coverageRunners = plugins.FilterByAvailability(plugins.DiscoveredCoverageRunners, "coverage runner");
 
             var ttr = this.discoverer.DiscoverTestBinaries(cmdLine, testRunners);
 
             log.Info("Test runner: " + ttr.TestRunner.Name);
             log.Info("Test binaries: " + string.Join(", ", ttr.TestBinaries.Select(fi => fi.Name)));
-        }
-
-        private IReadOnlyCollection<T> CheckPluginReadyness<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin
-        {
-            var readiness = plugins.Select(tr =>
-            {
-                string msg;
-                return new
-                {
-                    Runner = tr,
-                    Ready = tr.IsReady(out msg),
-                    Msg = msg
-                };
-            }).ToArray();
-
-            if (!readiness.Any(tr => tr.Ready))
-            {
-                var msgs = string.Join(Environment.NewLine, readiness.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                throw new Exception(string.Format("No {0} ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs));
-            }
-            else
-            {
-                var notReady = readiness.Where(r => !r.Ready);
-                if (notReady.Any())
-                {
-                    var msgs = string.Join(Environment.NewLine, notReady.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                    this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
-                }
-            }
-
-            return readiness.Where(tr => tr.Ready).Select(tr => tr.Runner).ToArray();
         }
     }
 }

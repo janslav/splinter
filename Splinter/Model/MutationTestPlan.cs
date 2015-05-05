@@ -13,11 +13,11 @@ namespace Splinter.Model
     /// </summary>
     public class MutationTestPlan
     {
-        public MutationTestPlan(InitialCoverage initialCoverage)
-        {
-            this.InitialCoverage = initialCoverage;
-        }
+        //public MutationTestPlan(InitialCoverage initialCoverage)
+        //{
+        //    this.InitialCoverage = initialCoverage;
+        //}
 
-        public InitialCoverage InitialCoverage { get; private set; }
+        //public InitialCoverage InitialCoverage { get; private set; }
     }
 }

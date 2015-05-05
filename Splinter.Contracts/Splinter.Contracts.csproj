@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DTOs\InitialCoverage.cs" />
     <Compile Include="IPlugin.cs" />
     <Compile Include="IPluginFactory{T}.cs" />
     <Compile Include="ITestRunner.cs" />
@@ -52,6 +53,7 @@
     <Compile Include="ITestRunnerMetadata.cs" />
     <Compile Include="ICoverageRunnerMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DTOs\TestsToRun.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

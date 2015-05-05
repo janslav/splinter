@@ -6,38 +6,77 @@ using System.Threading.Tasks;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 
+using log4net;
+
 using Splinter.Contracts;
 
 namespace Splinter
 {
     public interface IPluginsContainer
     {
-        IReadOnlyCollection<ICoverageRunner> CoverageRunners { get; }
+        IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; }
 
-        IReadOnlyCollection<ITestRunner> TestRunners { get; }
+        IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
+
+        IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin;
     }
 
     public class PluginsContainer : IPluginsContainer
     {
         [ImportMany]
-        IEnumerable<Lazy<IPluginFactory<ICoverageRunner>, ICoverageRunnerMetadata>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
+        private IEnumerable<Lazy<IPluginFactory<ICoverageRunner>, ICoverageRunnerMetadata>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
 
         [ImportMany]
-        IEnumerable<Lazy<IPluginFactory<ITestRunner>, ITestRunnerMetadata>> lazyTestRunners = null; //assigning null to avoid compiler warning
+        private IEnumerable<Lazy<IPluginFactory<ITestRunner>, ITestRunnerMetadata>> lazyTestRunners = null; //assigning null to avoid compiler warning
 
-        public PluginsContainer(log4net.ILog log)
+        private readonly ILog log;
+
+        public PluginsContainer(ILog log)
         {
+            this.log = log;
+
             var catalog = new ApplicationCatalog();
 
             var compositionContainer = new CompositionContainer(catalog);
             compositionContainer.ComposeParts(this);
 
-            this.CoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
-            this.TestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.DiscoveredCoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.DiscoveredTestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
         }
 
-        public IReadOnlyCollection<ICoverageRunner> CoverageRunners { get; private set; }
+        public IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
 
-        public IReadOnlyCollection<ITestRunner> TestRunners { get; private set; }
+        public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
+
+        public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin
+        {
+            var readiness = plugins.Select(tr =>
+            {
+                string msg;
+                return new
+                {
+                    Runner = tr,
+                    Ready = tr.IsReady(out msg),
+                    Msg = msg
+                };
+            }).ToArray();
+
+            if (!readiness.Any(tr => tr.Ready))
+            {
+                var msgs = string.Join(Environment.NewLine, readiness.Select(tr => tr.Runner.Name + ": " + tr.Msg));
+                throw new Exception(string.Format("No {0} ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs));
+            }
+            else
+            {
+                var notReady = readiness.Where(r => !r.Ready);
+                if (notReady.Any())
+                {
+                    var msgs = string.Join(Environment.NewLine, notReady.Select(tr => tr.Runner.Name + ": " + tr.Msg));
+                    this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
+                }
+            }
+
+            return readiness.Where(tr => tr.Ready).Select(tr => tr.Runner).ToArray();
+        }
     }
 }

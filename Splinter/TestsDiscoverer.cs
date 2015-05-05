@@ -6,7 +6,7 @@ using System.IO;
 using System.Reflection;
 
 using Splinter.Contracts;
-using Splinter.Model;
+using Splinter.Contracts.DTOs;
 
 using log4net;
 
@@ -23,7 +23,7 @@ namespace Splinter
         /// </summary>
         /// <param name="cmdLine">Manual configuration via command line.</param>
         /// <param name="testRunners">Available test runners.</param>
-        /// <returns></returns>
+        /// <returns>The test runner implementation and the related tests</returns>
         TestsToRun DiscoverTestBinaries(ManualConfiguration cmdLine, IReadOnlyCollection<ITestRunner> testRunners);
     }
 

@@ -12,7 +12,7 @@ namespace Splinter
     {
         static void Main(string[] args)
         {
-            var iocContainer = UnityBootstrapper.CreateContainer();
+            var iocContainer = new UnityBootstrapper().CreateContainer();
 
             var log = iocContainer.Resolve<log4net.ILog>();
 

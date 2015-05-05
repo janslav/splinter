@@ -95,9 +95,7 @@
   <ItemGroup>
     <Compile Include="TestsDiscoverer.cs" />
     <Compile Include="ManualConfiguration.cs" />
-    <Compile Include="Model\InitialCoverage.cs" />
     <Compile Include="Model\MutationTestPlan.cs" />
-    <Compile Include="Model\TestsToRun.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="PluginsContainer.cs" />
     <Compile Include="Program.cs" />
@@ -122,9 +120,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
-  <ItemGroup>
-    <Content Include="FluentAssert.Provenance.txt" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Reflection;
+using System.Diagnostics;
 
 using NinjaTurtles;
 
@@ -18,7 +19,7 @@ namespace Splinter.TestRunner.MSTest
     {
         private log4net.ILog log;
 
-        //private Assembly frameworkAssembly;
+        private FileInfo msTestExe;
 
         ITestRunner IPluginFactory<ITestRunner>.GetPlugin(log4net.ILog log)
         {
@@ -32,6 +33,8 @@ namespace Splinter.TestRunner.MSTest
                 var paths = this.GetMsExeSearchPaths();
 
                 var process = ConsoleProcessFactory.CreateProcess("mstest.exe", "", paths.ToArray());
+
+                this.msTestExe = new FileInfo(process.StartInfo.FileName);
 
                 if (process != null)
                 {
@@ -76,12 +79,6 @@ namespace Splinter.TestRunner.MSTest
         //code stolen from NinjaTurtles msbuild runner
         private IEnumerable<string> GetMsExeSearchPaths()
         {
-            //(TestDirectory testDirectory, string testAssemblyLocation, IEnumerable<string> testsToRun)
-            //testAssemblyLocation = Path.Combine(testDirectory.FullName, Path.GetFileName(testAssemblyLocation));
-            //string testArguments = string.Join(" ", testsToRun.Select(t => string.Format("/test:\"{0}\"", t)));
-            //string arguments = string.Format("/testcontainer:\"{0}\" {1}",
-            //                                 testAssemblyLocation, testArguments);
-
             var searchPath = new List<string>();
             string programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
             string programFilesX86Folder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
@@ -135,5 +132,22 @@ namespace Splinter.TestRunner.MSTest
 
         //    return result;
         //}
+
+
+        public IReadOnlyCollection<ProcessStartInfo> GetProcessInfoToRunTests(IReadOnlyCollection<FileInfo> testBinaries)
+        {
+            //mstest can run multiple test binaries using /testmetadata but that requires creating the metadata file which is a needless complication
+            //we can and have to be able to deal with multiple processes anyway.
+
+
+
+            //(TestDirectory testDirectory, string testAssemblyLocation, IEnumerable<string> testsToRun)
+            //testAssemblyLocation = Path.Combine(testDirectory.FullName, Path.GetFileName(testAssemblyLocation));
+            //string testArguments = string.Join(" ", testsToRun.Select(t => string.Format("/test:\"{0}\"", t)));
+            //string arguments = string.Format("/testcontainer:\"{0}\" {1}",
+            //                                 testAssemblyLocation, testArguments);
+
+            return null;
+        }
     }
 }

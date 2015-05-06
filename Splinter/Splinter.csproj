@@ -93,10 +93,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="TestsDiscoverer.cs" />
     <Compile Include="ManualConfiguration.cs" />
     <Compile Include="Model\MutationTestPlan.cs" />
-    <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="PluginsContainer.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

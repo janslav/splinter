@@ -84,6 +84,9 @@
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="OpenCover.Framework">
+      <HintPath>..\..\..\..\..\AppData\Local\Apps\OpenCover\OpenCover.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -95,6 +98,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ByTestMappingRunner.cs" />
+    <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="OpenCoverRunnerFactory.cs" />
     <Compile Include="OpenCoverRunner.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

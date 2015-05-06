@@ -27,7 +27,7 @@ namespace Splinter.Utils
     /// It then cleans up this directory on calling Dispose()
     /// </summary>
     /// </remarks>
-    //[DebuggerDisplay("ShadowDirectory {Shadow}")]
+    [DebuggerDisplay("ShadowDirectory {Shadow}")]
     public class ShadowDirectory : IDisposable
     {
         private bool disposed;

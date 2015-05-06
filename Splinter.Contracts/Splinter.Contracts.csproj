@@ -45,7 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DTOs\InitialCoverage.cs" />
+    <Compile Include="DTOs\Method.cs" />
+    <Compile Include="DTOs\TestSubjectMethod.cs" />
     <Compile Include="IPlugin.cs" />
     <Compile Include="IPluginFactory{T}.cs" />
     <Compile Include="ITestRunner.cs" />

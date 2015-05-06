@@ -80,7 +80,7 @@ namespace Splinter
 
             this.log.Info("Coverage runner: " + coverageRunner.Name);
 
-            coverageRunner.GetInitialCoverage(ttr);
+            var testedMethods = coverageRunner.GetInitialCoverage(ttr);
         }
     }
 }

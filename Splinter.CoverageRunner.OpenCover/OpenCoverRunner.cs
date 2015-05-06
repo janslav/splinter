@@ -112,11 +112,10 @@ namespace Splinter.CoverageRunner.OpenCover
             return Path.GetFullPath(path);
         }
 
-        public InitialCoverage GetInitialCoverage(TestsToRun testsToRun)
+        public IReadOnlyCollection<TestSubjectMethod> GetInitialCoverage(TestsToRun testsToRun)
         {
             var r = this.byTestRunner.RunTestsAndMapMethods(this.ncoverExe, testsToRun);
-
-                return r;
+            return r;
         }
 
         ///// <summary>

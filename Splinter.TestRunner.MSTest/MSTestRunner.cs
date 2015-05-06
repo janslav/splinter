@@ -11,6 +11,7 @@ using System.Diagnostics;
 using NinjaTurtles;
 
 using Splinter.Contracts;
+using Splinter.Utils;
 
 namespace Splinter.TestRunner.MSTest
 {
@@ -29,7 +30,8 @@ namespace Splinter.TestRunner.MSTest
 
         public bool IsReady(out string unavailableMessage)
         {
-            try { 
+            try
+            {
                 var paths = this.GetMsExeSearchPaths();
 
                 var process = ConsoleProcessFactory.CreateProcess("mstest.exe", "", paths.ToArray());
@@ -134,12 +136,8 @@ namespace Splinter.TestRunner.MSTest
         //}
 
 
-        public IReadOnlyCollection<ProcessStartInfo> GetProcessInfoToRunTests(IReadOnlyCollection<FileInfo> testBinaries)
+        public ProcessStartInfo GetProcessInfoToRunTests(FileInfo testBinary)
         {
-            //mstest can run multiple test binaries using /testmetadata but that requires creating the metadata file which is a needless complication
-            //we can and have to be able to deal with multiple processes anyway.
-
-
 
             //(TestDirectory testDirectory, string testAssemblyLocation, IEnumerable<string> testsToRun)
             //testAssemblyLocation = Path.Combine(testDirectory.FullName, Path.GetFileName(testAssemblyLocation));
@@ -147,7 +145,13 @@ namespace Splinter.TestRunner.MSTest
             //string arguments = string.Format("/testcontainer:\"{0}\" {1}",
             //                                 testAssemblyLocation, testArguments);
 
-            return null;
+            var escapedTestBinary = CmdLine.EncodeArgument(testBinary.FullName);
+
+            var r = new ProcessStartInfo(
+                    this.msTestExe.FullName,
+                    string.Format("/noisolation /testcontainer:\"{0}\"", escapedTestBinary));
+
+            return r;
         }
     }
 }

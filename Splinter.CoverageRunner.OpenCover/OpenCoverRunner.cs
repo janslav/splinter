@@ -28,6 +28,8 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly IByTestMappingRunner byTestRunner;
 
+        private FileInfo ncoverExe;
+
         public OpenCoverRunner(ILog log, IByTestMappingRunner byTestRunner)
         {
             this.log = log;
@@ -45,6 +47,8 @@ namespace Splinter.CoverageRunner.OpenCover
                 {
                     process.Start();
                     process.WaitForExit();
+
+                    this.ncoverExe = new FileInfo(process.StartInfo.FileName);
 
                     unavailableMessage = null;
                     return true;
@@ -110,7 +114,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
         public InitialCoverage GetInitialCoverage(TestsToRun testsToRun)
         {
-            var r = this.byTestRunner.RunTestsAndMapMethods(testsToRun);
+            var r = this.byTestRunner.RunTestsAndMapMethods(this.ncoverExe, testsToRun);
 
                 return r;
         }

@@ -12,6 +12,6 @@ namespace Splinter.Contracts
     {
         bool IsTestBinary(FileInfo binary);
 
-        IReadOnlyCollection<ProcessStartInfo> GetProcessInfoToRunTests(IReadOnlyCollection<FileInfo> testBinaries);
+        ProcessStartInfo GetProcessInfoToRunTests(FileInfo testBinaries);
     }
 }

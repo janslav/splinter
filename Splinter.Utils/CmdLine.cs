@@ -7,8 +7,15 @@ using System.Threading.Tasks;
 
 namespace Splinter.Utils
 {
+    /// <summary>
+    /// Taken from https://github.com/ericpopivker/Command-Line-Encoder
+    /// It looks well tested except for the case when shell (cmd.exe) is used, then I think it requires escaping stuff with ^ 
+    /// </summary>
     public static class CmdLine
     {
+        /// <summary>
+        /// Using this you can safely encode/escape text arguments on command line.
+        /// </summary>
         public static string EncodeArgument(string original)
         {
             var result = original;
@@ -57,27 +64,27 @@ namespace Splinter.Utils
             return result;
         }
 
-        public static string EscapeBackSlashes(string text)
-        {
-            var regexPattern = "\\\\";
+        //public static string EscapeBackSlashes(string text)
+        //{
+        //    var regexPattern = "\\\\";
 
-            var result = text;
+        //    var result = text;
 
-            var regex = new Regex(regexPattern);
+        //    var regex = new Regex(regexPattern);
 
-            var matches = regex.Matches(text);
+        //    var matches = regex.Matches(text);
 
-            for (int i = matches.Count - 1; i >= 0; i--)
-            {
-                var match = matches[i];
+        //    for (int i = matches.Count - 1; i >= 0; i--)
+        //    {
+        //        var match = matches[i];
 
-                var index = match.Index + match.Length;
+        //        var index = match.Index + match.Length;
 
-                if (index >= text.Length || text[index] == '\\')
-                    result = result.Insert(match.Index, "\\");
-            }
+        //        if (index >= text.Length || text[index] == '\\')
+        //            result = result.Insert(match.Index, "\\");
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
     }
 }

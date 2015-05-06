@@ -18,6 +18,10 @@ namespace Splinter
             Description = "The test runner engine name, such as mstest or nunit.")]
         public string TestRunner { get; set; }
 
+        [NamedArgument("coverageRunner",
+            Description = "The test coverage engine name, such as opencover.")]
+        public string CoverageRunner { get; set; }
+
         //[PositionalArgument(0, MetaVar = "OUT",
         //    Description = "Output file.")]
         //public string OutputFile { get; set; }

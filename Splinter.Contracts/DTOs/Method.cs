@@ -11,9 +11,15 @@ namespace Splinter.Contracts.DTOs
     [DebuggerDisplay("Method {FullName}")]
     public class Method
     {
-        public FileInfo Assembly { get; set; }
+        public Method(FileInfo assembly, string fullName)
+        {
+            this.Assembly = assembly;
+            this.FullName = fullName;
+        }
 
-        public string FullName { get; set; }
+        public FileInfo Assembly { get; private set; }
+
+        public string FullName { get; private set; }
 
         #region Equals & GetHashCode
         public override bool Equals(object obj)

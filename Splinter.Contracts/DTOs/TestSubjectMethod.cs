@@ -7,13 +7,16 @@ using System.Threading.Tasks;
 
 namespace Splinter.Contracts.DTOs
 {
-    [DebuggerDisplay("TestSubjectMethod {FullName} Tests: {TestMethods.Count}")]
-    public class TestSubjectMethod : Method
+    [DebuggerDisplay("TestSubjectMethod {Method.FullName} Tests: {TestMethods.Count}")]
+    public class TestSubjectMethod
     {
-        public TestSubjectMethod()
+        public TestSubjectMethod(Method method, ISet<Method> testMethods)
         {
-            this.TestMethods = new HashSet<Method>();
+            this.Method = method;
+            this.TestMethods = testMethods;
         }
+
+        public Method Method { get; private set; }
 
         public ISet<Method> TestMethods { get; private set; }
     }

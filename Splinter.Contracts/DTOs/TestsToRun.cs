@@ -13,8 +13,14 @@ namespace Splinter.Contracts.DTOs
     /// </summary>
     public class TestsToRun
     {
-        public ITestRunner TestRunner { get; set; }
+        public TestsToRun(ITestRunner runner, IReadOnlyCollection<FileInfo> binaries)
+        {
+            this.TestRunner = runner;
+            this.TestBinaries = binaries;
+        }
 
-        public IReadOnlyCollection<FileInfo> TestBinaries { get; set; }
+        public ITestRunner TestRunner { get; private set; }
+
+        public IReadOnlyCollection<FileInfo> TestBinaries { get; private set; }
     }
 }

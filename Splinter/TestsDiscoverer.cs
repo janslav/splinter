@@ -123,11 +123,7 @@ namespace Splinter
                 selectedTestRunner = testRunners.Single(r => r.Name.Equals(testBinariesByRunner.Keys.Single(), StringComparison.OrdinalIgnoreCase));
             }
 
-            var ttr = new TestsToRun
-            {
-                TestBinaries = testBinariesByRunner.Values.Single(),
-                TestRunner = selectedTestRunner,
-            };
+            var ttr = new TestsToRun(selectedTestRunner, testBinariesByRunner.Values.Single());
 
             return ttr;
         }

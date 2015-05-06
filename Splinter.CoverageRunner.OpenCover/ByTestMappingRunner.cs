@@ -55,7 +55,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
                             this.RunOpenCoverProcess(runnerName, openCoverProcessInfo);
 
-                            return this.ExtractMapping(testBinary, sd.Shadow);
+                            return (IEnumerable<TestSubjectMethod>)this.ExtractMapping(testBinary, sd.Shadow);
                         }
                         catch (Exception e)
                         {
@@ -143,11 +143,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
                     foreach (var trackedMethod in testModule.TrackedMethods)
                     {
-                        var method = new Splinter.Contracts.DTOs.Method
-                        {
-                            Assembly = testBinary,
-                            FullName = trackedMethod.Name,
-                        };
+                        var method = new Splinter.Contracts.DTOs.Method(testBinary, trackedMethod.Name);
 
                         testMethods.Add(trackedMethod.UniqueId, method); //uid
                     }
@@ -165,23 +161,21 @@ namespace Splinter.CoverageRunner.OpenCover
                             {
                                 foreach (var m in cl.Methods)
                                 {
-                                    var subject = new TestSubjectMethod
-                                    {
-                                        Assembly = originalAssembly,
-                                        FullName = m.Name,
-                                    };
+                                    var list = new HashSet<Splinter.Contracts.DTOs.Method>();
 
                                     foreach (var trackedMethodRef in m.MethodPoint.TrackedMethodRefs.EmptyIfNull())
                                     {
                                         Splinter.Contracts.DTOs.Method testMethod;
                                         if (testMethods.TryGetValue(trackedMethodRef.UniqueId, out testMethod))
                                         {
-                                            subject.TestMethods.Add(testMethod);
+                                            list.Add(testMethod);
                                         }
                                     }
 
-                                    if (subject.TestMethods.Count > 0)
+                                    if (list.Count > 0)
                                     {
+                                        var subjectMethod = new Splinter.Contracts.DTOs.Method(originalAssembly, m.Name);
+                                        var subject = new TestSubjectMethod(subjectMethod, list);
                                         results.Add(subject);
                                     }
                                 }

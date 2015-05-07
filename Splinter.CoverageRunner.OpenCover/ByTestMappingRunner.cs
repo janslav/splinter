@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
@@ -15,6 +17,8 @@ using OpenCover.Framework.Model;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Utils;
+
+using SplinterMethod = Splinter.Contracts.DTOs.Method;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
@@ -55,7 +59,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
                             this.RunOpenCoverProcess(runnerName, openCoverProcessInfo);
 
-                            return (IEnumerable<TestSubjectMethod>)this.ExtractMapping(testBinary, sd.Shadow);
+                            return this.ExtractMapping(testBinary, sd.Shadow);
                         }
                         catch (Exception e)
                         {
@@ -69,16 +73,24 @@ namespace Splinter.CoverageRunner.OpenCover
                     }
                 });
 
-            var coverage = partialCoverages.SelectMany(i => i);
+            //one subject method can be tested by tests from several assemblies, so here we merge the lists.
+            var dict = new ConcurrentDictionary<SplinterMethod, IImmutableSet<SplinterMethod>>();
 
-            return coverage.ToArray();
+            partialCoverages.SelectMany(i => i)
+                .ForAll(subject =>
+                    dict.AddOrUpdate(
+                        subject.Method,
+                        subject.TestMethods,
+                        (_, existing) => existing.Union(subject.TestMethods)));
+
+            return dict.Select(kvp => new TestSubjectMethod(kvp.Key, kvp.Value)).ToArray();
         }
 
         private void RunOpenCoverProcess(string runnerName, ProcessStartInfo openCoverProcessInfo)
         {
             using (var p = Process.Start(openCoverProcessInfo))
             {
-                //TODO: redirecting doesn't work, probably because opencover isn't redirecting
+                //TODO: redirecting doesn't work
                 p.OutputDataReceived += (_, e) => this.log.Debug(runnerName + ": " + e.Data);
                 p.ErrorDataReceived += (_, e) => this.log.Warn(runnerName + ": " + e.Data);
 
@@ -137,13 +149,13 @@ namespace Splinter.CoverageRunner.OpenCover
                 {
                     var session = (CoverageSession)serializer.Deserialize(reader);
 
-                    var testMethods = new Dictionary<uint, Splinter.Contracts.DTOs.Method>();
+                    var testMethods = new Dictionary<uint, SplinterMethod>();
 
                     var testModule = session.Modules.Single(m => testBinaryHash.SequenceEqual(HashFromString(m.ModuleHash)));
 
                     foreach (var trackedMethod in testModule.TrackedMethods)
                     {
-                        var method = new Splinter.Contracts.DTOs.Method(testBinary, trackedMethod.Name);
+                        var method = new SplinterMethod(testBinary, trackedMethod.Name);
 
                         testMethods.Add(trackedMethod.UniqueId, method); //uid
                     }
@@ -161,11 +173,11 @@ namespace Splinter.CoverageRunner.OpenCover
                             {
                                 foreach (var m in cl.Methods)
                                 {
-                                    var list = new HashSet<Splinter.Contracts.DTOs.Method>();
+                                    var list = new HashSet<SplinterMethod>();
 
                                     foreach (var trackedMethodRef in m.MethodPoint.TrackedMethodRefs.EmptyIfNull())
                                     {
-                                        Splinter.Contracts.DTOs.Method testMethod;
+                                        SplinterMethod testMethod;
                                         if (testMethods.TryGetValue(trackedMethodRef.UniqueId, out testMethod))
                                         {
                                             list.Add(testMethod);
@@ -174,7 +186,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
                                     if (list.Count > 0)
                                     {
-                                        var subjectMethod = new Splinter.Contracts.DTOs.Method(originalAssembly, m.Name);
+                                        var subjectMethod = new SplinterMethod(originalAssembly, m.Name);
                                         var subject = new TestSubjectMethod(subjectMethod, list);
                                         results.Add(subject);
                                     }

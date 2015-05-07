@@ -23,7 +23,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Implementation of ICoverageRunner.GetInitialCoverage
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethodRef> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun);
+        XDocument RunTestsAndGetOutput(FileInfo openCoverExe, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName);
     }
 
     public class ProcessInvoker : IProcessInvoker
@@ -37,49 +37,35 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun)
+        public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName)
         {
-            var partialCoverages = testsToRun.TestBinaries
-                .AsParallel()
-                .Select(testBinary =>
+            var runnerName = testRunner.Name;
+
+            using (var sd = new ShadowDirectory(testBinary.Directory))
+            {
+                try
                 {
-                    var runnerName = testsToRun.TestRunner.Name;
+                    this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
 
-                    using (var sd = new ShadowDirectory(testBinary.Directory))
-                    {
-                        try
-                        {
-                            this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
+                    var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testRunner, testBinary, sd);
 
-                            var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testsToRun, testBinary, sd);
+                    this.RunOpenCoverProcess(runnerName, openCoverProcessInfo);
 
-                            this.RunOpenCoverProcess(runnerName, openCoverProcessInfo);
-
-                            return this.ExtractMapping(testBinary, sd.Shadow);
-                        }
-                        catch (Exception e)
-                        {
-                            this.log.Error(string.Format("Something went wrong while running tests from '{0}'.", testBinary.Name), e);
-                            throw;
-                        }
-                        finally
-                        {
-                            this.log.InfoFormat("Done running tests contained in '{0}'.", testBinary.Name);
-                        }
-                    }
-                });
-
-            //one subject method can be tested by tests from several assemblies, so here we merge the lists.
-            var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<MethodRef>>();
-
-            partialCoverages.SelectMany(i => i)
-                .ForAll(subject =>
-                    dict.AddOrUpdate(
-                        subject.Method,
-                        subject.TestMethods,
-                        (_, existing) => existing.Union(subject.TestMethods)));
-
-            return dict.Select(kvp => new TestSubjectMethodRef(kvp.Key, kvp.Value)).ToArray();
+                    //not using DirectoryInfo as the out value because the directory won't exist by the time
+                    shadowDirFullName = sd.Shadow.FullName;
+                    var resultsXml = XDocument.Load(Path.Combine(shadowDirFullName, outputFileName));
+                    return resultsXml;
+                }
+                catch (Exception e)
+                {
+                    this.log.Error(string.Format("Something went wrong while running tests from '{0}'.", testBinary.Name), e);
+                    throw;
+                }
+                finally
+                {
+                    this.log.InfoFormat("Done running tests contained in '{0}'.", testBinary.Name);
+                }
+            }
         }
 
         private void RunOpenCoverProcess(string runnerName, ProcessStartInfo openCoverProcessInfo)
@@ -100,11 +86,11 @@ namespace Splinter.CoverageRunner.OpenCover
             }
         }
 
-        private ProcessStartInfo CreateOpenCoverStartInfo(FileInfo openCoverExe, TestsToRun testsToRun, FileInfo testBinary, ShadowDirectory sd)
+        private ProcessStartInfo CreateOpenCoverStartInfo(FileInfo openCoverExe, ITestRunner testRunner, FileInfo testBinary, ShadowDirectory sd)
         {
             var shadowTestBinary = Path.Combine(sd.Shadow.FullName, testBinary.Name);
 
-            var testRunnerProcessInfo = testsToRun.TestRunner.GetProcessInfoToRunTests(new FileInfo(shadowTestBinary));
+            var testRunnerProcessInfo = testRunner.GetProcessInfoToRunTests(new FileInfo(shadowTestBinary));
 
             var staticArgs = "-register:user -returntargetcode -mergebyhash -output:" + outputFileName; // -log:All
             var target = string.Format("\"-target:{0}\"", CmdLine.EncodeArgument(testRunnerProcessInfo.FileName));

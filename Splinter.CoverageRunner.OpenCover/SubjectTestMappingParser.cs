@@ -23,7 +23,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Parses the subject-test mapping from opencover results.xml
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethodRef> ExtractMapping(FileInfo testBinary, DirectoryInfo shadowDir);
+        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(FileInfo testBinary, XDocument resultsXml, string shadowDirFullName);
     }
 
     public class SubjectTestMappingParser : ISubjectTestMappingParser
@@ -35,11 +35,8 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> ExtractMapping(FileInfo testBinary, DirectoryInfo shadowDir)
+        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(FileInfo testBinary, XDocument resultsXml, string shadowDirFullName)
         {
-            var resultsXmlFile = new FileInfo(Path.Combine(shadowDir.FullName, ProcessInvoker.outputFileName));
-
-            var resultsXml = XDocument.Load(resultsXmlFile.FullName);
             var session = resultsXml.Root;
 
             var testBinaryHash = this.HashFile(testBinary);
@@ -47,7 +44,6 @@ namespace Splinter.CoverageRunner.OpenCover
             var originalDir = testBinary.DirectoryName;
 
             var results = new List<TestSubjectMethodRef>();
-
 
             var testMethods = new Dictionary<uint, MethodRef>();
 
@@ -64,9 +60,9 @@ namespace Splinter.CoverageRunner.OpenCover
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))
             {
                 var shadowAssembly = new FileInfo(moduleEl.Element("FullName").Value);
-                if (shadowAssembly.FullName.StartsWith(shadowDir.FullName, StringComparison.OrdinalIgnoreCase))
+                if (shadowAssembly.FullName.StartsWith(shadowDirFullName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var relativePath = shadowAssembly.FullName.Substring(shadowDir.FullName.Length);
+                    var relativePath = shadowAssembly.FullName.Substring(shadowDirFullName.Length);
                     //the file path from the original directory is the one we care about
                     var originalAssembly = new FileInfo(Path.Combine(originalDir, relativePath));
 

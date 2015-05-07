@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.IO;
@@ -26,14 +28,17 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly ILog log;
 
-        private readonly IProcessInvoker byTestRunner;
+        private readonly IProcessInvoker invoker;
+
+        private readonly ISubjectTestMappingParser mappingParser;
 
         private FileInfo ncoverExe;
 
-        public OpenCoverRunner(ILog log, IProcessInvoker byTestRunner)
+        public OpenCoverRunner(ILog log, IProcessInvoker invoker, ISubjectTestMappingParser mappingParser)
         {
             this.log = log;
-            this.byTestRunner = byTestRunner;
+            this.invoker = invoker;
+            this.mappingParser = mappingParser;
         }
 
         public bool IsReady(out string unavailableMessage)
@@ -114,8 +119,27 @@ namespace Splinter.CoverageRunner.OpenCover
 
         public IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(TestsToRun testsToRun)
         {
-            var r = this.byTestRunner.RunTestsAndMapMethods(this.ncoverExe, testsToRun);
-            return r;
+            //invoke tests and parse results
+            var partialCoverages = testsToRun.TestBinaries
+                .AsParallel()
+                .Select(testBinary =>
+                    {
+                        string shadowDir;
+                        var doc = this.invoker.RunTestsAndGetOutput(this.ncoverExe, testsToRun.TestRunner, testBinary, out shadowDir);
+                        return this.mappingParser.ParseMapping(testBinary, doc, shadowDir);
+                    });
+
+            //one subject method can be tested by tests from several assemblies, so here we merge the lists.
+            var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<MethodRef>>();
+
+            partialCoverages.SelectMany(i => i)
+                .ForAll(subject =>
+                    dict.AddOrUpdate(
+                        subject.Method,
+                        subject.TestMethods,
+                        (_, existing) => existing.Union(subject.TestMethods)));
+
+            return dict.Select(kvp => new TestSubjectMethodRef(kvp.Key, kvp.Value)).ToArray();
         }
 
         ///// <summary>

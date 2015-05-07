@@ -11,8 +11,6 @@ using Microsoft.Practices.Unity;
 
 using log4net;
 
-using NinjaTurtles;
-
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 

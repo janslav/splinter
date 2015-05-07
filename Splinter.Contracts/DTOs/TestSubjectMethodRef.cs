@@ -9,22 +9,22 @@ using System.Threading.Tasks;
 namespace Splinter.Contracts.DTOs
 {
     [DebuggerDisplay("TestSubjectMethod {Method.FullName} Tests: {TestMethods.Count}")]
-    public class TestSubjectMethod
+    public class TestSubjectMethodRef
     {
-        public TestSubjectMethod(Method method, IImmutableSet<Method> testMethods)
+        public TestSubjectMethodRef(MethodRef method, IImmutableSet<MethodRef> testMethods)
         {
             this.Method = method;
             this.TestMethods = testMethods;
         }
 
-        public TestSubjectMethod(Method method, IEnumerable<Method> testMethods)
+        public TestSubjectMethodRef(MethodRef method, IEnumerable<MethodRef> testMethods)
         {
             this.Method = method;
             this.TestMethods = ImmutableHashSet.CreateRange(testMethods);
         }
 
-        public Method Method { get; private set; }
+        public MethodRef Method { get; private set; }
 
-        public IImmutableSet<Method> TestMethods { get; private set; }
+        public IImmutableSet<MethodRef> TestMethods { get; private set; }
     }
 }

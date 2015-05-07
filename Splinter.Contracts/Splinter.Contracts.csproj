@@ -48,8 +48,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DTOs\Method.cs" />
-    <Compile Include="DTOs\TestSubjectMethod.cs" />
+    <Compile Include="DTOs\MethodRef.cs" />
+    <Compile Include="DTOs\TestSubjectMethodRef.cs" />
     <Compile Include="IPlugin.cs" />
     <Compile Include="IPluginFactory{T}.cs" />
     <Compile Include="ITestRunner.cs" />

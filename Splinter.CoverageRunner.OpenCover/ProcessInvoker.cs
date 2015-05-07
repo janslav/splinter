@@ -16,30 +16,28 @@ using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Utils;
 
-using SplinterMethod = Splinter.Contracts.DTOs.Method;
-
 namespace Splinter.CoverageRunner.OpenCover
 {
-    public interface ISubjectTestMappingRunner
+    public interface IProcessInvoker
     {
         /// <summary>
         /// Implementation of ICoverageRunner.GetInitialCoverage
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethod> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun);
+        IReadOnlyCollection<TestSubjectMethodRef> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun);
     }
 
-    public class SubjectTestMappingRunner : ISubjectTestMappingRunner
+    public class ProcessInvoker : IProcessInvoker
     {
-        const string outputFileName = "opencover.results.xml";
+        public const string outputFileName = "opencover.results.xml";
 
         private readonly ILog log;
 
-        public SubjectTestMappingRunner(ILog log)
+        public ProcessInvoker(ILog log)
         {
             this.log = log;
         }
 
-        public IReadOnlyCollection<TestSubjectMethod> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun)
+        public IReadOnlyCollection<TestSubjectMethodRef> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun)
         {
             var partialCoverages = testsToRun.TestBinaries
                 .AsParallel()
@@ -72,7 +70,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 });
 
             //one subject method can be tested by tests from several assemblies, so here we merge the lists.
-            var dict = new ConcurrentDictionary<SplinterMethod, IImmutableSet<SplinterMethod>>();
+            var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<MethodRef>>();
 
             partialCoverages.SelectMany(i => i)
                 .ForAll(subject =>
@@ -81,7 +79,7 @@ namespace Splinter.CoverageRunner.OpenCover
                         subject.TestMethods,
                         (_, existing) => existing.Union(subject.TestMethods)));
 
-            return dict.Select(kvp => new TestSubjectMethod(kvp.Key, kvp.Value)).ToArray();
+            return dict.Select(kvp => new TestSubjectMethodRef(kvp.Key, kvp.Value)).ToArray();
         }
 
         private void RunOpenCoverProcess(string runnerName, ProcessStartInfo openCoverProcessInfo)
@@ -125,88 +123,6 @@ namespace Splinter.CoverageRunner.OpenCover
                 //RedirectStandardError = true
             };
             return openCoverProcessInfo;
-        }
-
-        private IReadOnlyCollection<TestSubjectMethod> ExtractMapping(FileInfo testBinary, DirectoryInfo shadowDir)
-        {
-            var resultsXmlFile = new FileInfo(Path.Combine(shadowDir.FullName, outputFileName));
-
-            var resultsXml = XDocument.Load(resultsXmlFile.FullName);
-            var session = resultsXml.Root;
-
-            var testBinaryHash = this.HashFile(testBinary);
-
-            var originalDir = testBinary.DirectoryName;
-
-            var results = new List<TestSubjectMethod>();
-
-
-            var testMethods = new Dictionary<uint, SplinterMethod>();
-
-            var testModule = session.Element("Modules").Elements("Module")
-                .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
-
-            foreach (var trackedMethodEl in testModule.Element("TrackedMethods").Elements("TrackedMethod"))
-            {
-                var method = new SplinterMethod(testBinary, trackedMethodEl.Attribute("name").Value);
-
-                testMethods.Add((uint) trackedMethodEl.Attribute("uid"), method);
-            }
-
-            foreach (var moduleEl in session.Element("Modules").Elements("Module"))
-            {
-                var shadowAssembly = new FileInfo(moduleEl.Element("FullName").Value);
-                if (shadowAssembly.FullName.StartsWith(shadowDir.FullName, StringComparison.OrdinalIgnoreCase))
-                {
-                    var relativePath = shadowAssembly.FullName.Substring(shadowDir.FullName.Length);
-                    //the file path from the original directory is the one we care about
-                    var originalAssembly = new FileInfo(Path.Combine(originalDir, relativePath));
-
-                    foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
-                    {
-                        foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
-                        {
-                            var list = new HashSet<SplinterMethod>();
-
-                            foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
-                            {
-                                SplinterMethod testMethod;
-                                if (testMethods.TryGetValue((uint) trackedMethodRefEl.Attribute("uid"), out testMethod))
-                                {
-                                    list.Add(testMethod);
-                                }
-                            }
-
-                            if (list.Count > 0)
-                            {
-                                var subjectMethod = new SplinterMethod(originalAssembly, metodEl.Element("Name").Value);
-                                var subject = new TestSubjectMethod(subjectMethod, list);
-                                results.Add(subject);
-                            }
-                        }
-                    }
-                }
-            }
-
-            return results;
-        }
-
-        private byte[] HashFile(FileInfo file)
-        {
-            using (var sr = file.OpenRead())
-            {
-                using (var prov = new SHA1CryptoServiceProvider())
-                {
-                    return prov.ComputeHash(sr);
-                }
-            }
-        }
-
-        private byte[] HashFromString(string dashDelimitedHexNumbers)
-        {
-            return dashDelimitedHexNumbers.Split('-')
-                .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
-                .ToArray();
         }
     }
 }

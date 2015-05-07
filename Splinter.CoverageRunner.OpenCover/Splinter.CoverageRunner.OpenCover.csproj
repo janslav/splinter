@@ -97,7 +97,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SubjectTestMappingRunner.cs" />
+    <Compile Include="SubjectTestMappingParser.cs" />
+    <Compile Include="ProcessInvoker.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="OpenCoverRunnerFactory.cs" />
     <Compile Include="OpenCoverRunner.cs" />

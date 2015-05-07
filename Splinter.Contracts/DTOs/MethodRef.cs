@@ -9,9 +9,9 @@ using System.Diagnostics;
 namespace Splinter.Contracts.DTOs
 {
     [DebuggerDisplay("Method {FullName}")]
-    public class Method
+    public class MethodRef
     {
-        public Method(FileInfo assembly, string fullName)
+        public MethodRef(FileInfo assembly, string fullName)
         {
             this.Assembly = assembly;
             this.FullName = fullName;
@@ -29,12 +29,12 @@ namespace Splinter.Contracts.DTOs
                 return false;
             }
 
-            if (obj.GetType() != typeof(Method))
+            if (obj.GetType() != typeof(MethodRef))
             {
                 return false;
             }
 
-            var o = (Method)obj;
+            var o = (MethodRef)obj;
 
             return string.Equals(this.Assembly.FullName, o.Assembly.FullName, StringComparison.OrdinalIgnoreCase) &&
                  string.Equals(this.FullName, o.FullName);

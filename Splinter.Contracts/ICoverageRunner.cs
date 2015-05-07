@@ -18,6 +18,6 @@ namespace Splinter.Contracts
         /// </summary>
         /// <param name="testsToRun"></param>
         /// <returns></returns>
-        IReadOnlyCollection<TestSubjectMethod> GetInitialCoverage(TestsToRun testsToRun);
+        IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(TestsToRun testsToRun);
     }
 }

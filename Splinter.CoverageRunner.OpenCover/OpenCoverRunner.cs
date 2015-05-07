@@ -26,11 +26,11 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly ILog log;
 
-        private readonly ISubjectTestMappingRunner byTestRunner;
+        private readonly IProcessInvoker byTestRunner;
 
         private FileInfo ncoverExe;
 
-        public OpenCoverRunner(ILog log, ISubjectTestMappingRunner byTestRunner)
+        public OpenCoverRunner(ILog log, IProcessInvoker byTestRunner)
         {
             this.log = log;
             this.byTestRunner = byTestRunner;
@@ -112,7 +112,7 @@ namespace Splinter.CoverageRunner.OpenCover
             return Path.GetFullPath(path);
         }
 
-        public IReadOnlyCollection<TestSubjectMethod> GetInitialCoverage(TestsToRun testsToRun)
+        public IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(TestsToRun testsToRun)
         {
             var r = this.byTestRunner.RunTestsAndMapMethods(this.ncoverExe, testsToRun);
             return r;

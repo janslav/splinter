@@ -6,7 +6,9 @@ using System.IO;
 using System.Reflection;
 
 using Splinter.Contracts;
-using Splinter.Model;
+using Splinter.Phase0_Boot;
+using Splinter.Phase1_Discovery;
+using Splinter.Phase2_Mutation;
 
 using log4net;
 
@@ -25,11 +27,14 @@ namespace Splinter
 
         ITestsDiscoverer discoverer;
 
-        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer)
+        IMutationTestSession mutation;
+
+        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
+            this.mutation = mutation;
         }
 
         public void Start(ManualConfiguration cmdLine)
@@ -62,6 +67,13 @@ namespace Splinter
             this.log.Info("Covered subject code assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, subjectAssemblies));
             this.log.Info("Number of unique subject methods: " + testedMethods.Count);
             this.log.Info("Number of unique test methods: " + testMethodsCount);
+
+            testedMethods
+                .AsParallel()
+                .ForAll(subject =>
+                {
+                    this.mutation.Start(ttr.TestRunner, subject);
+                });
         }
 
         private ICoverageRunner PickCoverageRunner(ManualConfiguration cmdLine)
@@ -93,6 +105,7 @@ namespace Splinter
                 coverageRunner = coverageRunners.First();
                 this.log.Debug("Multiple coverage runners available and none picked manually, picking the first one.");
             }
+
             return coverageRunner;
         }
     }

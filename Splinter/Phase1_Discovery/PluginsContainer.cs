@@ -10,7 +10,7 @@ using log4net;
 
 using Splinter.Contracts;
 
-namespace Splinter
+namespace Splinter.Phase1_Discovery
 {
     public interface IPluginsContainer
     {

@@ -10,7 +10,9 @@ using Splinter.Contracts.DTOs;
 
 using log4net;
 
-namespace Splinter
+using Splinter.Phase0_Boot;
+
+namespace Splinter.Phase1_Discovery
 {
     /// <summary>
     /// Performs the discovery of test binaries that are to be run.

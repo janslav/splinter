@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using Microsoft.Practices.Unity;
 
+using Splinter.Phase0_Boot;
+
 namespace Splinter
 {
     class Program

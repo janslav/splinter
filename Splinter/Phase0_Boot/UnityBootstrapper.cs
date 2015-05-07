@@ -7,7 +7,7 @@ using System.Configuration;
 
 using Microsoft.Practices.Unity;
 
-namespace Splinter
+namespace Splinter.Phase0_Boot
 {
     public class UnityBootstrapper
     {

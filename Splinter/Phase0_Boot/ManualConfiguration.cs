@@ -5,7 +5,7 @@ using System.Text;
 
 using clipr;
 
-namespace Splinter
+namespace Splinter.Phase0_Boot
 {
     [ApplicationInfo(Description = "Splinter is a mutation analysis runner.")]
     public class ManualConfiguration

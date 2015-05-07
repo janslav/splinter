@@ -6,6 +6,8 @@ using clipr;
 using clipr.Core;
 using clipr.Usage;
 
+using Splinter.Phase0_Boot;
+
 namespace Splinter.Test
 {
     [TestClass]

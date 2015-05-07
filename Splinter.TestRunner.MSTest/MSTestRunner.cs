@@ -15,7 +15,6 @@ using Splinter.Utils;
 
 namespace Splinter.TestRunner.MSTest
 {
-    [Export(typeof(IPluginFactory<ITestRunner>))]
     public class MSTestRunner : ITestRunner, IPluginFactory<ITestRunner>
     {
         private log4net.ILog log;

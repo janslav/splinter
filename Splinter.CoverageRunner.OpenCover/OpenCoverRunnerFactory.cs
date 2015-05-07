@@ -16,7 +16,6 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
-    [Export(typeof(IPluginFactory<ICoverageRunner>))]
     public class OpenCoverRunnerFactory : IPluginFactory<ICoverageRunner>
     {
         public ICoverageRunner GetPlugin(ILog log)

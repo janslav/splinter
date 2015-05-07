@@ -21,11 +21,6 @@ namespace Splinter.CoverageRunner.OpenCover
     [Export(typeof(IPluginFactory<ICoverageRunner>))]
     public class OpenCoverRunnerFactory : IPluginFactory<ICoverageRunner>
     {
-        private const string OpenCoverRegKey = @"SOFTWARE\OpenCover\";
-        private const string OpenCoverRegKeyWow6432 = @"SOFTWARE\Wow6432Node\OpenCover\";
-        private const string OpenCoverRegValue = "Path";
-        private const string OpenCoverExeName = "OpenCover.Console.exe";
-
         public ICoverageRunner GetPlugin(ILog log)
         {
             var container = new UnityBootstrapper(log).CreateContainer();

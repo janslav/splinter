@@ -26,11 +26,11 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly ILog log;
 
-        private readonly IByTestMappingRunner byTestRunner;
+        private readonly ISubjectTestMappingRunner byTestRunner;
 
         private FileInfo ncoverExe;
 
-        public OpenCoverRunner(ILog log, IByTestMappingRunner byTestRunner)
+        public OpenCoverRunner(ILog log, ISubjectTestMappingRunner byTestRunner)
         {
             this.log = log;
             this.byTestRunner = byTestRunner;

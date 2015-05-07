@@ -84,9 +84,6 @@
       <HintPath>..\packages\NLog.2.0.0.2000\lib\net40\NLog.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="OpenCover.Framework">
-      <HintPath>..\..\..\..\..\AppData\Local\Apps\OpenCover\OpenCover.Framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable">
       <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.34\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
@@ -100,7 +97,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ByTestMappingRunner.cs" />
+    <Compile Include="SubjectTestMappingRunner.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="OpenCoverRunnerFactory.cs" />
     <Compile Include="OpenCoverRunner.cs" />

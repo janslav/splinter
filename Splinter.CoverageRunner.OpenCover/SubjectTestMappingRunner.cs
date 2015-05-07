@@ -6,13 +6,11 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
+using System.Xml.Linq;
 using System.Diagnostics;
 using System.Security.Cryptography;
 
 using log4net;
-
-using OpenCover.Framework;
-using OpenCover.Framework.Model;
 
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
@@ -22,7 +20,7 @@ using SplinterMethod = Splinter.Contracts.DTOs.Method;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
-    public interface IByTestMappingRunner
+    public interface ISubjectTestMappingRunner
     {
         /// <summary>
         /// Implementation of ICoverageRunner.GetInitialCoverage
@@ -30,13 +28,13 @@ namespace Splinter.CoverageRunner.OpenCover
         IReadOnlyCollection<TestSubjectMethod> RunTestsAndMapMethods(FileInfo openCoverExe, TestsToRun testsToRun);
     }
 
-    public class ByTestMappingRunner : IByTestMappingRunner
+    public class SubjectTestMappingRunner : ISubjectTestMappingRunner
     {
         const string outputFileName = "opencover.results.xml";
 
         private readonly ILog log;
 
-        public ByTestMappingRunner(ILog log)
+        public SubjectTestMappingRunner(ILog log)
         {
             this.log = log;
         }
@@ -133,9 +131,8 @@ namespace Splinter.CoverageRunner.OpenCover
         {
             var resultsXmlFile = new FileInfo(Path.Combine(shadowDir.FullName, outputFileName));
 
-            var serializer = new XmlSerializer(
-                typeof(CoverageSession),
-                new[] { typeof(Module), typeof(global::OpenCover.Framework.Model.File), typeof(Class) });
+            var resultsXml = XDocument.Load(resultsXmlFile.FullName);
+            var session = resultsXml.Root;
 
             var testBinaryHash = this.HashFile(testBinary);
 
@@ -143,54 +140,48 @@ namespace Splinter.CoverageRunner.OpenCover
 
             var results = new List<TestSubjectMethod>();
 
-            using (var fs = resultsXmlFile.OpenRead())
+
+            var testMethods = new Dictionary<uint, SplinterMethod>();
+
+            var testModule = session.Element("Modules").Elements("Module")
+                .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
+
+            foreach (var trackedMethodEl in testModule.Element("TrackedMethods").Elements("TrackedMethod"))
             {
-                using (var reader = new StreamReader(fs, new UTF8Encoding()))
+                var method = new SplinterMethod(testBinary, trackedMethodEl.Attribute("name").Value);
+
+                testMethods.Add((uint) trackedMethodEl.Attribute("uid"), method);
+            }
+
+            foreach (var moduleEl in session.Element("Modules").Elements("Module"))
+            {
+                var shadowAssembly = new FileInfo(moduleEl.Element("FullName").Value);
+                if (shadowAssembly.FullName.StartsWith(shadowDir.FullName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var session = (CoverageSession)serializer.Deserialize(reader);
+                    var relativePath = shadowAssembly.FullName.Substring(shadowDir.FullName.Length);
+                    //the file path from the original directory is the one we care about
+                    var originalAssembly = new FileInfo(Path.Combine(originalDir, relativePath));
 
-                    var testMethods = new Dictionary<uint, SplinterMethod>();
-
-                    var testModule = session.Modules.Single(m => testBinaryHash.SequenceEqual(HashFromString(m.ModuleHash)));
-
-                    foreach (var trackedMethod in testModule.TrackedMethods)
+                    foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
                     {
-                        var method = new SplinterMethod(testBinary, trackedMethod.Name);
-
-                        testMethods.Add(trackedMethod.UniqueId, method); //uid
-                    }
-
-                    foreach (var module in session.Modules)
-                    {
-                        var shadowAssembly = new FileInfo(module.FullName);
-                        if (shadowAssembly.FullName.StartsWith(shadowDir.FullName, StringComparison.OrdinalIgnoreCase))
+                        foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                         {
-                            var relativePath = shadowAssembly.FullName.Substring(shadowDir.FullName.Length);
-                            //the file path from the original directory is the one we care about
-                            var originalAssembly = new FileInfo(Path.Combine(originalDir, relativePath));
+                            var list = new HashSet<SplinterMethod>();
 
-                            foreach (var cl in module.Classes)
+                            foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
                             {
-                                foreach (var m in cl.Methods)
+                                SplinterMethod testMethod;
+                                if (testMethods.TryGetValue((uint) trackedMethodRefEl.Attribute("uid"), out testMethod))
                                 {
-                                    var list = new HashSet<SplinterMethod>();
-
-                                    foreach (var trackedMethodRef in m.MethodPoint.TrackedMethodRefs.EmptyIfNull())
-                                    {
-                                        SplinterMethod testMethod;
-                                        if (testMethods.TryGetValue(trackedMethodRef.UniqueId, out testMethod))
-                                        {
-                                            list.Add(testMethod);
-                                        }
-                                    }
-
-                                    if (list.Count > 0)
-                                    {
-                                        var subjectMethod = new SplinterMethod(originalAssembly, m.Name);
-                                        var subject = new TestSubjectMethod(subjectMethod, list);
-                                        results.Add(subject);
-                                    }
+                                    list.Add(testMethod);
                                 }
+                            }
+
+                            if (list.Count > 0)
+                            {
+                                var subjectMethod = new SplinterMethod(originalAssembly, metodEl.Element("Name").Value);
+                                var subject = new TestSubjectMethod(subjectMethod, list);
+                                results.Add(subject);
                             }
                         }
                     }

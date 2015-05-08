@@ -51,7 +51,7 @@ namespace Splinter
             }
 
             var modelDirectory = new DirectoryInfo(
-                string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
+                !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
 
             var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
             var coverageRunner = this.PickCoverageRunner(cmdLine);

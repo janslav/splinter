@@ -22,6 +22,8 @@
 using System;
 using System.IO;
 using System.Globalization;
+using System.Diagnostics;
+
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 using Splinter.Phase2_Mutation.NinjaTurtles;
@@ -33,6 +35,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles
     /// <summary>
     /// An immutable class containing metadata of a single mutation. Will be deleted on Dispose.
     /// </summary>
+    [DebuggerDisplay("MutantMetaData {Input.Subject.Method.FullName} {Description}")]
     public class MutantMetaData : IDisposable
     {
         public MutantMetaData(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int ilIndex, string description)

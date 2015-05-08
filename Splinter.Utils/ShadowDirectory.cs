@@ -30,8 +30,6 @@ namespace Splinter.Utils
     [DebuggerDisplay("ShadowDirectory {Source} -> {Shadow}")]
     public class ShadowDirectory : IDisposable
     {
-        private bool disposed;
-
         /// <summary>
         /// Creates a ShadowProcess instance.
         /// </summary>
@@ -57,21 +55,37 @@ namespace Splinter.Utils
 
             var relativePath = fileInSourceDir.FullName.Substring(this.Source.FullName.Length);
             //the file path from the original directory is the one we care about
-            var shadowed = new FileInfo(this.Source.FullName + relativePath);
+            var shadowed = new FileInfo(this.Shadow.FullName + relativePath);
 
             return shadowed;
         }
 
         public void Dispose()
         {
-            if (this.disposed)
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~ShadowDirectory()
+        {
+            this.Dispose(false);
+        }
+
+        private void Dispose(bool disposing)
+        {
+            try
             {
-                return;
+                var s = this.Shadow;
+                if (s != null)
+                {
+                    s.Delete(true);
+                    this.Shadow = null;
+                }
             }
-
-            this.disposed = true;
-
-            this.Shadow.Delete(true);
+            catch
+            {
+                //do we care really?
+            }
         }
 
         //stolen from https://msdn.microsoft.com/en-us/library/bb762914%28v=vs.110%29.aspx

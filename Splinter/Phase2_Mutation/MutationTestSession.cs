@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Text;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
@@ -80,7 +82,35 @@ namespace Splinter.Phase2_Mutation
 
         public MutationTestSessionResult Run(MutationTestSessionInput input)
         {
-            var subjectMethod = this.GetMethodDef(input.Subject.Method);
+            var mutations = this.allTurtles.SelectMany(t => t.TryCreateMutants(input)).ToArray();
+
+            var options = new ParallelOptions
+            {
+                MaxDegreeOfParallelism = Environment.ProcessorCount * 4,
+            };
+
+            try
+            {
+                var state = Parallel.ForEach(mutations,
+                    mutation =>
+                    {
+                        using (mutation)
+                        {
+
+
+                        }
+                    });
+            }
+            finally
+            {
+                //a second 
+                foreach (var mutation in mutations)
+                {
+                    mutation.Dispose();
+                }
+            }
+            
+
 
             return null;
         }

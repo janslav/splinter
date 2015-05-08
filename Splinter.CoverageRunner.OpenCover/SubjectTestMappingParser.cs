@@ -64,7 +64,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 {
                     var relativePath = shadowAssembly.FullName.Substring(shadowDirFullName.Length);
                     //the file path from the original directory is the one we care about
-                    var originalAssembly = new FileInfo(Path.Combine(originalDir, relativePath));
+                    var originalAssembly = new FileInfo(originalDir + relativePath);
 
                     foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
                     {

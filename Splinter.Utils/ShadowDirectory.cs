@@ -27,7 +27,7 @@ namespace Splinter.Utils
     /// It then cleans up this directory on calling Dispose()
     /// </summary>
     /// </remarks>
-    [DebuggerDisplay("ShadowDirectory {Shadow}")]
+    [DebuggerDisplay("ShadowDirectory {Source} -> {Shadow}")]
     public class ShadowDirectory : IDisposable
     {
         private bool disposed;
@@ -35,14 +35,32 @@ namespace Splinter.Utils
         /// <summary>
         /// Creates a ShadowProcess instance.
         /// </summary>
-        public ShadowDirectory(DirectoryInfo copyFrom)
+        public ShadowDirectory(DirectoryInfo source)
         {
-            this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), Path.GetRandomFileName()));
+            this.Source = source;
 
-            DirectoryCopy(copyFrom, this.Shadow, true);
+            this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Splinter", Path.GetRandomFileName()));
+
+            DirectoryCopy(source, this.Shadow);
         }
 
+        public DirectoryInfo Source { get; private set; }
+
         public DirectoryInfo Shadow { get; private set; }
+
+        public FileInfo GetEquivalentShadowPath(FileInfo fileInSourceDir)
+        {
+            if (!fileInSourceDir.FullName.StartsWith(this.Source.FullName, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException("Provided file is not part of the source path.", "fileInSourceDir");
+            }
+
+            var relativePath = fileInSourceDir.FullName.Substring(this.Source.FullName.Length);
+            //the file path from the original directory is the one we care about
+            var shadowed = new FileInfo(this.Source.FullName + relativePath);
+
+            return shadowed;
+        }
 
         public void Dispose()
         {
@@ -57,11 +75,8 @@ namespace Splinter.Utils
         }
 
         //stolen from https://msdn.microsoft.com/en-us/library/bb762914%28v=vs.110%29.aspx
-        private static void DirectoryCopy(DirectoryInfo source, DirectoryInfo destination, bool copySubDirs)
+        private static void DirectoryCopy(DirectoryInfo source, DirectoryInfo destination)
         {
-            // Get the subdirectories for the specified directory.
-            DirectoryInfo[] dirs = source.GetDirectories();
-
             if (!source.Exists)
             {
                 throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + source);
@@ -74,21 +89,17 @@ namespace Splinter.Utils
             }
 
             // Get the files in the directory and copy them to the new location.
-            FileInfo[] files = source.GetFiles();
-            foreach (FileInfo file in files)
+            foreach (FileInfo file in source.GetFiles())
             {
                 string newFilePath = Path.Combine(destination.FullName, file.Name);
                 file.CopyTo(newFilePath, false);
             }
 
-            // If copying subdirectories, copy them and their contents to new location. 
-            if (copySubDirs)
+            // recursively copy subdirectories and their contents to new location. 
+            foreach (DirectoryInfo subdir in source.GetDirectories())
             {
-                foreach (DirectoryInfo subdir in dirs)
-                {
-                    string temppath = Path.Combine(destination.FullName, subdir.Name);
-                    DirectoryCopy(subdir, new DirectoryInfo(temppath), true);
-                }
+                string temppath = Path.Combine(destination.FullName, subdir.Name);
+                DirectoryCopy(subdir, new DirectoryInfo(temppath));
             }
         }
     }

@@ -16,7 +16,7 @@ namespace Splinter
 {
     public interface ISplinterSession
     {
-        void Start(ManualConfiguration cmdLine);
+        void Run(ManualConfiguration cmdLine);
     }
 
     public class SplinterSession : ISplinterSession
@@ -37,8 +37,9 @@ namespace Splinter
             this.mutation = mutation;
         }
 
-        public void Start(ManualConfiguration cmdLine)
+        public void Run(ManualConfiguration cmdLine)
         {
+            //Phase 0: configuration / plugins discovery
             if (!this.plugins.DiscoveredTestRunners.EmptyIfNull().Any())
             {
                 throw new Exception("No test runners available.");
@@ -50,14 +51,15 @@ namespace Splinter
             }
 
             var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
+            var coverageRunner = this.PickCoverageRunner(cmdLine);
+
+            this.log.Info("Coverage runner: " + coverageRunner.Name);
+
+            //Phase 1: find tests and run them to see who tests what
             var ttr = this.discoverer.DiscoverTestBinaries(cmdLine, testRunners);
 
             this.log.Info("Test runner: " + ttr.TestRunner.Name);
             this.log.Info("Test binaries: " + string.Join(", ", ttr.TestBinaries.Select(fi => fi.Name)));
-
-            var coverageRunner = this.PickCoverageRunner(cmdLine);
-
-            this.log.Info("Coverage runner: " + coverageRunner.Name);
 
             var testedMethods = coverageRunner.GetInitialCoverage(ttr);
 
@@ -68,11 +70,10 @@ namespace Splinter
             this.log.Info("Number of unique subject methods: " + testedMethods.Count);
             this.log.Info("Number of unique test methods: " + testMethodsCount);
 
-            testedMethods
-                .AsParallel()
-                .ForAll(subject =>
+            //Phase 2 - mutate away!
+            testedMethods.AsParallel().ForAll(subject =>
                 {
-                    this.mutation.Start(ttr.TestRunner, subject);
+                    this.mutation.Run(ttr.TestRunner, subject);
                 });
         }
 

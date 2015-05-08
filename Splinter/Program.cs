@@ -27,7 +27,7 @@ namespace Splinter
                 var cmdLine = clipr.CliParser.Parse<ManualConfiguration>(args); //new [] {"-h"}
 
                 var splinterSession = iocContainer.Resolve<ISplinterSession>();
-                splinterSession.Start(cmdLine);
+                splinterSession.Run(cmdLine);
             }
             catch (clipr.Core.ParserExit)
             {

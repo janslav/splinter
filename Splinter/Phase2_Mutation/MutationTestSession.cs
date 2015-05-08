@@ -16,14 +16,33 @@ using Mono.Cecil.Pdb;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 
-using NinjaTurtles;
-using NinjaTurtles.Turtles;
+using Splinter;
+using Splinter.Phase2_Mutation.NinjaTurtles;
+using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
 
 namespace Splinter.Phase2_Mutation
 {
     public interface IMutationTestSession
     {
-        void Start(ITestRunner testRunner, TestSubjectMethodRef subject);
+        MutationSessionResult Run(ITestRunner testRunner, TestSubjectMethodRef subject);
+    }
+
+    public class SingleMutationResult
+    {
+        IMethodTurtle mutation;
+
+        //mutation place
+
+        IReadOnlyCollection<MethodRef> passingTests;
+
+        IReadOnlyCollection<MethodRef> failingTests;
+    }
+
+    public class MutationSessionResult
+    {
+        TestSubjectMethodRef subjectRef;
+
+        IReadOnlyCollection<SingleMutationResult> mutationResults;
     }
 
     public class MutationTestSession : IMutationTestSession
@@ -33,9 +52,9 @@ namespace Splinter.Phase2_Mutation
         [ImportMany]
         private IEnumerable<IMethodTurtle> allTurtles = null; //assigning null to avoid compiler warning
 
-        private readonly ICodeCache codeCache;
+        private readonly IModuleCache codeCache;
 
-        public MutationTestSession(ILog log, ICodeCache codeCache)
+        public MutationTestSession(ILog log, IModuleCache codeCache)
         {
             this.log = log;
             this.codeCache = codeCache;
@@ -58,16 +77,17 @@ namespace Splinter.Phase2_Mutation
             compositionContainer.ComposeParts(this);
         }
 
-        public void Start(ITestRunner testRunner, TestSubjectMethodRef subjectRef)
+        public MutationSessionResult Run(ITestRunner testRunner, TestSubjectMethodRef subjectRef)
         {
-            var subjectMethod = this.GetMethodDefinition(subjectRef.Method);
+            var subjectMethod = this.GetMethodDef(subjectRef.Method);
+
+            return null;
         }
 
-        private MethodReference GetMethodDefinition(MethodRef method)
+        private MethodDefinition GetMethodDef(MethodRef method)
         {
             return this.codeCache.GetAssembly(method.Assembly).GetMethodByFullName(method.FullName);
         }
-
 
         //private void PopulateDefaultTurtles()
         //{

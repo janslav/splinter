@@ -38,12 +38,12 @@ namespace Splinter.Phase2_Mutation.DTOs
     [DebuggerDisplay("MutantMetaData {Input.Subject.Method.FullName} {Description}")]
     public class Mutation : IDisposable
     {
-        public Mutation(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int ilIndex, string description)
+        public Mutation(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int instructionIndex, string description)
         {
             this.Input = input;
             this.Mutant = mutant;
             this.Description = description;
-            this.ILIndex = ilIndex;
+            this.InstructionIndex = instructionIndex;
             this.TestDirectory = testDirectory;
         }
 
@@ -65,7 +65,7 @@ namespace Splinter.Phase2_Mutation.DTOs
         /// <summary>
         /// Gets the index into the mutated method of the modified instruction.
         /// </summary>
-        public int ILIndex { get; private set; }
+        public int InstructionIndex { get; private set; }
 
         /// <summary>
         /// Gets the directory to which the mutated method was saved.

@@ -10,6 +10,7 @@ using Splinter.Phase0_Boot;
 using Splinter.Phase1_Discovery;
 using Splinter.Phase2_Mutation;
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Phase3_Reporting;
 
 using log4net;
 
@@ -22,20 +23,23 @@ namespace Splinter
 
     public class SplinterSession : ISplinterSession
     {
-        ILog log;
+        private readonly ILog log;
 
-        IPluginsContainer plugins;
+        private readonly IPluginsContainer plugins;
 
-        ITestsDiscoverer discoverer;
+        private readonly ITestsDiscoverer discoverer;
 
-        IMutationTestSession mutation;
+        private readonly IMutationTestSession mutation;
 
-        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation)
+        private readonly IResultsLogger resultsLogger;
+
+        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation, IResultsLogger resultsLogger)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
             this.mutation = mutation;
+            this.resultsLogger = resultsLogger;
         }
 
         public void Run(ManualConfiguration cmdLine)
@@ -73,10 +77,13 @@ namespace Splinter
             this.log.Info("Number of unique test methods: " + testMethodsCount);
 
             //Phase 2 - mutate away!
-            testedMethods.AsParallel().ForAll(subject =>
-                {
-                    var r = this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject));
-                });
+            this.log.Info("Starting mutation runs");
+            var mutationResults = testedMethods.AsParallel().SelectMany(subject =>
+                this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject))).ToArray();
+            this.log.Info("Mutation runs finished.");
+
+            //Phase 3 - produce results
+            this.resultsLogger.LogResults(mutationResults);
         }
 
         private ICoverageRunner PickCoverageRunner(ManualConfiguration cmdLine)

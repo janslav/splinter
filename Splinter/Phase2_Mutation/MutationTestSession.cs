@@ -29,29 +29,7 @@ namespace Splinter.Phase2_Mutation
 {
     public interface IMutationTestSession
     {
-        MutationTestSessionResult Run(MutationTestSessionInput input);
-    }
-
-    public class SingleMutationResult
-    {
-        MethodRef Subject;
-
-        int IlIndex
-        
-        string Description;
-
-        //mutation place
-
-        IReadOnlyCollection<MethodRef> passingTests;
-
-        IReadOnlyCollection<MethodRef> failingTests;
-    }
-
-    public class MutationTestSessionResult
-    {
-        TestSubjectMethodRef subjectRef;
-
-        IReadOnlyCollection<SingleMutationResult> mutationResults;
+        IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input);
     }
 
     public class MutationTestSession : IMutationTestSession
@@ -86,26 +64,23 @@ namespace Splinter.Phase2_Mutation
             compositionContainer.ComposeParts(this);
         }
 
-        public MutationTestSessionResult Run(MutationTestSessionInput input)
+        public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input)
         {
             var mutations = this.allTurtles.SelectMany(t => t.TryCreateMutants(input)).ToArray();
 
-            var options = new ParallelOptions
-            {
-                MaxDegreeOfParallelism = Environment.ProcessorCount * 8,
-            };
-
             try
             {
-                var state = Parallel.ForEach(mutations,
-                    mutation =>
+                var results = mutations.AsParallel()
+                    .Select(mutation =>
                     {
+                        var failingTests = new List<MethodRef>();
+                        var passingTests = new List<MethodRef>();
+
                         using (mutation)
                         {
                             foreach (var test in mutation.Input.Subject.TestMethods)
                             {
                                 var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
-
                                 var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
 
                                 using (var p = Process.Start(processInfo))
@@ -119,16 +94,25 @@ namespace Splinter.Phase2_Mutation
 
                                     if (p.ExitCode == 0)
                                     {
-
+                                        passingTests.Add(test.Method);
                                     }
                                     else
                                     {
-
+                                        failingTests.Add(test.Method);
                                     }
                                 }
                             }
                         }
+
+                        return new SingleMutationTestResult(
+                            mutation.Input.Subject.Method,
+                            mutation.InstructionIndex,
+                            mutation.Description,
+                            passingTests,
+                            failingTests);
                     });
+
+                return results.ToArray();
             }
             finally
             {
@@ -138,8 +122,6 @@ namespace Splinter.Phase2_Mutation
                     mutation.Dispose();
                 }
             }
-
-            return null;
         }
 
         private MethodDefinition GetMethodDef(MethodRef method)

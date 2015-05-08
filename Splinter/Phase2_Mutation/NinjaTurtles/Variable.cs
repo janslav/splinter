@@ -33,8 +33,11 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles
         }
 
         public VariableType Type { get; set; }
+
         public int Index { get; set; }
+
         public string Name { get; set; }
+
         public object Operand { get; set; }
 
         public OpCode GetReadOpCode()

@@ -29,6 +29,7 @@ using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
 using Splinter.Utils;
+using Splinter.Phase2_Mutation.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
@@ -43,7 +44,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// of mutations, having first carried out the mutation in question and
         /// saved the modified assembly under test to disk.
         /// </summary>
-        IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input);
+        IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input);
 
         /// <summary>
         /// Gets a description of this turtle.
@@ -57,7 +58,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public abstract class MethodTurtleBase : IMethodTurtle
     {
-        public IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input)
+        public IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input)
         {
 
             var ret = MutateMethod(input);
@@ -120,7 +121,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         //    return ret;
         //}
 
-        private IEnumerable<MutantMetaData> MutateMethod(MutationTestSessionInput input)
+        private IEnumerable<Mutation> MutateMethod(MutationTestSessionInput input)
         {
             var methodName = input.Subject.Method.FullName;
             var assemblyToMutate = AssemblyDefinition.ReadAssembly(input.Subject.Method.Assembly.FullName);
@@ -151,45 +152,20 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// </summary>
         /// <remarks>
         /// Implementing classes should yield the result obtained by calling
-        /// the <see mref="DoYield" /> method.
+        /// the <see mref="SaveMutantToDisk" /> method.
         /// </remarks>
-        /// <param name="method">
-        ///     A <see cref="MethodDefinition" /> for the method on which mutation
-        ///     testing is to be carried out.
-        /// </param>
-        /// <param name="module">
-        ///     A <see cref="MutatedAssembly" /> representing the main module of the
-        ///     containing assembly.
-        /// </param>
-        /// <param name="originalOffsets"></param>
-        /// <returns>
-        /// An <see cref="IEnumerable{T}" /> of
-        /// <see cref="MutantMetaData" /> structures.
-        /// </returns>
-        protected abstract IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyToMutate, MethodDefinition method, int[] originalOffsets);
+        protected abstract IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyToMutate, MethodDefinition method, int[] originalOffsets);
 
         /// <summary>
         /// A helper method that copies the test folder, and saves the mutated
         /// assembly under test into it before returning an instance of
-        /// <see cref="MutantMetaData" />.
+        /// <see cref="Mutation" />.
         /// </summary>
-        /// <param name="method">
-        /// A <see cref="MethodDefinition" /> for the method on which mutation
-        /// testing is to be carried out.
-        /// </param>
-        /// <param name="module">
-        /// A <see cref="MutatedAssembly" /> representing the main module of the
-        /// containing assembly.
-        /// </param>
-        /// <param name="description">
-        /// A description of the mutation that has been applied.
-        /// </param>
         /// <param name="index">
         /// The index of the (first) IL instruction at which the mutation was
         /// applied.
         /// </param>
-        /// <returns></returns>
-        protected MutantMetaData SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
+        protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
         {
             var shadow = new ShadowDirectory(input.ModelDirectory);
 
@@ -197,7 +173,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
             mutant.Write(shadowedPath.FullName);
 
-            return new MutantMetaData(input, shadow, shadowedPath, index, description);
+            return new Mutation(input, shadow, shadowedPath, index, description);
         }
     }
 }

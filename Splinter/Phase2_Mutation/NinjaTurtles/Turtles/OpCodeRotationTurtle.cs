@@ -25,6 +25,8 @@ using System.IO;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
+using Splinter.Phase2_Mutation.DTOs;
+
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
     /// <summary>
@@ -50,24 +52,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Performs the actual code mutations, returning each with
         /// <c>yield</c> for the calling code to use.
         /// </summary>
-        /// <remarks>
-        /// Implementing classes should yield the result obtained by calling
-        /// the <see mref="DoYield" /> method.
-        /// </remarks>
-        /// <param name="method">
-        ///     A <see cref="MethodDefinition" /> for the method on which mutation
-        ///     testing is to be carried out.
-        /// </param>
-        /// <param name="module">
-        ///     A <see cref="MutatedAssembly" /> representing the main module of the
-        ///     containing assembly.
-        /// </param>
-        /// <param name="originalOffsets"></param>
-        /// <returns>
-        /// An <see cref="IEnumerable{T}" /> of
-        /// <see cref="MutantMetaData" /> structures.
-        /// </returns>
-        protected override IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
+        protected override IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
         {
             for (int index = 0; index < method.Body.Instructions.Count; index++)
             {
@@ -82,7 +67,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                     {
                         instruction.OpCode = opCode;
                         var description = string.Format("{0:x4}: {1} => {2}", originalOffsets[index], originalOpCode.Code, opCode.Code);
-                        MutantMetaData mutation = this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
+                        Mutation mutation = this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
                         yield return mutation;
                     }
 

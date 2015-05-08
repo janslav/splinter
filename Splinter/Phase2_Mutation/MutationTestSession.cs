@@ -23,6 +23,7 @@ using Splinter.Utils.Cecil;
 using Splinter;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
+using Splinter.Phase2_Mutation.DTOs;
 
 namespace Splinter.Phase2_Mutation
 {
@@ -33,7 +34,11 @@ namespace Splinter.Phase2_Mutation
 
     public class SingleMutationResult
     {
-        IMethodTurtle mutation;
+        MethodRef Subject;
+
+        int IlIndex
+        
+        string Description;
 
         //mutation place
 
@@ -121,7 +126,6 @@ namespace Splinter.Phase2_Mutation
 
                                     }
                                 }
-
                             }
                         }
                     });

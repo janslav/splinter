@@ -92,7 +92,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Phase2_Mutation\MutationTestSessionInput.cs" />
+    <Compile Include="Phase2_Mutation\DTOs\MutationTestSessionInput.cs" />
     <Compile Include="Phase2_Mutation\MutationTestSession.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="Phase1_Discovery\TestsDiscoverer.cs" />
@@ -100,8 +100,7 @@
     <Compile Include="Phase1_Discovery\PluginsContainer.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\InstructionExtensions.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Methods.cs" />
-    <Compile Include="Phase2_Mutation\NinjaTurtles\MutatedAssembly.cs" />
-    <Compile Include="Phase2_Mutation\NinjaTurtles\MutantMetaData.cs" />
+    <Compile Include="Phase2_Mutation\DTOs\Mutation.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SplinterSession.cs" />
@@ -111,7 +110,6 @@
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\BranchConditionTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\ConditionalBoundaryTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\MethodTurtleBase.cs" />
-    <Compile Include="Phase2_Mutation\NinjaTurtles\MutantExtensions.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\OpCodeRotationTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\SequencePointDeletionTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Variable.cs" />

@@ -30,15 +30,15 @@ using Splinter.Phase2_Mutation.NinjaTurtles;
 
 using Splinter.Utils;
 
-namespace Splinter.Phase2_Mutation.NinjaTurtles
+namespace Splinter.Phase2_Mutation.DTOs
 {
     /// <summary>
-    /// An immutable class containing metadata of a single mutation. Will be deleted on Dispose.
+    /// An immutable class containing metadata of a single mutation. Directory will be deleted on Dispose.
     /// </summary>
     [DebuggerDisplay("MutantMetaData {Input.Subject.Method.FullName} {Description}")]
-    public class MutantMetaData : IDisposable
+    public class Mutation : IDisposable
     {
-        public MutantMetaData(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int ilIndex, string description)
+        public Mutation(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int ilIndex, string description)
         {
             this.Input = input;
             this.Mutant = mutant;
@@ -71,26 +71,6 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles
         /// Gets the directory to which the mutated method was saved.
         /// </summary>
         public ShadowDirectory TestDirectory { get; private set; }
-
-        //internal string GetOriginalSourceCode(int index)
-        //{
-        //    var sequencePoint = MethodDefinition.GetCurrentSequencePoint(index);
-        //    string result = "";
-        //    if (!Module.SourceFiles.ContainsKey(sequencePoint.Document.Url))
-        //    {
-        //        return "";
-        //    }
-        //    string[] sourceCode = Module.SourceFiles[sequencePoint.Document.Url];
-        //    int upperBound = Math.Min(sequencePoint.EndLine + 2, sourceCode.Length);
-        //    for (int line = Math.Max(sequencePoint.StartLine - 2, 1); line <= upperBound; line++)
-        //    {
-        //        string sourceLine = sourceCode[line - 1].Replace("\t", "    ");
-        //        result += line.ToString(CultureInfo.InvariantCulture)
-        //            .PadLeft(4, ' ') + ": " + sourceLine.TrimEnd(' ', '\t');
-        //        if (line < upperBound) result += Environment.NewLine;
-        //    }
-        //    return result;
-        //}
 
         public void Dispose()
         {

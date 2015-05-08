@@ -9,6 +9,7 @@ using Splinter.Contracts;
 using Splinter.Phase0_Boot;
 using Splinter.Phase1_Discovery;
 using Splinter.Phase2_Mutation;
+using Splinter.Phase2_Mutation.DTOs;
 
 using log4net;
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Splinter.Contracts.DTOs
 {
-    [DebuggerDisplay("TestMethodRef {Method.FullName} Runner: {testRunner.Name}")]
+    [DebuggerDisplay("TestMethodRef {Method.FullName} Runner: {Runner.Name}")]
     public class TestMethodRef
     {
         public TestMethodRef(MethodRef method, ITestRunner testRunner)

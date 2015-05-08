@@ -23,7 +23,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Parses the subject-test mapping from opencover results.xml
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(FileInfo testBinary, XDocument resultsXml, string shadowDirFullName);
+        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, XDocument resultsXml, string shadowDirFullName);
     }
 
     public class SubjectTestMappingParser : ISubjectTestMappingParser
@@ -35,7 +35,7 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(FileInfo testBinary, XDocument resultsXml, string shadowDirFullName)
+        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, XDocument resultsXml, string shadowDirFullName)
         {
             var session = resultsXml.Root;
 
@@ -45,7 +45,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
             var results = new List<TestSubjectMethodRef>();
 
-            var testMethods = new Dictionary<uint, MethodRef>();
+            var testMethods = new Dictionary<uint, TestMethodRef>();
 
             var testModule = session.Element("Modules").Elements("Module")
                 .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
@@ -54,7 +54,7 @@ namespace Splinter.CoverageRunner.OpenCover
             {
                 var method = new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value);
 
-                testMethods.Add((uint) trackedMethodEl.Attribute("uid"), method);
+                testMethods.Add((uint) trackedMethodEl.Attribute("uid"), new TestMethodRef(method, testRunner));
             }
 
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))
@@ -70,11 +70,11 @@ namespace Splinter.CoverageRunner.OpenCover
                     {
                         foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                         {
-                            var list = new HashSet<MethodRef>();
+                            var list = new HashSet<TestMethodRef>();
 
                             foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
                             {
-                                MethodRef testMethod;
+                                TestMethodRef testMethod;
                                 if (testMethods.TryGetValue((uint) trackedMethodRefEl.Attribute("uid"), out testMethod))
                                 {
                                     list.Add(testMethod);

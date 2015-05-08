@@ -50,18 +50,19 @@ namespace Splinter
                 throw new Exception("No coverage runners available.");
             }
 
+            var modelDirectory = new DirectoryInfo(
+                string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
+
             var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
             var coverageRunner = this.PickCoverageRunner(cmdLine);
 
             this.log.Info("Coverage runner: " + coverageRunner.Name);
 
             //Phase 1: find tests and run them to see who tests what
-            var ttr = this.discoverer.DiscoverTestBinaries(cmdLine, testRunners);
+            var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
+            this.log.Info("Test binaries: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name)));
 
-            this.log.Info("Test runner: " + ttr.TestRunner.Name);
-            this.log.Info("Test binaries: " + string.Join(", ", ttr.TestBinaries.Select(fi => fi.Name)));
-
-            var testedMethods = coverageRunner.GetInitialCoverage(ttr);
+            var testedMethods = coverageRunner.GetInitialCoverage(modelDirectory, testBinaries);
 
             var subjectAssemblies = testedMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
             var testMethodsCount = testedMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
@@ -73,9 +74,7 @@ namespace Splinter
             //Phase 2 - mutate away!
             testedMethods.AsParallel().ForAll(subject =>
                 {
-                    var modelDirectory = subject.Method.Assembly.Directory;
-
-                    var r = this.mutation.Run(new MutationTestSessionInput(modelDirectory, ttr.TestRunner, subject));
+                    var r = this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject));
                 });
         }
 

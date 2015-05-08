@@ -23,7 +23,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Implementation of ICoverageRunner.GetInitialCoverage
         /// </summary>
-        XDocument RunTestsAndGetOutput(FileInfo openCoverExe, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName);
+        XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName);
     }
 
     public class ProcessInvoker : IProcessInvoker
@@ -37,11 +37,11 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
-        public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName)
+        public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName)
         {
             var runnerName = testRunner.Name;
 
-            using (var sd = new ShadowDirectory(testBinary.Directory))
+            using (var sd = new ShadowDirectory(modelDirectory))
             {
                 try
                 {

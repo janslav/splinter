@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\MethodRef.cs" />
+    <Compile Include="DTOs\TestMethodRef.cs" />
     <Compile Include="DTOs\TestSubjectMethodRef.cs" />
     <Compile Include="IPlugin.cs" />
     <Compile Include="IPluginFactory{T}.cs" />
@@ -58,7 +59,7 @@
     <Compile Include="ITestRunnerMetadata.cs" />
     <Compile Include="ICoverageRunnerMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="DTOs\TestsToRun.cs" />
+    <Compile Include="DTOs\TestBinary.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -11,13 +11,13 @@ namespace Splinter.Contracts.DTOs
     [DebuggerDisplay("TestSubjectMethod {Method.FullName} Tests: {TestMethods.Count}")]
     public class TestSubjectMethodRef
     {
-        public TestSubjectMethodRef(MethodRef method, IImmutableSet<MethodRef> testMethods)
+        public TestSubjectMethodRef(MethodRef method, IImmutableSet<TestMethodRef> testMethods)
         {
             this.Method = method;
             this.TestMethods = testMethods;
         }
 
-        public TestSubjectMethodRef(MethodRef method, IEnumerable<MethodRef> testMethods)
+        public TestSubjectMethodRef(MethodRef method, IEnumerable<TestMethodRef> testMethods)
         {
             this.Method = method;
             this.TestMethods = ImmutableHashSet.CreateRange(testMethods);
@@ -25,6 +25,6 @@ namespace Splinter.Contracts.DTOs
 
         public MethodRef Method { get; private set; }
 
-        public IImmutableSet<MethodRef> TestMethods { get; private set; }
+        public IImmutableSet<TestMethodRef> TestMethods { get; private set; }
     }
 }

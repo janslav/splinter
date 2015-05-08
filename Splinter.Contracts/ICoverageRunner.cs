@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,6 @@ namespace Splinter.Contracts
         /// </summary>
         /// <param name="testsToRun"></param>
         /// <returns></returns>
-        IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(TestsToRun testsToRun);
+        IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun);
     }
 }

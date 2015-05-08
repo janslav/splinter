@@ -22,6 +22,10 @@ namespace Splinter.Phase0_Boot
             Description = "The test coverage engine name, such as opencover.")]
         public string CoverageRunner { get; set; }
 
+        [NamedArgument("workingDirectory",
+            Description = "The directory containing the application being tested. Will be copied to temp locations with mutated code. When not specified, current dir is used.")]
+        public string WorkingDirectory { get; set; }
+
         //[PositionalArgument(0, MetaVar = "OUT",
         //    Description = "Output file.")]
         //public string OutputFile { get; set; }

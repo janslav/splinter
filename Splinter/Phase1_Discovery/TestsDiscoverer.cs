@@ -25,8 +25,8 @@ namespace Splinter.Phase1_Discovery
         /// </summary>
         /// <param name="cmdLine">Manual configuration via command line.</param>
         /// <param name="testRunners">Available test runners.</param>
-        /// <returns>The test runner implementation and the related tests</returns>
-        TestsToRun DiscoverTestBinaries(ManualConfiguration cmdLine, IReadOnlyCollection<ITestRunner> testRunners);
+        /// <returns>The test runner implementations and the related tests</returns>
+        IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners);
     }
 
     public class TestsDiscoverer : ITestsDiscoverer
@@ -38,7 +38,7 @@ namespace Splinter.Phase1_Discovery
             this.log = log;
         }
 
-        public TestsToRun DiscoverTestBinaries(ManualConfiguration cmdLine, IReadOnlyCollection<ITestRunner> testRunners)
+        public IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners)
         {
             var testBinariesByRunner = new Dictionary<string, List<FileInfo>>();
             ITestRunner selectedTestRunner = null;
@@ -88,7 +88,7 @@ namespace Splinter.Phase1_Discovery
                     allowedTestRunners = new[] { selectedTestRunner };
                 }
 
-                foreach (var fi in new DirectoryInfo(Environment.CurrentDirectory).EnumerateFiles("*.dll"))
+                foreach (var fi in modelDirectory.EnumerateFiles("*.dll"))
                 {
                     if (!PdbFileExists(fi))
                     {
@@ -115,19 +115,13 @@ namespace Splinter.Phase1_Discovery
                 {
                     throw new Exception("No test binaries found");
                 }
-                else if (testBinariesByRunner.Count > 1)
-                {
-                    var found = string.Join(Environment.NewLine, testBinariesByRunner.Select(p => p.Key + ": " + string.Join(", ", p.Value.Select(fi => fi.Name))));
+            }            
 
-                    throw new Exception("More than one type of testrunner-compatible test binaries found during autodiscovery, please specify the runner and/or the binaries explicitly: " + found);
-                }
+            var ttr = testBinariesByRunner.SelectMany(kvp => 
+                kvp.Value.Select( i =>
+                    new TestBinary(testRunners.Single(r => r.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase)), i)));
 
-                selectedTestRunner = testRunners.Single(r => r.Name.Equals(testBinariesByRunner.Keys.Single(), StringComparison.OrdinalIgnoreCase));
-            }
-
-            var ttr = new TestsToRun(selectedTestRunner, testBinariesByRunner.Values.Single());
-
-            return ttr;
+            return ttr.ToArray();
         }
 
         private static bool PdbFileExists(FileInfo assemblyFile)

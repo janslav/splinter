@@ -117,20 +117,20 @@ namespace Splinter.CoverageRunner.OpenCover
             return Path.GetFullPath(path);
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(TestsToRun testsToRun)
+        public IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun)
         {
             //invoke tests and parse results
-            var partialCoverages = testsToRun.TestBinaries
+            var partialCoverages = testsToRun
                 .AsParallel()
                 .Select(testBinary =>
                     {
                         string shadowDir;
-                        var doc = this.invoker.RunTestsAndGetOutput(this.ncoverExe, testsToRun.TestRunner, testBinary, out shadowDir);
-                        return this.mappingParser.ParseMapping(testBinary, doc, shadowDir);
+                        var doc = this.invoker.RunTestsAndGetOutput(this.ncoverExe, modelDirectory, testBinary.Runner, testBinary.Binary, out shadowDir);
+                        return this.mappingParser.ParseMapping(testBinary.Runner, testBinary.Binary, doc, shadowDir);
                     });
 
             //one subject method can be tested by tests from several assemblies, so here we merge the lists.
-            var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<MethodRef>>();
+            var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<TestMethodRef>>();
 
             partialCoverages.SelectMany(i => i)
                 .ForAll(subject =>

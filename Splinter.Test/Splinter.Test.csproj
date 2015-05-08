@@ -75,11 +75,6 @@
       <Name>Splinter</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="FluentAssert.License.txt" />
-    <Content Include="FluentAssert.Provenance.txt" />
-    <Content Include="FluentAssert.xml" />
-  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

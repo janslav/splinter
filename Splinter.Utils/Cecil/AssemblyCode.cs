@@ -69,6 +69,5 @@ namespace Splinter.Utils.Cecil
                     }
                 });
         }
-
     }
 }

@@ -50,7 +50,7 @@ namespace Splinter.Phase3_Reporting
             }
 
             //now we want to write out unkilled mutants - those with zero failed tests.
-            foreach (var result in results.Where(r => r.FailingTests.Count == 0))
+            foreach (var result in results.Where(r => r.FailingTests.Count == 0 && !string.IsNullOrWhiteSpace(r.Description)))
             {
                 this.log.InfoFormat(
                     "Missed mutation: method '{0}', mutation '{1}', instruction {2}.",

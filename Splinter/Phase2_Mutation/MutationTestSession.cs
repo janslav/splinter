@@ -66,7 +66,22 @@ namespace Splinter.Phase2_Mutation
 
         public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input)
         {
-            var mutations = this.allTurtles.SelectMany(t => t.TryCreateMutants(input)).ToArray();
+            var unmutableMethods = new List<SingleMutationTestResult>();
+
+            var mutations = this.allTurtles.SelectMany(t =>
+            {
+                var mutants = t.TryCreateMutants(input);
+                if (!mutants.Any())
+                {
+                    unmutableMethods.Add(new SingleMutationTestResult(
+                            input.Subject.Method,
+                            0,
+                            "",
+                            input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
+                            new MethodRef[0]));
+                }
+                return mutants;
+            }).ToArray();
 
             try
             {
@@ -112,7 +127,9 @@ namespace Splinter.Phase2_Mutation
                             failingTests);
                     });
 
-                return results.ToArray();
+                var list = results.ToList();
+                list.AddRange(unmutableMethods);
+                return list;
             }
             finally
             {

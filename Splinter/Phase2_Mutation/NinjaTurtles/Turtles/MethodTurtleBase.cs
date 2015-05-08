@@ -26,6 +26,9 @@ using System.IO;
 using System.Linq;
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Mdb;
+using Mono.Cecil.Pdb;
 using Mono.Cecil.Rocks;
 
 using Splinter.Utils;
@@ -125,6 +128,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         {
             var methodName = input.Subject.Method.FullName;
             var assemblyToMutate = AssemblyDefinition.ReadAssembly(input.Subject.Method.Assembly.FullName);
+            LoadDebugInformation(assemblyToMutate, input.Subject.Method.Assembly);
 
             var methodToMutate = assemblyToMutate.Modules.SelectMany(m => m.Types).SelectMany(t => t.Methods)
                 .Single(m => m.FullName.Equals(methodName));
@@ -174,6 +178,41 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             mutant.Write(shadowedPath.FullName);
 
             return new Mutation(input, shadow, shadowedPath, index, description);
+        }
+
+        public static void LoadDebugInformation(AssemblyDefinition assemblyDef, FileInfo location)
+        {
+            var reader = ResolveSymbolReader(assemblyDef, location);
+            if (reader == null) return;
+
+            assemblyDef.MainModule.ReadSymbols(reader);
+        }
+
+        private static ISymbolReader ResolveSymbolReader(AssemblyDefinition assemblyDef, FileInfo location)
+        {
+            string symbolLocation = null;
+            string pdbLocation = Path.ChangeExtension(location.FullName, "pdb");
+            string mdbLocation = location.FullName + ".mdb";
+            ISymbolReaderProvider provider = null;
+
+            if (File.Exists(pdbLocation))
+            {
+                symbolLocation = pdbLocation;
+                provider = new PdbReaderProvider();
+            }
+            else if (File.Exists(mdbLocation))
+            {
+                symbolLocation = location.FullName;
+                provider = new MdbReaderProvider();
+            }
+
+            if (provider == null)
+            {
+                return null;
+            }
+
+            var reader = provider.GetSymbolReader(assemblyDef.MainModule, symbolLocation);
+            return reader;
         }
     }
 }

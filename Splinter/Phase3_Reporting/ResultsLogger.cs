@@ -77,19 +77,21 @@ namespace Splinter.Phase3_Reporting
                 this.log.WarnFormat("Never failing test: {0}", useless.FullName);
             }
 
-            this.log.Info("= = = = = = = = = = = = = = = = = = = = = = = =  = = = = = = = =");
+            this.log.Info("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =");
 
             this.log.InfoFormat(
-                "Out of {0} mutants, {1} survived. That's {2:0.0}% 'coverage'.",
+                "Out of {0} mutants, {1} survived. That's {2:0.0}% 'coverage-coverage'.",
                 results.Count,
                 survivingMutants.Length,
                 100.0 - ((survivingMutants.Length * 100.0) / results.Count));
 
+            var uniqueTests = allPassing.Union(allFailing).Count();
+
             this.log.InfoFormat(
                 "Out of {0} tests, {1} didn't contribute to killing mutants. That's {2:0.0}% usefulness.",
-                testsCount,
+                uniqueTests,
                 neverFailing.Length,
-                100.0 - ((neverFailing.Length * 100.0) / testsCount));
+                100.0 - ((neverFailing.Length * 100.0) / uniqueTests));
         }
     }
 }

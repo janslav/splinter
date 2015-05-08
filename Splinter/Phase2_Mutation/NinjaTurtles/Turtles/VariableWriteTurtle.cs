@@ -68,12 +68,12 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                     int oldIndex = -1;
                     if (instruction.OpCode == OpCodes.Stloc)
                     {
-                        int variableIndex = ((VariableDefinition)instruction.Operand).Index;
+                        int variableIndex = ((VariableReference)instruction.Operand).Index;
                         oldIndex = variables.FindIndex(v => v.Type == VariableType.Local && v.Index == variableIndex);
                     }
                     if (instruction.OpCode == OpCodes.Stfld)
                     {
-                        string fieldName = ((FieldDefinition)instruction.Operand).Name;
+                        string fieldName = ((FieldReference)instruction.Operand).Name;
                         oldIndex = variables.FindIndex(v => v.Type == VariableType.Field && v.Name == fieldName);
                     }
 
@@ -148,7 +148,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             {
                 if (instruction.OpCode == OpCodes.Ldloc)
                 {
-                    var variableDefinition = (VariableDefinition)instruction.Operand;
+                    var variableDefinition = (VariableReference)instruction.Operand;
                     int index = variableDefinition.Index;
                     if (!variables.ContainsKey(variableDefinition.VariableType)) continue;
                     var variable =
@@ -161,7 +161,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                 }
                 if (instruction.OpCode == OpCodes.Ldfld)
                 {
-                    var fieldDefinition = (FieldDefinition)instruction.Operand;
+                    var fieldDefinition = (FieldReference)instruction.Operand;
                     string name = fieldDefinition.Name;
                     if (!variables.ContainsKey(fieldDefinition.FieldType)) continue;
                     var variable =

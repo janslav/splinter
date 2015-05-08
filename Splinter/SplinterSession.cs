@@ -77,7 +77,7 @@ namespace Splinter
             this.log.Info("Number of unique test methods: " + testMethodsCount);
 
             //Phase 2 - mutate away!
-            this.log.Info("Starting mutation runs");
+            this.log.Info("Starting mutation runs.");
             var mutationResults = testedMethods.AsParallel().SelectMany(subject =>
                 this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject))).ToArray();
             this.log.Info("Mutation runs finished.");

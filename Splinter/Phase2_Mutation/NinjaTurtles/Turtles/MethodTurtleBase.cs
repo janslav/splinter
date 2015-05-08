@@ -124,13 +124,30 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         //    return ret;
         //}
 
+        private IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)
+        {
+            if (t.NestedTypes.Count > 0)
+            {
+                var c = t.NestedTypes.ToList();
+                c.Add(t);
+                return c;
+            }
+            else
+            {
+                return new[] { t };
+            }
+        }
+
         private IEnumerable<Mutation> MutateMethod(MutationTestSessionInput input)
         {
             var methodName = input.Subject.Method.FullName;
             var assemblyToMutate = AssemblyDefinition.ReadAssembly(input.Subject.Method.Assembly.FullName);
             LoadDebugInformation(assemblyToMutate, input.Subject.Method.Assembly);
 
-            var methodToMutate = assemblyToMutate.Modules.SelectMany(m => m.Types).SelectMany(t => t.Methods)
+            var methodToMutate = assemblyToMutate.Modules
+                .SelectMany(m => m.Types)
+                .SelectMany(t => ListNestedTypesRecursively(t))
+                .SelectMany(t => t.Methods)
                 .Single(m => m.FullName.Equals(methodName));
 
             int[] originalOffsets = methodToMutate.Body.Instructions.Select(i => i.Offset).ToArray();

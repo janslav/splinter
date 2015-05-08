@@ -32,6 +32,10 @@ namespace Splinter.Phase3_Reporting
                 return;
             }
 
+            this.log.InfoFormat("Number of mutations: {0}", results.Count());
+            this.log.InfoFormat("Number of mutation tests run: {0}", results.Sum(r => r.FailingTests.Count + r.PassingTests.Count));
+
+
             if (0 == results.Sum(r => r.PassingTests.Count + r.FailingTests.Count))
             {
                 this.log.Warn("No mutation tests run. Something probably wet wrong.");
@@ -52,7 +56,7 @@ namespace Splinter.Phase3_Reporting
             //now we want to write out unkilled mutants - those with zero failed tests.
             foreach (var result in results.Where(r => r.FailingTests.Count == 0 && !string.IsNullOrWhiteSpace(r.Description)))
             {
-                this.log.InfoFormat(
+                this.log.WarnFormat(
                     "Missed mutation: method '{0}', mutation '{1}', instruction {2}.",
                     result.Subject.FullName,
                     result.Description,
@@ -66,7 +70,7 @@ namespace Splinter.Phase3_Reporting
             var neverFailing = allPassing.Except(allFailing);
             foreach (var useless in neverFailing)
             {
-                this.log.InfoFormat("Never failing test: {0}", useless.FullName);
+                this.log.WarnFormat("Never failing test: {0}", useless.FullName);
             }
         }
     }

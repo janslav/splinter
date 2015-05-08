@@ -70,8 +70,8 @@ namespace Splinter.Phase2_Mutation
 
             var mutations = this.allTurtles.SelectMany(t =>
             {
-                var mutants = t.TryCreateMutants(input);
-                if (!mutants.Any())
+                var mutants = t.TryCreateMutants(input).ToArray();
+                if (mutants.Length == 0)
                 {
                     unmutableMethods.Add(new SingleMutationTestResult(
                             input.Subject.Method,
@@ -98,6 +98,12 @@ namespace Splinter.Phase2_Mutation
                                 var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
                                 var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
 
+                                this.log.DebugFormat(
+                                    "Running test '{0}' for mutation '{1}' in method '{2}'.",
+                                    test.Method.FullName,
+                                    mutation.Description, 
+                                    mutation.Input.Subject.Method.FullName);
+
                                 using (var p = Process.Start(processInfo))
                                 {
                                     var runnerName = test.Runner.Name;
@@ -117,14 +123,14 @@ namespace Splinter.Phase2_Mutation
                                     }
                                 }
                             }
-                        }
 
-                        return new SingleMutationTestResult(
-                            mutation.Input.Subject.Method,
-                            mutation.InstructionIndex,
-                            mutation.Description,
-                            passingTests,
-                            failingTests);
+                            return new SingleMutationTestResult(
+                                mutation.Input.Subject.Method,
+                                mutation.InstructionIndex,
+                                mutation.Description,
+                                passingTests,
+                                failingTests);
+                        }
                     });
 
                 var list = results.ToList();

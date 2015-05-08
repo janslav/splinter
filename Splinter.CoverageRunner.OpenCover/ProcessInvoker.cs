@@ -90,7 +90,7 @@ namespace Splinter.CoverageRunner.OpenCover
         {
             var shadowTestBinary = Path.Combine(sd.Shadow.FullName, testBinary.Name);
 
-            var testRunnerProcessInfo = testRunner.GetProcessInfoToRunTests(new FileInfo(shadowTestBinary));
+            var testRunnerProcessInfo = testRunner.GetProcessInfoToRunTests(sd.Shadow, new FileInfo(shadowTestBinary));
 
             var staticArgs = "-register:user -returntargetcode -mergebyhash -output:" + outputFileName; // -log:All
             var target = string.Format("\"-target:{0}\"", CmdLine.EncodeArgument(testRunnerProcessInfo.FileName));

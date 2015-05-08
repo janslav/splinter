@@ -8,6 +8,7 @@ using System.Text;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Registration;
+using System.Diagnostics;
 
 using log4net;
 
@@ -18,7 +19,7 @@ using Mono.Cecil.Pdb;
 
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
-
+using Splinter.Utils.Cecil;
 using Splinter;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
@@ -86,7 +87,7 @@ namespace Splinter.Phase2_Mutation
 
             var options = new ParallelOptions
             {
-                MaxDegreeOfParallelism = Environment.ProcessorCount * 4,
+                MaxDegreeOfParallelism = Environment.ProcessorCount * 8,
             };
 
             try
@@ -96,21 +97,43 @@ namespace Splinter.Phase2_Mutation
                     {
                         using (mutation)
                         {
+                            foreach (var test in mutation.Input.Subject.TestMethods)
+                            {
+                                var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
 
+                                var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
 
+                                using (var p = Process.Start(processInfo))
+                                {
+                                    var runnerName = test.Runner.Name;
+
+                                    p.OutputDataReceived += (_, e) => this.log.Debug(runnerName + ": " + e.Data);
+                                    p.ErrorDataReceived += (_, e) => this.log.Warn(runnerName + ": " + e.Data);
+
+                                    p.WaitForExit();
+
+                                    if (p.ExitCode == 0)
+                                    {
+
+                                    }
+                                    else
+                                    {
+
+                                    }
+                                }
+
+                            }
                         }
                     });
             }
             finally
             {
-                //a second 
+                //a second failsafe. We really don't want to leave the copied directories around.
                 foreach (var mutation in mutations)
                 {
                     mutation.Dispose();
                 }
             }
-            
-
 
             return null;
         }

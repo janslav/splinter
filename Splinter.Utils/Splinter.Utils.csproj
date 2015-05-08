@@ -65,7 +65,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cecil\AssemblyCode.cs" />
     <Compile Include="CmdLine.cs" />
+    <Compile Include="Cecil\CodeCache.cs" />
     <Compile Include="FileSystemInfoComparer.cs" />
     <Compile Include="ShadowDirectory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -29,7 +29,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Mdb;
 using Mono.Cecil.Pdb;
 
-namespace Splinter.Phase2_Mutation
+namespace Splinter.Utils.Cecil
 {
     /// <summary>
     /// Class representing the main module of a .NET assembly.

@@ -10,8 +10,10 @@ using System.Diagnostics;
 
 using NinjaTurtles;
 
+using Splinter.Contracts.DTOs;
 using Splinter.Contracts;
 using Splinter.Utils;
+using Splinter.Utils.Cecil;
 
 namespace Splinter.TestRunner.MSTest
 {
@@ -135,7 +137,7 @@ namespace Splinter.TestRunner.MSTest
         //}
 
 
-        public ProcessStartInfo GetProcessInfoToRunTests(FileInfo testBinary)
+        public ProcessStartInfo GetProcessInfoToRunTests(DirectoryInfo workingDirectory, FileInfo testBinary)
         {
 
             //(TestDirectory testDirectory, string testAssemblyLocation, IEnumerable<string> testsToRun)
@@ -148,7 +150,29 @@ namespace Splinter.TestRunner.MSTest
 
             var r = new ProcessStartInfo(
                     this.msTestExe.FullName,
-                    string.Format("/noisolation /testcontainer:\"{0}\"", escapedTestBinary));
+                    string.Format("/noisolation /testcontainer:\"{0}\"", escapedTestBinary))
+                    {
+                        WorkingDirectory = workingDirectory.FullName
+                    };
+
+            return r;
+        }
+
+        public ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName)
+        {
+            var testMethodDef = CodeCache.Instance.GetAssembly(testBinary).GetMethodByFullName(methodFullName);
+
+            var escapedTestBinary = CmdLine.EncodeArgument(testBinary.FullName);
+
+            var escapedTestName = CmdLine.EncodeArgument(string.Join(".",
+                testMethodDef.DeclaringType.Namespace, testMethodDef.DeclaringType.Name, testMethodDef.Name));
+
+            var r = new ProcessStartInfo(
+                    this.msTestExe.FullName,
+                    string.Format("/noisolation /testcontainer:\"{0}\" /test:\"{1}\"", escapedTestBinary, escapedTestName))
+                    {
+                        WorkingDirectory = workingDirectory.FullName
+                    };
 
             return r;
         }

@@ -6,12 +6,16 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Diagnostics;
 
+using Splinter.Contracts.DTOs;
+
 namespace Splinter.Contracts
 {
     public interface ITestRunner : IPlugin
     {
         bool IsTestBinary(FileInfo binary);
 
-        ProcessStartInfo GetProcessInfoToRunTests(FileInfo testBinaries);
+        ProcessStartInfo GetProcessInfoToRunTests(DirectoryInfo workingDirectory, FileInfo testBinaries);
+
+        ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName);
     }
 }

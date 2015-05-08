@@ -7,9 +7,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Splinter.Utils;
-using Splinter.Phase2_Mutation.NinjaTurtles;
 
-namespace Splinter.Phase2_Mutation
+namespace Splinter.Utils.Cecil
 {
     public interface ICodeCache
     {
@@ -18,6 +17,8 @@ namespace Splinter.Phase2_Mutation
 
     public class CodeCache : ICodeCache
     {
+        public static CodeCache Instance = new CodeCache();
+
         private readonly ConcurrentDictionary<FileInfo, AssemblyCode> assemblies =
             new ConcurrentDictionary<FileInfo, AssemblyCode>(new FileSystemInfoComparer());
 

@@ -7,6 +7,8 @@ using System.Configuration;
 
 using Microsoft.Practices.Unity;
 
+using Splinter.Utils.Cecil;
+
 namespace Splinter.Phase0_Boot
 {
     public class UnityBootstrapper
@@ -21,6 +23,8 @@ namespace Splinter.Phase0_Boot
                 WithMappings.FromMatchingInterface,
                 WithName.Default,
                 WithLifetime.ContainerControlled);
+
+            container.RegisterInstance<ICodeCache>(CodeCache.Instance);
 
             BootstrapLogging(container);
 

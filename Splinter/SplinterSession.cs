@@ -73,7 +73,9 @@ namespace Splinter
             //Phase 2 - mutate away!
             testedMethods.AsParallel().ForAll(subject =>
                 {
-                    this.mutation.Run(ttr.TestRunner, subject);
+                    var modelDirectory = subject.Method.Assembly.Directory;
+
+                    var r = this.mutation.Run(new MutationTestSessionInput(modelDirectory, ttr.TestRunner, subject));
                 });
         }
 

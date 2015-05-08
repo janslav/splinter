@@ -33,42 +33,37 @@ using Splinter.Utils;
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
     /// <summary>
-    /// An abstract base class for implementations of
-    /// <see cref="IMethodTurtle" />.
+    /// An <b>interface</b> defining basic functionality for a turtle that
+    /// operates on the IL of a method body.
     /// </summary>
-    public abstract class MethodTurtleBase : IMethodTurtle
+    public interface IMethodTurtle
     {
-        internal void MutantComplete(MutantMetaData metaData)
-        {
-            metaData.TestDirectory.Dispose();
-        }
-
         /// <summary>
         /// Returns an <see cref="IEnumerable{T}" /> of detailed descriptions
         /// of mutations, having first carried out the mutation in question and
         /// saved the modified assembly under test to disk.
         /// </summary>
-        /// <param name="method">
-        /// A <see cref="MethodDefinition" /> for the method on which mutation
-        /// testing is to be carried out.
-        /// </param>
-        /// <param name="module">
-        /// A <see cref="Module" /> representing the main module of the
-        /// containing assembly.
-        /// </param>
-        /// <param name="originalOffsets">
-        /// An array of the original IL offsets before macros were expanded.
-        /// </param>
-        /// <returns>
-        /// An <see cref="IEnumerable{T}" /> of
-        /// <see cref="MutantMetaData" /> structures.
-        /// </returns>
-        public IEnumerable<MutantMetaData> Mutate(MethodDefinition method, Module module, int[] originalOffsets)
+        IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input);
+
+        /// <summary>
+        /// Gets a description of this turtle.
+        /// </summary>
+        string Description { get; }
+    }
+
+    /// <summary>
+    /// An abstract base class for implementations of
+    /// <see cref="IMethodTurtle" />.
+    /// </summary>
+    public abstract class MethodTurtleBase : IMethodTurtle
+    {
+        public IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input)
         {
-            var ret = MutateMethod(method, module, originalOffsets);
+
+            var ret = MutateMethod(input);
 
             //ret = ret.Concat(MutateEnumerableGenerators(method, module));
-            
+
             //ret = ret.Concat(MutateClosures(method, module));
 
             //ret = ret.Concat(MutateAnonymousDelegates(method, module));
@@ -76,64 +71,73 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             return ret;
         }
 
-        private IEnumerable<MutantMetaData> MutateEnumerableGenerators(MethodDefinition method, Module module)
+        //private IEnumerable<MutantMetaData> MutateEnumerableGenerators(MethodDefinition method, MutatedAssembly module)
+        //{
+        //    var nestedType =
+        //        method.DeclaringType.NestedTypes.FirstOrDefault(
+        //            t => t.Name.StartsWith(string.Format("<{0}>", method.Name))
+        //            && t.Interfaces.Any(i => i.Name == "IEnumerable`1"));
+        //    if (nestedType == null)
+        //        return Enumerable.Empty<MutantMetaData>();
+
+        //    var nestedMethod = nestedType.Methods.First(m => m.Name == "MoveNext");
+        //    var originalOffsets = nestedMethod.Body.Instructions.Select(i => i.Offset).ToArray();
+        //    return MutateMethod(nestedMethod, module, originalOffsets);
+        //}
+
+        //private IEnumerable<MutantMetaData> MutateClosures(MethodDefinition method, MutatedAssembly module)
+        //{
+        //    var ret = Enumerable.Empty<MutantMetaData>();
+
+        //    var nestedType =
+        //        method.DeclaringType.NestedTypes.FirstOrDefault(
+        //            t => t.Name.StartsWith("<>c__DisplayClass")
+        //                && t.Methods.Any(m => m.Name.StartsWith(string.Format("<{0}>", method.Name)))
+        //            );
+        //    if (nestedType == null)
+        //        return ret;
+
+        //    var closureMethods = nestedType.Methods.Where(m => m.Name.StartsWith(string.Format("<{0}>", method.Name)));
+        //    foreach (var closureMethod in closureMethods) { 
+        //        var originalOffsets = closureMethod.Body.Instructions.Select(i => i.Offset).ToArray();
+        //        ret = ret.Concat(MutateMethod(closureMethod, module, originalOffsets));
+        //    }
+
+        //    return ret;
+        //}
+
+        //private IEnumerable<MutantMetaData> MutateAnonymousDelegates(MethodDefinition method, MutatedAssembly module)
+        //{
+        //    var delegateMethods = method.DeclaringType.Methods.Where(m => m.Name.StartsWith(string.Format("<{0}>", method.Name)));
+
+        //    var ret = Enumerable.Empty<MutantMetaData>();
+        //    foreach (var delegateMethod in delegateMethods)
+        //    {
+        //        var originalOffsets = delegateMethod.Body.Instructions.Select(i => i.Offset).ToArray();
+        //        ret = ret.Concat(MutateMethod(delegateMethod, module, originalOffsets));
+        //    }
+
+        //    return ret;
+        //}
+
+        private IEnumerable<MutantMetaData> MutateMethod(MutationTestSessionInput input)
         {
-            var nestedType =
-                method.DeclaringType.NestedTypes.FirstOrDefault(
-                    t => t.Name.StartsWith(string.Format("<{0}>", method.Name))
-                    && t.Interfaces.Any(i => i.Name == "IEnumerable`1"));
-            if (nestedType == null)
-                return Enumerable.Empty<MutantMetaData>();
-            
-            var nestedMethod = nestedType.Methods.First(m => m.Name == "MoveNext");
-            var originalOffsets = nestedMethod.Body.Instructions.Select(i => i.Offset).ToArray();
-            return MutateMethod(nestedMethod, module, originalOffsets);
-        }
+            var methodName = input.Subject.Method.FullName;
+            var assemblyToMutate = AssemblyDefinition.ReadAssembly(input.Subject.Method.Assembly.FullName);
 
-        private IEnumerable<MutantMetaData> MutateClosures(MethodDefinition method, Module module)
-        {
-            var ret = Enumerable.Empty<MutantMetaData>();
+            var methodToMutate = assemblyToMutate.Modules.SelectMany(m => m.Types).SelectMany(t => t.Methods)
+                .Single(m => m.FullName.Equals(methodName));
 
-            var nestedType =
-                method.DeclaringType.NestedTypes.FirstOrDefault(
-                    t => t.Name.StartsWith("<>c__DisplayClass")
-                        && t.Methods.Any(m => m.Name.StartsWith(string.Format("<{0}>", method.Name)))
-                    );
-            if (nestedType == null)
-                return ret;
+            int[] originalOffsets = methodToMutate.Body.Instructions.Select(i => i.Offset).ToArray();
 
-            var closureMethods = nestedType.Methods.Where(m => m.Name.StartsWith(string.Format("<{0}>", method.Name)));
-            foreach (var closureMethod in closureMethods) { 
-                var originalOffsets = closureMethod.Body.Instructions.Select(i => i.Offset).ToArray();
-                ret = ret.Concat(MutateMethod(closureMethod, module, originalOffsets));
-            }
 
-            return ret;
-        }
-
-        private IEnumerable<MutantMetaData> MutateAnonymousDelegates(MethodDefinition method, Module module)
-        {
-            var delegateMethods = method.DeclaringType.Methods.Where(m => m.Name.StartsWith(string.Format("<{0}>", method.Name)));
-
-            var ret = Enumerable.Empty<MutantMetaData>();
-            foreach (var delegateMethod in delegateMethods)
-            {
-                var originalOffsets = delegateMethod.Body.Instructions.Select(i => i.Offset).ToArray();
-                ret = ret.Concat(MutateMethod(delegateMethod, module, originalOffsets));
-            }
-
-            return ret;
-        }
-
-        private IEnumerable<MutantMetaData> MutateMethod(MethodDefinition method, Module module, int[] originalOffsets)
-        {
-                //leave as a yield-return, so that we don't optimize macros again until we stop enumerating.
-            method.Body.SimplifyMacros();
-            foreach (var mutation in CreateMutant(method, module, originalOffsets))
+            //leave as a yield-return, so that we don't optimize macros again until we stop enumerating.
+            methodToMutate.Body.SimplifyMacros();
+            foreach (var mutation in this.TryCreateMutants(input, assemblyToMutate, methodToMutate, originalOffsets))
             {
                 yield return mutation;
             }
-            method.Body.OptimizeMacros();
+            methodToMutate.Body.OptimizeMacros();
         }
 
         /// <summary>
@@ -154,7 +158,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         ///     testing is to be carried out.
         /// </param>
         /// <param name="module">
-        ///     A <see cref="Module" /> representing the main module of the
+        ///     A <see cref="MutatedAssembly" /> representing the main module of the
         ///     containing assembly.
         /// </param>
         /// <param name="originalOffsets"></param>
@@ -162,7 +166,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// An <see cref="IEnumerable{T}" /> of
         /// <see cref="MutantMetaData" /> structures.
         /// </returns>
-        protected abstract IEnumerable<MutantMetaData> CreateMutant(MethodDefinition method, Module module, int[] originalOffsets);
+        protected abstract IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyToMutate, MethodDefinition method, int[] originalOffsets);
 
         /// <summary>
         /// A helper method that copies the test folder, and saves the mutated
@@ -174,7 +178,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// testing is to be carried out.
         /// </param>
         /// <param name="module">
-        /// A <see cref="Module" /> representing the main module of the
+        /// A <see cref="MutatedAssembly" /> representing the main module of the
         /// containing assembly.
         /// </param>
         /// <param name="description">
@@ -185,30 +189,15 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// applied.
         /// </param>
         /// <returns></returns>
-        protected MutantMetaData DoYield(MethodDefinition method, Module module, string description, int index)
+        protected MutantMetaData SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
         {
-            var testDirectory = new ShadowDirectory(module.AssemblyLocation.Directory);
+            var shadow = new ShadowDirectory(input.ModelDirectory);
 
-            SaveAssembly(testDirectory, module);
+            var shadowedPath = shadow.GetEquivalentShadowPath(input.Subject.Method.Assembly);
 
-            return new MutantMetaData(
-                module,
-                description,
-                method,
-                index,
-                testDirectory
-            );
-        }
+            mutant.Write(shadowedPath.FullName);
 
-        /// <summary>
-        /// Saves an image of a mutated assembly into the test        /// directory.
-        /// </summary>
-        /// <param name="module"></param>
-        private static void SaveAssembly(ShadowDirectory directory, Module module)
-        {
-            var shadowedPath = directory.GetEquivalentShadowPath(module.AssemblyLocation);
-
-            module.AssemblyDefinition.Write(shadowedPath.FullName);
+            return new MutantMetaData(input, shadow, shadowedPath, index, description);
         }
     }
 }

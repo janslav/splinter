@@ -20,6 +20,7 @@
 #endregion
 
 using System;
+using System.IO;
 using System.Globalization;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
@@ -30,17 +31,17 @@ using Splinter.Utils;
 namespace Splinter.Phase2_Mutation.NinjaTurtles
 {
     /// <summary>
-    /// An immutable class containing metadata for a mutation test.
+    /// An immutable class containing metadata of a single mutation. Will be deleted on Dispose.
     /// </summary>
-    public class MutantMetaData
+    public class MutantMetaData : IDisposable
     {
-        public MutantMetaData(Module module, string description, MethodDefinition methodDefinition, int ilIndex, ShadowDirectory testDirectory)
+        public MutantMetaData(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int ilIndex, string description)
         {
-            Module = module;
-            Description = description;
-            MethodDefinition = methodDefinition;
-            ILIndex = ilIndex;
-            TestDirectory = testDirectory;
+            this.Input = input;
+            this.Mutant = mutant;
+            this.Description = description;
+            this.ILIndex = ilIndex;
+            this.TestDirectory = testDirectory;
         }
 
         /// <summary>
@@ -49,14 +50,14 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles
         public string Description { get; private set; }
 
         /// <summary>
-        /// Gets the Module containing the mutated method.
+        /// Gets the location of the assembly containing the model method.
         /// </summary>
-        public Module Module { get; private set; }
+        public MutationTestSessionInput Input { get; private set; }
 
         /// <summary>
-        /// Gets the mutated method.
+        /// Gets the location of the assembly containing the mutated method.
         /// </summary>
-        public MethodDefinition MethodDefinition { get; private set; }
+        public FileInfo Mutant { get; private set; }
 
         /// <summary>
         /// Gets the index into the mutated method of the modified instruction.
@@ -68,25 +69,34 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles
         /// </summary>
         public ShadowDirectory TestDirectory { get; private set; }
 
-        internal string GetOriginalSourceCode(int index)
+        //internal string GetOriginalSourceCode(int index)
+        //{
+        //    var sequencePoint = MethodDefinition.GetCurrentSequencePoint(index);
+        //    string result = "";
+        //    if (!Module.SourceFiles.ContainsKey(sequencePoint.Document.Url))
+        //    {
+        //        return "";
+        //    }
+        //    string[] sourceCode = Module.SourceFiles[sequencePoint.Document.Url];
+        //    int upperBound = Math.Min(sequencePoint.EndLine + 2, sourceCode.Length);
+        //    for (int line = Math.Max(sequencePoint.StartLine - 2, 1); line <= upperBound; line++)
+        //    {
+        //        string sourceLine = sourceCode[line - 1].Replace("\t", "    ");
+        //        result += line.ToString(CultureInfo.InvariantCulture)
+        //            .PadLeft(4, ' ') + ": " + sourceLine.TrimEnd(' ', '\t');
+        //        if (line < upperBound) result += Environment.NewLine;
+        //    }
+        //    return result;
+        //}
+
+        public void Dispose()
         {
-            var sequencePoint = MethodDefinition.GetCurrentSequencePoint(index);
-            string result = "";
-            if (!Module.SourceFiles.ContainsKey(sequencePoint.Document.Url))
+            var s = this.TestDirectory;
+            if (s != null)
             {
-                return "";
+                s.Dispose();
+                s = null;
             }
-            string[] sourceCode = Module.SourceFiles[sequencePoint.Document.Url];
-            int upperBound = Math.Min(sequencePoint.EndLine + 2, sourceCode.Length);
-            for (int line = Math.Max(sequencePoint.StartLine - 2, 1); line <= upperBound; line++)
-            {
-                string sourceLine = sourceCode[line - 1].Replace("\t", "    ");
-                result += line.ToString(CultureInfo.InvariantCulture)
-                    .PadLeft(4, ' ') + ": " + sourceLine.TrimEnd(' ', '\t');
-                if (line < upperBound) result += Environment.NewLine;
-            }
-            return result;
         }
     }
 }
-

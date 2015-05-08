@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,7 +25,7 @@ namespace Splinter.Phase2_Mutation
 {
     public interface IMutationTestSession
     {
-        MutationSessionResult Run(ITestRunner testRunner, TestSubjectMethodRef subject);
+        MutationTestSessionResult Run(MutationTestSessionInput input);
     }
 
     public class SingleMutationResult
@@ -38,7 +39,7 @@ namespace Splinter.Phase2_Mutation
         IReadOnlyCollection<MethodRef> failingTests;
     }
 
-    public class MutationSessionResult
+    public class MutationTestSessionResult
     {
         TestSubjectMethodRef subjectRef;
 
@@ -52,9 +53,9 @@ namespace Splinter.Phase2_Mutation
         [ImportMany]
         private IEnumerable<IMethodTurtle> allTurtles = null; //assigning null to avoid compiler warning
 
-        private readonly IModuleCache codeCache;
+        private readonly ICodeCache codeCache;
 
-        public MutationTestSession(ILog log, IModuleCache codeCache)
+        public MutationTestSession(ILog log, ICodeCache codeCache)
         {
             this.log = log;
             this.codeCache = codeCache;
@@ -77,9 +78,9 @@ namespace Splinter.Phase2_Mutation
             compositionContainer.ComposeParts(this);
         }
 
-        public MutationSessionResult Run(ITestRunner testRunner, TestSubjectMethodRef subjectRef)
+        public MutationTestSessionResult Run(MutationTestSessionInput input)
         {
-            var subjectMethod = this.GetMethodDef(subjectRef.Method);
+            var subjectMethod = this.GetMethodDef(input.Subject.Method);
 
             return null;
         }

@@ -20,6 +20,7 @@
 #endregion
 
 using System.Collections.Generic;
+using System.IO;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -56,7 +57,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         ///     testing is to be carried out.
         /// </param>
         /// <param name="module">
-        ///     A <see cref="Module" /> representing the main module of the
+        ///     A <see cref="MutatedAssembly" /> representing the main module of the
         ///     containing assembly.
         /// </param>
         /// <param name="originalOffsets"></param>
@@ -64,7 +65,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// An <see cref="IEnumerable{T}" /> of
         /// <see cref="MutantMetaData" /> structures.
         /// </returns>
-        protected override IEnumerable<MutantMetaData> CreateMutant(MethodDefinition method, Module module, int[] originalOffsets)
+        protected override IEnumerable<MutantMetaData> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
         {
             for (int index = 0; index < method.Body.Instructions.Count; index++)
             {
@@ -83,7 +84,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                     instruction.OpCode = instruction.OpCode == OpCodes.Clt ? OpCodes.Cgt : OpCodes.Clt;
 
                     var description = string.Format("{0:x4}: {1} => not {2}", originalOffsets[index], originalCode, instruction.OpCode.Code);
-                    yield return DoYield(method, module, description, index);
+                    yield return this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
 
                     instruction.OpCode = instruction.OpCode == OpCodes.Clt ? OpCodes.Cgt : OpCodes.Clt;
 

@@ -92,7 +92,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Phase2_Mutation\ModuleCache.cs" />
+    <Compile Include="Phase2_Mutation\AssemblyCode.cs" />
+    <Compile Include="Phase2_Mutation\CodeCache.cs" />
+    <Compile Include="Phase2_Mutation\MutationTestSessionInput.cs" />
     <Compile Include="Phase2_Mutation\MutationTestSession.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="Phase1_Discovery\TestsDiscoverer.cs" />
@@ -100,7 +102,7 @@
     <Compile Include="Phase1_Discovery\PluginsContainer.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\InstructionExtensions.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Methods.cs" />
-    <Compile Include="Phase2_Mutation\NinjaTurtles\Module.cs" />
+    <Compile Include="Phase2_Mutation\NinjaTurtles\MutatedAssembly.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\MutantMetaData.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -110,7 +112,6 @@
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\BitwiseOperatorTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\BranchConditionTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\ConditionalBoundaryTurtle.cs" />
-    <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\IMethodTurtle.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\MethodTurtleBase.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\MutantExtensions.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\OpCodeRotationTurtle.cs" />

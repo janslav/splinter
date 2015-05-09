@@ -8,25 +8,28 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 
-using NinjaTurtles;
-
 using Splinter.Contracts.DTOs;
 using Splinter.Contracts;
 using Splinter.Utils;
 using Splinter.Utils.Cecil;
 
-namespace Splinter.TestRunner.MSTest
+namespace Splinter.TestRunner.MsTest
 {
-    public class MSTestRunner : ITestRunner, IPluginFactory<ITestRunner>
+    public class MSTestRunner : ITestRunner
     {
-        private log4net.ILog log;
+        private readonly log4net.ILog log;
+
+        private readonly ICodeCache codeCache;
+
+        private readonly IConsoleProcessFactory processFactory;
 
         private FileInfo msTestExe;
 
-        ITestRunner IPluginFactory<ITestRunner>.GetPlugin(log4net.ILog log)
+        public MSTestRunner(log4net.ILog log, ICodeCache codeCache, IConsoleProcessFactory processFactory)
         {
             this.log = log;
-            return this;
+            this.codeCache = codeCache;
+            this.processFactory = processFactory;
         }
 
         public bool IsReady(out string unavailableMessage)
@@ -35,7 +38,7 @@ namespace Splinter.TestRunner.MSTest
             {
                 var paths = this.GetMsExeSearchPaths();
 
-                var process = ConsoleProcessFactory.CreateProcess("mstest.exe", "", paths.ToArray());
+                var process = this.processFactory.CreateProcess("mstest.exe", "", paths.ToArray());
 
                 this.msTestExe = new FileInfo(process.StartInfo.FileName);
 
@@ -160,7 +163,7 @@ namespace Splinter.TestRunner.MSTest
 
         public ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName)
         {
-            var testMethodDef = CodeCache.Instance.GetAssembly(testBinary).GetMethodByFullName(methodFullName);
+            var testMethodDef = this.codeCache.GetAssembly(testBinary).GetMethodByFullName(methodFullName);
 
             var escapedTestBinary = CmdLine.EncodeArgument(testBinary.FullName);
 

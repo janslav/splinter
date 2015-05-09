@@ -7,7 +7,9 @@ using System.Configuration;
 
 using Microsoft.Practices.Unity;
 
-namespace Splinter.CoverageRunner.OpenCover
+using Splinter.Utils.Cecil;
+
+namespace Splinter.TestRunner.MsTest
 {
     public class UnityBootstrapper
     {
@@ -29,7 +31,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 WithName.Default,
                 WithLifetime.ContainerControlled);
 
-            var registrations = container.Registrations.Select(r => new { r.RegisteredType, r.MappedToType });
+            container.RegisterInstance<ICodeCache>(CodeCache.Instance);
 
             this.BootstrapLogging(container);
 

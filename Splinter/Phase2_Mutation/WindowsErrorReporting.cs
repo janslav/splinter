@@ -39,7 +39,7 @@ namespace Splinter.Phase2_Mutation
             var r = new Switch();
 
             //debugger attached = we don't care about default debug UI
-            //if (!Debugger.IsAttached)
+            if (!Debugger.IsAttached)
             {
                 try
                 {

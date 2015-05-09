@@ -9,7 +9,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter", "Splinter\Splint
 		{6A477967-BA47-4AC1-979F-58342F41BE12} = {6A477967-BA47-4AC1-979F-58342F41BE12}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.TestRunner.MSTest", "Splinter.TestRunner.MSTest\Splinter.TestRunner.MSTest.csproj", "{6A477967-BA47-4AC1-979F-58342F41BE12}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.TestRunner.MsTest", "Splinter.TestRunner.MSTest\Splinter.TestRunner.MsTest.csproj", "{6A477967-BA47-4AC1-979F-58342F41BE12}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Splinter.Test.Subject.MSTest", "Splinter.Test.Subject.MSTest\Splinter.Test.Subject.MSTest.csproj", "{A22542A7-F213-4EF5-B265-9C5CA03105C3}"
 EndProject

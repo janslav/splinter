@@ -12,10 +12,9 @@ using Microsoft.Win32;
 
 using log4net;
 
-using NinjaTurtles;
-
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
+using Splinter.Utils;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
@@ -32,13 +31,16 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly ISubjectTestMappingParser mappingParser;
 
+        private readonly IConsoleProcessFactory processFactory;
+
         private FileInfo ncoverExe;
 
-        public OpenCoverRunner(ILog log, IProcessInvoker invoker, ISubjectTestMappingParser mappingParser)
+        public OpenCoverRunner(ILog log, IProcessInvoker invoker, ISubjectTestMappingParser mappingParser, IConsoleProcessFactory processFactory)
         {
             this.log = log;
             this.invoker = invoker;
             this.mappingParser = mappingParser;
+            this.processFactory = processFactory;
         }
 
         public bool IsReady(out string unavailableMessage)
@@ -46,7 +48,7 @@ namespace Splinter.CoverageRunner.OpenCover
             try
             {
                 var paths = new[] { this.GetOpenCoverExeInstallationPath() };
-                var process = ConsoleProcessFactory.CreateProcess(OpenCoverExeName, "", paths);
+                var process = this.processFactory.CreateProcess(OpenCoverExeName, "", paths);
 
                 if (process != null)
                 {

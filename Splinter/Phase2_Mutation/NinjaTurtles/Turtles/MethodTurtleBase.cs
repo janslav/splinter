@@ -36,6 +36,8 @@ using Splinter.Utils;
 using Splinter.Utils.Cecil;
 using Splinter.Phase2_Mutation.DTOs;
 
+using log4net;
+
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
     /// <summary>
@@ -64,6 +66,13 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public abstract class MethodTurtleBase : IMethodTurtle
     {
+        private readonly ILog log;
+
+        public MethodTurtleBase(ILog log)
+        {
+            this.log = log;
+        }
+
         public IReadOnlyCollection<Mutation> TryCreateMutants(MutationTestSessionInput input)
         {
 
@@ -172,7 +181,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// </param>
         protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
         {
-            var shadow = new ShadowDirectory(input.ModelDirectory);
+            var shadow = new ShadowDirectory(this.log, input.ModelDirectory);
 
             var shadowedPath = shadow.GetEquivalentShadowPath(input.Subject.Method.Assembly);
 

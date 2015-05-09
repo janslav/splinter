@@ -20,6 +20,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
+using log4net;
+
 namespace Splinter.Utils
 {
     /// <summary>
@@ -30,15 +32,19 @@ namespace Splinter.Utils
     [DebuggerDisplay("ShadowDirectory {Source} -> {Shadow}")]
     public class ShadowDirectory : IDisposable
     {
+        private readonly ILog log;
+
         /// <summary>
         /// Creates a ShadowProcess instance.
         /// </summary>
-        public ShadowDirectory(DirectoryInfo source)
+        public ShadowDirectory(ILog log, DirectoryInfo source)
         {
+            this.log = log;
             this.Source = source;
 
             this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Splinter", Path.GetRandomFileName()));
 
+            this.log.DebugFormat("Copying root directory to '{0}'.", this.Shadow.FullName);
             DirectoryCopy(source, this.Shadow);
         }
 
@@ -78,6 +84,7 @@ namespace Splinter.Utils
                 var s = this.Shadow;
                 if (s != null)
                 {
+                    this.log.DebugFormat("Deleting directory '{0}'.", this.Shadow.FullName);
                     s.Delete(true);
                     this.Shadow = null;
                 }

@@ -37,13 +37,14 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// <summary>
         /// Initializes a new instance of <see cref="BranchConditionTurtle" />.
         /// </summary>
-        public BranchConditionTurtle()
+        public BranchConditionTurtle(log4net.ILog log)
+            : base(log)
         {
-            _opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
-                           {
-                               {OpCodes.Brtrue, new[] {OpCodes.Nop, OpCodes.Brfalse, OpCodes.Br}},
-                               {OpCodes.Brfalse, new[] {OpCodes.Nop, OpCodes.Brtrue, OpCodes.Br}}
-                           };
+            this._opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
+            {
+                {OpCodes.Brtrue, new[] {OpCodes.Nop, OpCodes.Brfalse, OpCodes.Br}},
+                {OpCodes.Brfalse, new[] {OpCodes.Nop, OpCodes.Brtrue, OpCodes.Br}}
+            };
         }
 
         /// <summary>

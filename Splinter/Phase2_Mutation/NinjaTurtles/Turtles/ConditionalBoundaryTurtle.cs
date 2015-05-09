@@ -38,6 +38,11 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public class ConditionalBoundaryTurtle : MethodTurtleBase
     {
+        public ConditionalBoundaryTurtle(log4net.ILog log)
+            : base(log)
+        {
+        }
+
         /// <summary>
         /// Gets a description of the current turtle.
         /// </summary>

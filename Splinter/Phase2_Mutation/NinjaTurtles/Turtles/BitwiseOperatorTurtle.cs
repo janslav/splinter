@@ -36,7 +36,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// <summary>
         /// Initializes a new instance of <see cref="BitwiseOperatorTurtle" />.
         /// </summary>
-        public BitwiseOperatorTurtle()
+        public BitwiseOperatorTurtle(log4net.ILog log)
+            : base(log)
         {
             _opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
                            {

@@ -37,6 +37,11 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public class SequencePointDeletionTurtle : MethodTurtleBase
     {
+        public SequencePointDeletionTurtle(log4net.ILog log)
+            : base(log)
+        {
+        }
+
         /// <summary>
         /// Gets a description of the current turtle.
         /// </summary>

@@ -5,9 +5,12 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
+using System.ComponentModel.Composition.ReflectionModel;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Registration;
 using System.Diagnostics;
+
+using Microsoft.Practices.Unity;
 
 using log4net;
 
@@ -38,30 +41,36 @@ namespace Splinter.Phase2_Mutation
     {
         private readonly ILog log;
 
-        [ImportMany]
-        private IEnumerable<IMethodTurtle> allTurtles = null; //assigning null to avoid compiler warning
+        private IReadOnlyCollection<IMethodTurtle> allTurtles = null;
 
         private readonly ICodeCache codeCache;
 
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
-        public MutationTestSession(ILog log, ICodeCache codeCache, IWindowsErrorReporting errorReportingSwitch)
+        public MutationTestSession(ILog log, IUnityContainer container, ICodeCache codeCache, IWindowsErrorReporting errorReportingSwitch)
         {
             this.log = log;
             this.codeCache = codeCache;
             this.errorReportingSwitch = errorReportingSwitch;
 
-            this.ImportTurtles();
+            this.ImportTurtles(container);
         }
 
         /// <summary>
         /// Turtles = the implementatinos of method code mutators
         /// </summary>
-        private void ImportTurtles()
+        private void ImportTurtles(IUnityContainer container)
         {
             var catalog = new ApplicationCatalog();
-            var compositionContainer = new CompositionContainer(catalog);
-            compositionContainer.ComposeParts(this);
+
+            this.allTurtles = catalog
+                .Where(i => i.Exports(typeof(IMethodTurtle)))
+                .Select(i =>
+                {
+                    var type = ReflectionModelServices.GetPartType(i).Value;
+                    var turtle = container.Resolve(type);
+                    return (IMethodTurtle)turtle;
+                }).ToArray();
         }
 
         public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input)

@@ -41,7 +41,7 @@ namespace Splinter.CoverageRunner.OpenCover
         {
             var runnerName = testRunner.Name;
 
-            using (var sd = new ShadowDirectory(modelDirectory))
+            using (var sd = new ShadowDirectory(this.log, modelDirectory))
             {
                 try
                 {
@@ -108,6 +108,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 //RedirectStandardOutput = true,
                 //RedirectStandardError = true
             };
+
             return openCoverProcessInfo;
         }
     }

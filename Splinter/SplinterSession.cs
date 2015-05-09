@@ -57,6 +57,7 @@ namespace Splinter
 
             var modelDirectory = new DirectoryInfo(
                 !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
+            this.log.DebugFormat("Operation root directory is '{0}'", modelDirectory.FullName);
 
             var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
             var coverageRunner = this.PickCoverageRunner(cmdLine);
@@ -82,7 +83,7 @@ namespace Splinter
                 this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject))).ToArray();
             this.log.Info("Mutation runs finished.");
 
-            //Phase 3 - produce results
+            //Phase 3 - output results
             this.resultsLogger.LogResults(mutationResults);
         }
 

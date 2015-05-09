@@ -41,6 +41,11 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </remarks>
     public abstract class OpCodeRotationTurtle : MethodTurtleBase
     {
+        public OpCodeRotationTurtle(log4net.ILog log)
+            : base(log)
+        {
+        }
+
         /// <summary>
         /// An <see cref="IDictionary{K,V}" /> containing source OpCodes as
         /// keys, and <see cref="IEnumerable{T}" />s of OpCodes as each key's

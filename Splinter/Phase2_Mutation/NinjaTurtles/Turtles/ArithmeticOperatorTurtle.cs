@@ -38,7 +38,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Initializes a new instance of 
         /// <see cref="ArithmeticOperatorTurtle" />.
         /// </summary>
-        public ArithmeticOperatorTurtle()
+        public ArithmeticOperatorTurtle(log4net.ILog log)
+            : base(log)
         {
             _opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
                            {

@@ -115,7 +115,7 @@ namespace Splinter.Phase1_Discovery
                 {
                     throw new Exception("No test binaries found");
                 }
-            }            
+            }  
 
             var ttr = testBinariesByRunner.SelectMany(kvp => 
                 kvp.Value.Select( i =>

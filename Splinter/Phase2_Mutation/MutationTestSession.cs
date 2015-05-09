@@ -16,16 +16,19 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Mdb;
 using Mono.Cecil.Pdb;
 
+using Splinter;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
-using Splinter.Utils.Cecil;
-using Splinter;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase2_Mutation
 {
+    /// <summary>
+    /// The creation of mutated assemblies and running tests against them is driven from here.
+    /// </summary>
     public interface IMutationTestSession
     {
         IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input);
@@ -67,7 +70,7 @@ namespace Splinter.Phase2_Mutation
             {
                 var unmutableMethods = new List<SingleMutationTestResult>();
 
-                var mutations = this.allTurtles.AsParallel().SelectMany(t =>
+                var mutations = this.allTurtles.SelectMany(t =>
                 {
                     var mutants = t.TryCreateMutants(input);
                     if (mutants.Count == 0)
@@ -84,7 +87,7 @@ namespace Splinter.Phase2_Mutation
 
                 try
                 {
-                    var results = mutations.Select(mutation =>
+                    var results = mutations.AsParallel().Select(mutation =>
                     {
                         var failingTests = new List<MethodRef>();
                         var passingTests = new List<MethodRef>();

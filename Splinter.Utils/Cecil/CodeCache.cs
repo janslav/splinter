@@ -12,7 +12,7 @@ namespace Splinter.Utils.Cecil
 {
     public interface ICodeCache
     {
-        AssemblyCode GetAssembly(FileInfo location);
+        IAssemblyCode GetAssembly(FileInfo location);
     }
 
     public class CodeCache : ICodeCache
@@ -23,7 +23,7 @@ namespace Splinter.Utils.Cecil
             new ConcurrentDictionary<FileInfo, AssemblyCode>(new FileSystemInfoComparer());
 
 
-        public AssemblyCode GetAssembly(FileInfo location)
+        public IAssemblyCode GetAssembly(FileInfo location)
         {
             return this.assemblies.GetOrAdd(location, l => new AssemblyCode(l));
         }

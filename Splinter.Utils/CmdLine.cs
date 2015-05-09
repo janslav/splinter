@@ -63,28 +63,5 @@ namespace Splinter.Utils
 
             return result;
         }
-
-        //public static string EscapeBackSlashes(string text)
-        //{
-        //    var regexPattern = "\\\\";
-
-        //    var result = text;
-
-        //    var regex = new Regex(regexPattern);
-
-        //    var matches = regex.Matches(text);
-
-        //    for (int i = matches.Count - 1; i >= 0; i--)
-        //    {
-        //        var match = matches[i];
-
-        //        var index = match.Index + match.Length;
-
-        //        if (index >= text.Length || text[index] == '\\')
-        //            result = result.Insert(match.Index, "\\");
-        //    }
-
-        //    return result;
-        //}
     }
 }

@@ -33,6 +33,7 @@ using Mono.Cecil.Pdb;
 using Mono.Cecil.Rocks;
 
 using Splinter.Utils;
+using Splinter.Utils.Cecil;
 using Splinter.Phase2_Mutation.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
@@ -126,37 +127,19 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         //    return ret;
         //}
 
-        private IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)
-        {
-            if (t.NestedTypes.Count > 0)
-            {
-                var c = t.NestedTypes.ToList();
-                c.Add(t);
-                return c;
-            }
-            else
-            {
-                return new[] { t };
-            }
-        }
-
         private IEnumerable<Mutation> MutateMethod(MutationTestSessionInput input)
         {
             var methodName = input.Subject.Method.FullName;
-            var assemblyToMutate = AssemblyDefinition.ReadAssembly(input.Subject.Method.Assembly.FullName);
-            LoadDebugInformation(assemblyToMutate, input.Subject.Method.Assembly);
+            var assemblyToMutate = new AssemblyCode(input.Subject.Method.Assembly);
+            assemblyToMutate.LoadDebugInformation();
 
-            var methodToMutate = assemblyToMutate.Modules
-                .SelectMany(m => m.Types)
-                .SelectMany(t => ListNestedTypesRecursively(t))
-                .SelectMany(t => t.Methods)
-                .Single(m => m.FullName.Equals(methodName));
+            var methodToMutate = assemblyToMutate.GetMethodByFullName(methodName);
 
             int[] originalOffsets = methodToMutate.Body.Instructions.Select(i => i.Offset).ToArray();
 
             //leave as a yield-return, so that we don't optimize macros again until we stop enumerating.
             methodToMutate.Body.SimplifyMacros();
-            foreach (var mutation in this.TryCreateMutants(input, assemblyToMutate, methodToMutate, originalOffsets))
+            foreach (var mutation in this.TryToCreateMutations(input, assemblyToMutate.AssemblyDefinition, methodToMutate, originalOffsets))
             {
                 yield return mutation;
             }
@@ -176,7 +159,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Implementing classes should yield the result obtained by calling
         /// the <see mref="SaveMutantToDisk" /> method.
         /// </remarks>
-        protected abstract IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyToMutate, MethodDefinition method, int[] originalOffsets);
+        protected abstract IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyToMutate, MethodDefinition method, int[] originalOffsets);
 
         /// <summary>
         /// A helper method that copies the test folder, and saves the mutated
@@ -196,41 +179,6 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             mutant.Write(shadowedPath.FullName);
 
             return new Mutation(input, shadow, shadowedPath, index, description);
-        }
-
-        public static void LoadDebugInformation(AssemblyDefinition assemblyDef, FileInfo location)
-        {
-            var reader = ResolveSymbolReader(assemblyDef, location);
-            if (reader == null) return;
-
-            assemblyDef.MainModule.ReadSymbols(reader);
-        }
-
-        private static ISymbolReader ResolveSymbolReader(AssemblyDefinition assemblyDef, FileInfo location)
-        {
-            string symbolLocation = null;
-            string pdbLocation = Path.ChangeExtension(location.FullName, "pdb");
-            string mdbLocation = location.FullName + ".mdb";
-            ISymbolReaderProvider provider = null;
-
-            if (File.Exists(pdbLocation))
-            {
-                symbolLocation = pdbLocation;
-                provider = new PdbReaderProvider();
-            }
-            else if (File.Exists(mdbLocation))
-            {
-                symbolLocation = location.FullName;
-                provider = new MdbReaderProvider();
-            }
-
-            if (provider == null)
-            {
-                return null;
-            }
-
-            var reader = provider.GetSymbolReader(assemblyDef.MainModule, symbolLocation);
-            return reader;
         }
     }
 }

@@ -33,8 +33,20 @@ namespace Splinter.Utils.Cecil
 {
     /// <summary>
     /// Class representing the main module of a .NET assembly.
+    /// Code mostly taken from NinjaTurtles class Module
     /// </summary>
-    public class AssemblyCode
+    public interface IAssemblyCode
+    {
+        FileInfo AssemblyLocation { get; }
+
+        AssemblyDefinition AssemblyDefinition { get; }
+
+        MethodDefinition GetMethodByFullName(string fullName);
+
+        void LoadDebugInformation();
+    }
+
+    public class AssemblyCode : IAssemblyCode
     {
         private static readonly object locker = new object();
 
@@ -42,8 +54,8 @@ namespace Splinter.Utils.Cecil
 
         public AssemblyCode(FileInfo assemblyLocation)
         {
-            AssemblyLocation = assemblyLocation;
-            AssemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyLocation.FullName);
+            this.AssemblyLocation = assemblyLocation;
+            this.AssemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyLocation.FullName);
         }
 
         /// <summary>
@@ -64,10 +76,62 @@ namespace Splinter.Utils.Cecil
                 {
                     lock (locker)
                     {
-                        return this.AssemblyDefinition.Modules.SelectMany(m => m.Types).SelectMany(t => t.Methods)
+                        return this.AssemblyDefinition.Modules
+                            .SelectMany(m => m.Types)
+                            .SelectMany(t => ListNestedTypesRecursively(t))
+                            .SelectMany(t => t.Methods)
                             .Single(m => m.FullName.Equals(n));
                     }
                 });
+        }
+
+        private IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)
+        {
+            if (t.NestedTypes.Count > 0)
+            {
+                var c = t.NestedTypes.ToList();
+                c.Add(t);
+                return c;
+            }
+            else
+            {
+                return new[] { t };
+            }
+        }
+
+        public void LoadDebugInformation()
+        {
+            var reader = ResolveSymbolReader();
+            if (reader == null) return;
+
+            this.AssemblyDefinition.MainModule.ReadSymbols(reader);
+        }
+
+        private ISymbolReader ResolveSymbolReader()
+        {
+            string symbolLocation = null;
+            string pdbLocation = Path.ChangeExtension(this.AssemblyLocation.FullName, "pdb");
+            string mdbLocation = this.AssemblyLocation.FullName + ".mdb";
+            ISymbolReaderProvider provider = null;
+
+            if (File.Exists(pdbLocation))
+            {
+                symbolLocation = pdbLocation;
+                provider = new PdbReaderProvider();
+            }
+            else if (File.Exists(mdbLocation))
+            {
+                symbolLocation = this.AssemblyLocation.FullName;
+                provider = new MdbReaderProvider();
+            }
+
+            if (provider == null)
+            {
+                return null;
+            }
+
+            var reader = provider.GetSymbolReader(this.AssemblyDefinition.MainModule, symbolLocation);
+            return reader;
         }
     }
 }

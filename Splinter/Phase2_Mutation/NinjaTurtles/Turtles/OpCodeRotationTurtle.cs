@@ -52,7 +52,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Performs the actual code mutations, returning each with
         /// <c>yield</c> for the calling code to use.
         /// </summary>
-        protected override IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
+        protected override IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
         {
             for (int index = 0; index < method.Body.Instructions.Count; index++)
             {

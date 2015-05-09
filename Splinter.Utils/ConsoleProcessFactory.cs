@@ -26,6 +26,10 @@ using System.IO;
 
 namespace Splinter.Utils
 {
+    /// <summary>
+    /// A factory class used to instatiate a <see cref="Process" /> instance,
+    /// taking into account the operating system and runtime.
+    /// </summary>
     public interface IConsoleProcessFactory
     {
         /// <summary>
@@ -48,24 +52,21 @@ namespace Splinter.Utils
         Process CreateProcess(string exeName, string arguments, IEnumerable<string> additionalSearchLocations = null);
     }
 
-    /// <summary>
-    /// A factory class used to instatiate a <see cref="Process" /> instance,
-    /// taking into account the operating system and runtime.
-    /// </summary>
+    // Code mostly taken from NinjaTurtles class Module
     public class ConsoleProcessFactory : IConsoleProcessFactory
     {
-        internal static bool IsMono { get; set; }
+        public static bool IsMono { get; private set; }
 
-        internal static bool IsWindows { get; set; }
+        public static bool IsWindows { get; private set; }
 
         static ConsoleProcessFactory()
         {
             IsMono = Type.GetType("Mono.Runtime") != null;
             IsWindows = Environment.OSVersion.Platform.ToString().StartsWith("Win")
-                        || Environment.OSVersion.Platform == PlatformID.Xbox;
+                || Environment.OSVersion.Platform == PlatformID.Xbox;
         }
 
-        public Process CreateProcess(string exeName, string arguments, IEnumerable<string> additionalSearchLocations = null)
+        public Process CreateProcess(string exeName, string arguments, IEnumerable<string> additionalSearchLocations)
         {
             exeName = FindExecutable(exeName, additionalSearchLocations);
 

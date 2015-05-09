@@ -92,6 +92,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Phase2_Mutation\WindowsErrorReporting.cs" />
     <Compile Include="Phase2_Mutation\DTOs\SingleMutationTestResult.cs" />
     <Compile Include="Phase2_Mutation\DTOs\MutationTestSessionInput.cs" />
     <Compile Include="Phase2_Mutation\MutationTestSession.cs" />

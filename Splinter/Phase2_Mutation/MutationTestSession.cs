@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Text;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Registration;
@@ -41,10 +40,13 @@ namespace Splinter.Phase2_Mutation
 
         private readonly ICodeCache codeCache;
 
-        public MutationTestSession(ILog log, ICodeCache codeCache)
+        private readonly IWindowsErrorReporting errorReportingSwitch;
+
+        public MutationTestSession(ILog log, ICodeCache codeCache, IWindowsErrorReporting errorReportingSwitch)
         {
             this.log = log;
             this.codeCache = codeCache;
+            this.errorReportingSwitch = errorReportingSwitch;
 
             this.ImportTurtles();
         }
@@ -54,39 +56,35 @@ namespace Splinter.Phase2_Mutation
         /// </summary>
         private void ImportTurtles()
         {
-            //this is how you MEF-resolve stuff that wasn't made for MEF
-            var registration = new RegistrationBuilder();
-            registration.ForTypesDerivedFrom<IMethodTurtle>().ExportInterfaces();
-
-            var catalog = new ApplicationCatalog(registration);
-
+            var catalog = new ApplicationCatalog();
             var compositionContainer = new CompositionContainer(catalog);
             compositionContainer.ComposeParts(this);
         }
 
         public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input)
         {
-            var unmutableMethods = new List<SingleMutationTestResult>();
-
-            var mutations = this.allTurtles.SelectMany(t =>
+            using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
-                var mutants = t.TryCreateMutants(input).ToArray();
-                if (mutants.Length == 0)
+                var unmutableMethods = new List<SingleMutationTestResult>();
+
+                var mutations = this.allTurtles.AsParallel().SelectMany(t =>
                 {
-                    unmutableMethods.Add(new SingleMutationTestResult(
-                            input.Subject.Method,
-                            0,
-                            "",
-                            input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
-                            new MethodRef[0]));
-                }
-                return mutants;
-            }).ToArray();
+                    var mutants = t.TryCreateMutants(input);
+                    if (mutants.Count == 0)
+                    {
+                        unmutableMethods.Add(new SingleMutationTestResult(
+                                input.Subject.Method,
+                                0,
+                                "",
+                                input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
+                                new MethodRef[0]));
+                    }
+                    return mutants;
+                });
 
-            try
-            {
-                var results = mutations.AsParallel()
-                    .Select(mutation =>
+                try
+                {
+                    var results = mutations.Select(mutation =>
                     {
                         var failingTests = new List<MethodRef>();
                         var passingTests = new List<MethodRef>();
@@ -101,7 +99,7 @@ namespace Splinter.Phase2_Mutation
                                 this.log.DebugFormat(
                                     "Running test '{0}' for mutation '{1}' in method '{2}'.",
                                     test.Method.FullName,
-                                    mutation.Description, 
+                                    mutation.Description,
                                     mutation.Input.Subject.Method.FullName);
 
                                 using (var p = Process.Start(processInfo))
@@ -133,16 +131,16 @@ namespace Splinter.Phase2_Mutation
                         }
                     });
 
-                var list = results.ToList();
-                list.AddRange(unmutableMethods);
-                return list;
-            }
-            finally
-            {
-                //a second failsafe. We really don't want to leave the copied directories around.
-                foreach (var mutation in mutations)
+                    unmutableMethods.AddRange(results);
+                    return unmutableMethods;
+                }
+                finally
                 {
-                    mutation.Dispose();
+                    //a second failsafe. We really don't want to leave the copied directories around.
+                    foreach (var mutation in mutations)
+                    {
+                        mutation.Dispose();
+                    }
                 }
             }
         }
@@ -151,17 +149,5 @@ namespace Splinter.Phase2_Mutation
         {
             return this.codeCache.GetAssembly(method.Assembly).GetMethodByFullName(method.FullName);
         }
-
-        //private void PopulateDefaultTurtles()
-        //{
-        //    IMethodTurtle
-
-        //    foreach (var type in GetType().Assembly.GetTypes()
-        //        .Where(t => t.GetInterface("IMethodTurtle") != null
-        //        && !t.IsAbstract))
-        //    {
-        //        _mutationsToApply.Add(type);
-        //    }
-        //}
     }
 }

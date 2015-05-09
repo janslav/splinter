@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.ComponentModel.Composition;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -40,14 +41,15 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// An <b>interface</b> defining basic functionality for a turtle that
     /// operates on the IL of a method body.
     /// </summary>
+    [InheritedExport]
     public interface IMethodTurtle
     {
         /// <summary>
-        /// Returns an <see cref="IEnumerable{T}" /> of detailed descriptions
+        /// Returns a collection of detailed descriptions
         /// of mutations, having first carried out the mutation in question and
         /// saved the modified assembly under test to disk.
         /// </summary>
-        IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input);
+        IReadOnlyCollection<Mutation> TryCreateMutants(MutationTestSessionInput input);
 
         /// <summary>
         /// Gets a description of this turtle.
@@ -61,7 +63,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public abstract class MethodTurtleBase : IMethodTurtle
     {
-        public IEnumerable<Mutation> TryCreateMutants(MutationTestSessionInput input)
+        public IReadOnlyCollection<Mutation> TryCreateMutants(MutationTestSessionInput input)
         {
 
             var ret = MutateMethod(input);
@@ -72,7 +74,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
             //ret = ret.Concat(MutateAnonymousDelegates(method, module));
 
-            return ret;
+            return ret.ToArray();
         }
 
         //private IEnumerable<MutantMetaData> MutateEnumerableGenerators(MethodDefinition method, MutatedAssembly module)
@@ -151,7 +153,6 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                 .Single(m => m.FullName.Equals(methodName));
 
             int[] originalOffsets = methodToMutate.Body.Instructions.Select(i => i.Offset).ToArray();
-
 
             //leave as a yield-return, so that we don't optimize macros again until we stop enumerating.
             methodToMutate.Body.SimplifyMacros();

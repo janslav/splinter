@@ -41,38 +41,39 @@ namespace Splinter
             }
         }
 
+        const int progressBarWidth = 50;
+
         private static void DrawTextProgressBar(int progress, int total)
         {
             //draw empty progress bar
             Console.CursorLeft = 0;
             Console.Write("["); //start
-            Console.CursorLeft = 32;
+            Console.CursorLeft = progressBarWidth + 2;
             Console.Write("]"); //end
             Console.CursorLeft = 1;
-            float onechunk = 30.0f / total;
+            float onechunk = ((float)progressBarWidth) / total;
 
             //draw filled part
             int position = 1;
-            for (int i = 0; i < onechunk * progress; i++)
+            for (int i = 0; i < Math.Round(onechunk * progress); i++)
             {
-                Console.BackgroundColor = ConsoleColor.Gray;
+                Console.BackgroundColor = ConsoleColor.White;
                 Console.CursorLeft = position++;
                 Console.Write(" ");
             }
 
             //draw unfilled part
-            for (int i = position; i <= 31; i++)
+            for (int i = position; i <= progressBarWidth + 1; i++)
             {
-                Console.BackgroundColor = ConsoleColor.Green;
+                Console.BackgroundColor = ConsoleColor.Black;
                 Console.CursorLeft = position++;
                 Console.Write(" ");
             }
 
             //draw totals
-            Console.CursorLeft = 35;
+            Console.CursorLeft = progressBarWidth + 5;
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write(progress.ToString() + " of " + total.ToString() + "    "); //blanks at the end remove any excess}
-
+            Console.Write(progress.ToString() + " of " + total.ToString() + "    "); //blanks at the end remove any excess
         }
 
         public void Dispose()

@@ -34,6 +34,8 @@ namespace Splinter.Utils
     {
         private readonly ILog log;
 
+        private static int counter;
+
         /// <summary>
         /// Creates a ShadowProcess instance.
         /// </summary>
@@ -44,13 +46,21 @@ namespace Splinter.Utils
 
             this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Splinter", Path.GetRandomFileName()));
 
-            this.log.DebugFormat("Copying root directory to '{0}'.", this.Shadow.FullName);
+            counter++;
+            this.ShadowId = "#" + counter + "#: ";
+
+            this.log.DebugFormat("{0}Copying root directory to '{1}'.", this.ShadowId, this.Shadow.FullName);
             DirectoryCopy(source, this.Shadow);
         }
 
         public DirectoryInfo Source { get; private set; }
 
         public DirectoryInfo Shadow { get; private set; }
+
+        /// <summary>
+        /// A unique string identifying this instance. To be used for logging purposes.
+        /// </summary>
+        public string ShadowId { get; private set; }
 
         public FileInfo GetEquivalentShadowPath(FileInfo fileInSourceDir)
         {
@@ -84,7 +94,7 @@ namespace Splinter.Utils
                 var s = this.Shadow;
                 if (s != null)
                 {
-                    this.log.DebugFormat("Deleting directory '{0}'.", this.Shadow.FullName);
+                    this.log.DebugFormat("{0}Deleting directory '{1}'.", this.ShadowId, this.Shadow.FullName);
                     s.Delete(true);
                     this.Shadow = null;
                 }

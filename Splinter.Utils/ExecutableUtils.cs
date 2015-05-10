@@ -36,9 +36,9 @@ namespace Splinter.Utils
         /// </summary>
         FileInfo FindExecutable(string exeName, IEnumerable<string> additionalSearchLocations = null);
 
-        int RunProcessAndWaitForExit(FileInfo executable, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null);
+        int RunProcessAndWaitForExit(FileInfo executable, string shadowId, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null);
 
-        int RunProcessAndWaitForExit(ProcessStartInfo startInfo);
+        int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId);
     }
 
     // Code mostly taken from NinjaTurtles class Module
@@ -69,7 +69,7 @@ namespace Splinter.Utils
             throw new Exception(string.Format("Couldn't find '{0}' executable.", exeName));
         }
 
-        public int RunProcessAndWaitForExit(FileInfo executable, IEnumerable<string> arguments, DirectoryInfo workingDirectory)
+        public int RunProcessAndWaitForExit(FileInfo executable, string shadowId, IEnumerable<string> arguments, DirectoryInfo workingDirectory)
         {
             var r = new ProcessStartInfo(
                     executable.FullName,
@@ -78,17 +78,12 @@ namespace Splinter.Utils
                 WorkingDirectory = workingDirectory == null ? Environment.CurrentDirectory : workingDirectory.FullName,
             };
 
-            return this.RunProcessAndWaitForExit(r);
+            return this.RunProcessAndWaitForExit(r, shadowId);
         }
 
-        private static int counter;
-
-        public int RunProcessAndWaitForExit(ProcessStartInfo startInfo)
+        public int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId)
         {
-            counter++;
-            var pid = "#" + counter + "#: ";
-
-            this.log.DebugFormat("{0}Starting process '{1}' with arguments '{2}'.", pid, startInfo.FileName, startInfo.Arguments);
+            this.log.DebugFormat("{0}Starting process '{1}' with arguments '{2}'.", shadowId, startInfo.FileName, startInfo.Arguments);
 
             startInfo.RedirectStandardError = true;
             startInfo.RedirectStandardOutput = true;
@@ -99,8 +94,8 @@ namespace Splinter.Utils
             {
                 p.EnableRaisingEvents = true;
 
-                p.OutputDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Debug(pid + e.Data); };
-                p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Warn(pid + e.Data); };
+                p.OutputDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Debug(shadowId + e.Data); };
+                p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Warn(shadowId + e.Data); };
 
                 p.Start();
 
@@ -109,7 +104,7 @@ namespace Splinter.Utils
 
                 p.WaitForExit();
 
-                this.log.DebugFormat("{0}Process exited.", pid);
+                this.log.DebugFormat("{0}Process exited.", shadowId);
 
                 return p.ExitCode;
             }

@@ -78,7 +78,7 @@ namespace Splinter.Phase2_Mutation
                 }).ToArray();
         }
 
-        public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input, IProgress<Tuple<int,int>> progress)
+        public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input, IProgress<Tuple<int, int>> progress)
         {
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
@@ -100,67 +100,58 @@ namespace Splinter.Phase2_Mutation
                                 input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
                                 new MethodRef[0]));
                     }
+
                     return mutants;
                 });
 
-                try
+                var results = mutations.AsParallel().Select(mutation =>
                 {
-                    var results = mutations.AsParallel().Select(mutation =>
+                    Interlocked.Add(ref testsCount, input.Subject.TestMethods.Count);
+                    ReportProgress(progress, testsCount, testsFinishedCount);
+
+                    var failingTests = new List<MethodRef>();
+                    var passingTests = new List<MethodRef>();
+
+                    using (mutation)
                     {
-                        Interlocked.Add(ref testsCount, input.Subject.TestMethods.Count);
-                        ReportProgress(progress, testsCount, testsFinishedCount);
-
-                        var failingTests = new List<MethodRef>();
-                        var passingTests = new List<MethodRef>();
-
-                        using (mutation)
+                        //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
+                        foreach (var test in mutation.Input.Subject.TestMethods)
                         {
-                            //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
-                            foreach (var test in mutation.Input.Subject.TestMethods)
+                            var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
+                            var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
+
+                            this.log.DebugFormat(
+                                "Running test '{0}' for mutation '{1}' in method '{2}'.",
+                                test.Method.FullName,
+                                mutation.Description,
+                                mutation.Input.Subject.Method.FullName);
+
+                            var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.TestDirectory.ShadowId);
+                            if (exitCode == 0)
                             {
-                                var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
-                                var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
-
-                                this.log.DebugFormat(
-                                    "Running test '{0}' for mutation '{1}' in method '{2}'.",
-                                    test.Method.FullName,
-                                    mutation.Description,
-                                    mutation.Input.Subject.Method.FullName);
-
-                                var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo);
-                                if (exitCode == 0)
-                                {
-                                    passingTests.Add(test.Method);
-                                }
-                                else
-                                {
-                                    failingTests.Add(test.Method);
-                                }
-
-                                Interlocked.Increment(ref testsFinishedCount);
-                                ReportProgress(progress, testsCount, testsFinishedCount);
+                                passingTests.Add(test.Method);
                             }
+                            else
+                            {
+                                failingTests.Add(test.Method);
+                            }
+
+                            Interlocked.Increment(ref testsFinishedCount);
+                            ReportProgress(progress, testsCount, testsFinishedCount);
                         }
-
-                        return new SingleMutationTestResult(
-                            mutation.Input.Subject.Method,
-                            mutation.InstructionIndex,
-                            mutation.Description,
-                            passingTests,
-                            failingTests);
-                    });
-
-                    unmutableMethods.AddRange(results);
-                    return unmutableMethods;
-                }
-                finally
-                {
-                    //a second failsafe. We really don't want to leave the copied directories around.
-                    foreach (var mutation in mutations)
-                    {
-                        mutation.Dispose();
                     }
-                }
+
+                    return new SingleMutationTestResult(
+                        mutation.Input.Subject.Method,
+                        mutation.InstructionIndex,
+                        mutation.Description,
+                        passingTests,
+                        failingTests);
+                });
+
+                unmutableMethods.AddRange(results);
+                return unmutableMethods;
+
             }
         }
 

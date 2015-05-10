@@ -51,7 +51,7 @@ namespace Splinter.CoverageRunner.OpenCover
                     this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
 
                     var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testRunner, testBinary, sd);
-                    var exitCode = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo);
+                    var exitCode = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, sd.ShadowId);
 
                     if (exitCode != 0)
                     {

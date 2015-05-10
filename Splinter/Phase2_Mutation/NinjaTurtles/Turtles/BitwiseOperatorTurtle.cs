@@ -39,12 +39,12 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         public BitwiseOperatorTurtle(log4net.ILog log)
             : base(log)
         {
-            _opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
-                           {
-                               {OpCodes.Or, new[] {OpCodes.And, OpCodes.Xor}},
-                               {OpCodes.And, new[] {OpCodes.Or, OpCodes.Xor}},
-                               {OpCodes.Xor, new[] {OpCodes.Or, OpCodes.And}}
-                           };
+            this.opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
+            {
+                {OpCodes.Or, new[] {OpCodes.And, OpCodes.Xor}},
+                {OpCodes.And, new[] {OpCodes.Or, OpCodes.Xor}},
+                {OpCodes.Xor, new[] {OpCodes.Or, OpCodes.And}}
+            };
         }
 
         /// <summary>

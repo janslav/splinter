@@ -50,7 +50,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 var paths = new[] { this.GetOpenCoverExeInstallationPath() };
 
                 this.ncoverExe = this.executableUtils.FindExecutable(OpenCoverExeName, paths);
-                this.executableUtils.RunProcessAndWaitForExit(this.ncoverExe);
+                this.executableUtils.RunProcessAndWaitForExit(this.ncoverExe, "openCoverDiscovery: ");
 
                 unavailableMessage = null;
                 return true;
@@ -133,7 +133,8 @@ namespace Splinter.CoverageRunner.OpenCover
                         subject.TestMethods,
                         (_, existing) => existing.Union(subject.TestMethods)));
 
-            return dict.Select(kvp => new TestSubjectMethodRef(kvp.Key, kvp.Value)).ToArray();
+            return dict//.Where(kvp => kvp.Value.Count > 0)
+                .Select(kvp => new TestSubjectMethodRef(kvp.Key, kvp.Value)).ToArray();
         }
 
         ///// <summary>

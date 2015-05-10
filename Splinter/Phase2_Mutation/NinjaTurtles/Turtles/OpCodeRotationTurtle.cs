@@ -51,7 +51,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// keys, and <see cref="IEnumerable{T}" />s of OpCodes as each key's
         /// possible replacements.
         /// </summary>
-        protected IDictionary<OpCode, IEnumerable<OpCode>> _opCodes;
+        protected IDictionary<OpCode, IEnumerable<OpCode>> opCodes;
 
         /// <summary>
         /// Performs the actual code mutations, returning each with
@@ -62,13 +62,13 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             for (int index = 0; index < method.Body.Instructions.Count; index++)
             {
                 var instruction = method.Body.Instructions[index];
-                if (_opCodes.ContainsKey(instruction.OpCode))
+                if (this.opCodes.ContainsKey(instruction.OpCode))
                 {
                     if (instruction.IsMeaninglessUnconditionalBranch()) continue;
 
                     var originalOpCode = instruction.OpCode;
 
-                    foreach (var opCode in _opCodes[originalOpCode])
+                    foreach (var opCode in this.opCodes[originalOpCode])
                     {
                         instruction.OpCode = opCode;
                         var description = string.Format("{0:x4}: {1} => {2}", originalOffsets[index], originalOpCode.Code, opCode.Code);

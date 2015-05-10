@@ -20,5 +20,29 @@ namespace Splinter.Contracts.DTOs
         public MethodRef Method { get; private set; }
 
         public ITestRunner Runner { get; private set; }
+
+        #region Equals & GetHashCode
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            if (obj.GetType() != typeof(TestMethodRef))
+            {
+                return false;
+            }
+
+            var o = (TestMethodRef)obj;
+
+            return this.Method.Equals(o.Method) && this.Runner.Equals(o.Runner);
+        }
+
+        public override int GetHashCode()
+        {
+            return this.Method.GetHashCode() * 17 + this.Runner.GetHashCode();
+        }
+        #endregion
     }
 }

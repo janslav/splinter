@@ -39,7 +39,7 @@ namespace Splinter.TestRunner.MsTest
                 var paths = this.GetMsExeSearchPaths();
 
                 this.msTestExe = this.executableUtils.FindExecutable("mstest.exe", paths);
-                this.executableUtils.RunProcessAndWaitForExit(this.msTestExe);
+                this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "msTestDiscovery: ");
 
                 unavailableMessage = null;
                 return true;
@@ -169,6 +169,21 @@ namespace Splinter.TestRunner.MsTest
                     };
 
             return r;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            return this.GetType() == obj.GetType();
+        }
+
+        public override int GetHashCode()
+        {
+            return this.GetType().GetHashCode();
         }
     }
 }

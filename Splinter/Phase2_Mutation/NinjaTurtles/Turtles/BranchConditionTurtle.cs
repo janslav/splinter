@@ -40,7 +40,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         public BranchConditionTurtle(log4net.ILog log)
             : base(log)
         {
-            this._opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
+            this.opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
             {
                 {OpCodes.Brtrue, new[] {OpCodes.Nop, OpCodes.Brfalse, OpCodes.Br}},
                 {OpCodes.Brfalse, new[] {OpCodes.Nop, OpCodes.Brtrue, OpCodes.Br}}

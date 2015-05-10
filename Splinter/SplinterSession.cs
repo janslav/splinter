@@ -70,13 +70,18 @@ namespace Splinter
             var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
             this.log.Info("Test binaries: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name)));
 
-            var testedMethods = coverageRunner.GetInitialCoverage(modelDirectory, testBinaries);
+            var subjectMethods = coverageRunner.GetInitialCoverage(modelDirectory, testBinaries);
+            if (subjectMethods.Count == 0)
+            {
+                this.log.Warn("No test methods discovered. Either there are none, or something went wrong.");
+                return;
+            }
 
-            var subjectAssemblies = testedMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
-            var testMethodsCount = testedMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
+            var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
+            var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
 
             this.log.Info("Covered subject code assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, subjectAssemblies));
-            this.log.Info("Number of unique subject methods: " + testedMethods.Count);
+            this.log.Info("Number of unique subject methods: " + subjectMethods.Count);
             this.log.Info("Number of unique test methods: " + testMethodsCount);
 
             //Phase 2 - mutate away!
@@ -84,7 +89,7 @@ namespace Splinter
             SingleMutationTestResult[] mutationResults;
             using (var pb = new ConsoleProgressBar<MethodRef>())
             {
-                mutationResults = testedMethods.AsParallel().SelectMany(subject =>
+                mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
                 {
                     var progress = pb.CreateProgressReportingObject(subject.Method);
                     return this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject), progress);

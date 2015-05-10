@@ -41,14 +41,14 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         public ArithmeticOperatorTurtle(log4net.ILog log)
             : base(log)
         {
-            _opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
-                           {
-                               {OpCodes.Add, new[] {OpCodes.Sub, OpCodes.Mul, OpCodes.Div, OpCodes.Rem}},
-                               {OpCodes.Sub, new[] {OpCodes.Add, OpCodes.Mul, OpCodes.Div, OpCodes.Rem}},
-                               {OpCodes.Mul, new[] {OpCodes.Add, OpCodes.Sub, OpCodes.Div, OpCodes.Rem}},
-                               {OpCodes.Div, new[] {OpCodes.Add, OpCodes.Sub, OpCodes.Mul, OpCodes.Rem}},
-                               {OpCodes.Rem, new[] {OpCodes.Add, OpCodes.Sub, OpCodes.Mul, OpCodes.Div}}
-                           };
+            this.opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
+            {
+                {OpCodes.Add, new[] {OpCodes.Sub, OpCodes.Mul, OpCodes.Div, OpCodes.Rem}},
+                {OpCodes.Sub, new[] {OpCodes.Add, OpCodes.Mul, OpCodes.Div, OpCodes.Rem}},
+                {OpCodes.Mul, new[] {OpCodes.Add, OpCodes.Sub, OpCodes.Div, OpCodes.Rem}},
+                {OpCodes.Div, new[] {OpCodes.Add, OpCodes.Sub, OpCodes.Mul, OpCodes.Rem}},
+                {OpCodes.Rem, new[] {OpCodes.Add, OpCodes.Sub, OpCodes.Mul, OpCodes.Div}}
+            };
         }
 
         /// <summary>

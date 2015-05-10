@@ -50,7 +50,9 @@ namespace Splinter.CoverageRunner.OpenCover
                 var paths = new[] { this.GetOpenCoverExeInstallationPath() };
 
                 this.ncoverExe = this.executableUtils.FindExecutable(OpenCoverExeName, paths);
-                this.executableUtils.RunProcessAndWaitForExit(this.ncoverExe, "openCoverDiscovery: ");
+                var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.ncoverExe, "openCoverDiscovery: ", new[] { "-?" });
+
+                //we'd love to check exitCode but it's unfortunately always 1 on a dry run, even when we do specify -?
 
                 unavailableMessage = null;
                 return true;

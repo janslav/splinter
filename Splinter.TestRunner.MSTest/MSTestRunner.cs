@@ -39,7 +39,13 @@ namespace Splinter.TestRunner.MsTest
                 var paths = this.GetMsExeSearchPaths();
 
                 this.msTestExe = this.executableUtils.FindExecutable("mstest.exe", paths);
-                this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "msTestDiscovery: ");
+                var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "msTestDiscovery: ", new[] { "/help" });
+
+                if (exitCode != 0)
+                {
+                    unavailableMessage = "Discovery run of mstest.exe returned non-zero code. Please check the log.";
+                    return false;
+                }
 
                 unavailableMessage = null;
                 return true;

@@ -10,7 +10,7 @@ namespace Splinter
 {
     public class ConsoleProgressBar<T> : IDisposable
     {
-        private readonly Timer timer = new Timer(100);
+        private readonly Timer timer = new Timer(250);
 
         private readonly ConcurrentDictionary<T, Tuple<int, int>> progressDict = new ConcurrentDictionary<T, Tuple<int, int>>();
 

@@ -19,6 +19,6 @@ namespace Splinter.Contracts
         /// </summary>
         /// <param name="testsToRun"></param>
         /// <returns></returns>
-        IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun);
+        IReadOnlyCollection<TestSubjectMethodRef> DiscoverTestSubjectMapping(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun);
     }
 }

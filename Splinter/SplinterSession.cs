@@ -70,7 +70,7 @@ namespace Splinter
             var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
             this.log.Info("Test binaries: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name)));
 
-            var subjectMethods = coverageRunner.GetInitialCoverage(modelDirectory, testBinaries);
+            var subjectMethods = coverageRunner.DiscoverTestSubjectMapping(modelDirectory, testBinaries);
             if (subjectMethods.Count == 0)
             {
                 this.log.Warn("No test methods discovered. Either there are none, or something went wrong.");

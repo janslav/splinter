@@ -113,7 +113,7 @@ namespace Splinter.CoverageRunner.OpenCover
             return Path.GetFullPath(path);
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> GetInitialCoverage(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun)
+        public IReadOnlyCollection<TestSubjectMethodRef> DiscoverTestSubjectMapping(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun)
         {
             //invoke tests and parse results
             var partialCoverages = testsToRun

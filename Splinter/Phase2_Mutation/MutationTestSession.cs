@@ -91,6 +91,9 @@ namespace Splinter.Phase2_Mutation
                 {
                     var mutants = t.TryCreateMutants(input);
 
+                    Interlocked.Add(ref testsCount, mutants.Count * input.Subject.TestMethods.Count);
+                    ReportProgress(progress, testsCount, testsFinishedCount);
+
                     if (mutants.Count == 0)
                     {
                         unmutableMethods.Add(new SingleMutationTestResult(
@@ -106,9 +109,6 @@ namespace Splinter.Phase2_Mutation
 
                 var results = mutations.AsParallel().Select(mutation =>
                 {
-                    Interlocked.Add(ref testsCount, input.Subject.TestMethods.Count);
-                    ReportProgress(progress, testsCount, testsFinishedCount);
-
                     var failingTests = new List<MethodRef>();
                     var passingTests = new List<MethodRef>();
 

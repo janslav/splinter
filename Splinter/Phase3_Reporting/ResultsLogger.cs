@@ -82,7 +82,8 @@ namespace Splinter.Phase3_Reporting
             this.log.Info("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =");
 
             this.log.InfoFormat(
-                "Out of {0} mutants, {1} survived. That's {2:0.0}% 'coverage-coverage'.",
+                "Out of {1} mutants, {2} survived.{0}That's {3:0.0}% 'coverage-coverage'.",
+                Environment.NewLine,
                 realRunsResults.Length,
                 survivingMutants.Length,
                 100.0 - ((survivingMutants.Length * 100.0) / realRunsResults.Length));
@@ -90,7 +91,8 @@ namespace Splinter.Phase3_Reporting
             var uniqueTests = allPassing.Union(allFailing).Count();
 
             this.log.InfoFormat(
-                "Out of {0} tests, {1} didn't contribute to killing mutants. That's {2:0.0}% usefulness.",
+                "Out of {1} tests, {2} didn't contribute to killing mutants.{0}That's {3:0.0}% usefulness.",
+                Environment.NewLine,
                 uniqueTests,
                 neverFailing.Length,
                 100.0 - ((neverFailing.Length * 100.0) / uniqueTests));

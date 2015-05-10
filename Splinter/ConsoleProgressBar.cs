@@ -10,7 +10,7 @@ namespace Splinter
 {
     public class ConsoleProgressBar<T> : IDisposable
     {
-        private readonly Timer timer = new Timer(250);
+        private readonly Timer timer = new Timer(500);
 
         private readonly ConcurrentDictionary<T, Tuple<int, int>> progressDict = new ConcurrentDictionary<T, Tuple<int, int>>();
 
@@ -73,7 +73,7 @@ namespace Splinter
             //draw totals
             Console.CursorLeft = progressBarWidth + 5;
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write(progress.ToString() + " of " + total.ToString() + "    "); //blanks at the end remove any excess
+            Console.Write(progress.ToString() + " of " + total.ToString() + "          "); //blanks at the end remove any excess
         }
 
         public void Dispose()

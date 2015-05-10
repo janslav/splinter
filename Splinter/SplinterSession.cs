@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Text;
 using System.IO;
 using System.Reflection;
 
 using Splinter.Contracts;
+using Splinter.Contracts.DTOs;
 using Splinter.Phase0_Boot;
 using Splinter.Phase1_Discovery;
 using Splinter.Phase2_Mutation;
@@ -79,8 +81,15 @@ namespace Splinter
 
             //Phase 2 - mutate away!
             this.log.Info("Starting mutation runs.");
-            var mutationResults = testedMethods.AsParallel().SelectMany(subject =>
-                this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject))).ToArray();
+            SingleMutationTestResult[] mutationResults;
+            using (var pb = new ConsoleProgressBar<MethodRef>())
+            {
+                mutationResults = testedMethods.AsParallel().SelectMany(subject =>
+                {
+                    var progress = pb.CreateProgressReportingObject(subject.Method);
+                    return this.mutation.Run(new MutationTestSessionInput(modelDirectory, subject), progress);
+                }).ToArray();
+            }
             this.log.Info("Mutation runs finished.");
 
             //Phase 3 - output results
@@ -119,5 +128,6 @@ namespace Splinter
 
             return coverageRunner;
         }
+
     }
 }

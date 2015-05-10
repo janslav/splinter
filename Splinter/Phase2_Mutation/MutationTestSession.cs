@@ -9,6 +9,7 @@ using System.ComponentModel.Composition.ReflectionModel;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Registration;
 using System.Diagnostics;
+using System.Threading;
 
 using Microsoft.Practices.Unity;
 
@@ -35,7 +36,7 @@ namespace Splinter.Phase2_Mutation
     /// </summary>
     public interface IMutationTestSession
     {
-        IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input);
+        IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input, IProgress<Tuple<int, int>> progress = null);
     }
 
     public class MutationTestSession : IMutationTestSession
@@ -77,15 +78,19 @@ namespace Splinter.Phase2_Mutation
                 }).ToArray();
         }
 
-        public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input)
+        public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input, IProgress<Tuple<int,int>> progress)
         {
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
                 var unmutableMethods = new List<SingleMutationTestResult>();
 
+                int testsCount = 0;
+                int testsFinishedCount = 0;
+
                 var mutations = this.allTurtles.SelectMany(t =>
                 {
                     var mutants = t.TryCreateMutants(input);
+
                     if (mutants.Count == 0)
                     {
                         unmutableMethods.Add(new SingleMutationTestResult(
@@ -102,11 +107,15 @@ namespace Splinter.Phase2_Mutation
                 {
                     var results = mutations.AsParallel().Select(mutation =>
                     {
+                        Interlocked.Add(ref testsCount, input.Subject.TestMethods.Count);
+                        ReportProgress(progress, testsCount, testsFinishedCount);
+
                         var failingTests = new List<MethodRef>();
                         var passingTests = new List<MethodRef>();
 
                         using (mutation)
                         {
+                            //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
                             foreach (var test in mutation.Input.Subject.TestMethods)
                             {
                                 var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
@@ -127,15 +136,18 @@ namespace Splinter.Phase2_Mutation
                                 {
                                     failingTests.Add(test.Method);
                                 }
-                            }
 
-                            return new SingleMutationTestResult(
-                                mutation.Input.Subject.Method,
-                                mutation.InstructionIndex,
-                                mutation.Description,
-                                passingTests,
-                                failingTests);
+                                Interlocked.Increment(ref testsFinishedCount);
+                                ReportProgress(progress, testsCount, testsFinishedCount);
+                            }
                         }
+
+                        return new SingleMutationTestResult(
+                            mutation.Input.Subject.Method,
+                            mutation.InstructionIndex,
+                            mutation.Description,
+                            passingTests,
+                            failingTests);
                     });
 
                     unmutableMethods.AddRange(results);
@@ -149,6 +161,14 @@ namespace Splinter.Phase2_Mutation
                         mutation.Dispose();
                     }
                 }
+            }
+        }
+
+        private static void ReportProgress(IProgress<Tuple<int, int>> progress, int testsCount, int testsFinishedCount)
+        {
+            if (progress != null)
+            {
+                progress.Report(Tuple.Create(testsFinishedCount, testsCount));
             }
         }
 

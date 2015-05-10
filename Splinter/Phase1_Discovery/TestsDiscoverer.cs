@@ -40,7 +40,40 @@ namespace Splinter.Phase1_Discovery
 
         public IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners)
         {
-            var testBinariesByRunner = new Dictionary<string, List<FileInfo>>();
+            IEnumerable<Tuple<string, FileInfo>> testBinariesWithRunner;
+
+            var selectedTestRunner = SelectTestRunnerIfManuallySpecified(cmdLine, testRunners);
+
+            if (cmdLine.TestBinaries.EmptyIfNull().Any())
+            {
+                //when particular binaries are specified, the runner is also already specified. This fact should be validated already at this point.
+                testBinariesWithRunner = this.DiscoverManuallySpecifiedBinaries(cmdLine).Select(fi => Tuple.Create(cmdLine.TestRunner, fi));
+            }
+            else
+            {
+                //if the user specified a particular runner, we don't use any other
+                var allowedTestRunners = testRunners;
+                if (selectedTestRunner != null)
+                {
+                    allowedTestRunners = new[] { selectedTestRunner };
+                }
+
+                testBinariesWithRunner = this.AutoDiscoverBinaries(modelDirectory, allowedTestRunners);
+
+                if (!testBinariesWithRunner.EmptyIfNull().Any())
+                {
+                    throw new Exception("No test binaries found");
+                }
+            }
+
+            var ttr = testBinariesWithRunner.Select(i =>
+                new TestBinary(testRunners.Single(r => r.Name.Equals(i.Item1, StringComparison.OrdinalIgnoreCase)), i.Item2));
+
+            return ttr.ToArray();
+        }
+
+        private ITestRunner SelectTestRunnerIfManuallySpecified(ManualConfiguration cmdLine, IReadOnlyCollection<ITestRunner> testRunners)
+        {
             ITestRunner selectedTestRunner = null;
 
             if (!string.IsNullOrWhiteSpace(cmdLine.TestRunner))
@@ -52,76 +85,50 @@ namespace Splinter.Phase1_Discovery
                 }
             }
 
-            if (cmdLine.TestBinaries.EmptyIfNull().Any())
+            return selectedTestRunner;
+        }
+
+        private IEnumerable<FileInfo> DiscoverManuallySpecifiedBinaries(ManualConfiguration cmdLine)
+        {
+            foreach (var path in cmdLine.TestBinaries)
             {
-                var list = new List<FileInfo>();
-                //when particular binaries are specified, the runner is also already specified. This fact is validated already at this point.
-                testBinariesByRunner[cmdLine.TestRunner] = list;
+                var fi = new FileInfo(path);
 
-                foreach (var path in cmdLine.TestBinaries)
+                //currently I'm only aware of OpenCover needing the pdbs for connecting unittests and their subjects, 
+                //but chances are any coverage engine would need it as well (if we ever get to implement anything else)
+                if (!PdbFileExists(fi))
                 {
-                    var fi = new FileInfo(path);
+                    throw new Exception(string.Format("Test binary '{0}' doesn't have its pdb file present.", fi.FullName));
+                }
 
-                    //currently I'm only aware of OpenCover needing the pdbs for connecting unittests and their subjects, 
-                    //but chances are any coverage engine would need it as well (if we ever get to implement anything else)
-                    if (!PdbFileExists(fi))
-                    {
-                        throw new Exception(string.Format("Test binary '{0}' doesn't have its pdb file present.", fi.FullName));
-                    }
+                if (fi.Exists)
+                {
+                    yield return fi;
+                }
+                else
+                {
+                    throw new Exception(string.Format("Test binary '{0}' doesn't exist.", fi.FullName));
+                }
+            }
+        }
 
-                    if (fi.Exists)
+        private IEnumerable<Tuple<string, FileInfo>> AutoDiscoverBinaries(DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> allowedTestRunners)
+        {
+            foreach (var fi in modelDirectory.EnumerateFiles("*.dll"))
+            {
+                if (!PdbFileExists(fi))
+                {
+                    continue;
+                }
+
+                foreach (var testRunner in allowedTestRunners)
+                {
+                    if (testRunner.IsTestBinary(fi))
                     {
-                        list.Add(fi);
-                    }
-                    else
-                    {
-                        throw new Exception(string.Format("Test binary '{0}' doesn't exist.", fi.FullName));
+                        yield return Tuple.Create(testRunner.Name, fi);
                     }
                 }
             }
-            else
-            {
-                //if the user specified a particular runner, we don't use any other
-                var allowedTestRunners = testRunners;
-                if (selectedTestRunner != null)
-                {
-                    allowedTestRunners = new[] { selectedTestRunner };
-                }
-
-                foreach (var fi in modelDirectory.EnumerateFiles("*.dll"))
-                {
-                    if (!PdbFileExists(fi))
-                    {
-                        continue;
-                    }
-
-                    foreach (var testRunner in allowedTestRunners)
-                    {
-                        if (testRunner.IsTestBinary(fi))
-                        {
-                            List<FileInfo> list;
-                            if (!testBinariesByRunner.TryGetValue(testRunner.Name, out list))
-                            {
-                                list = new List<FileInfo>();
-                                testBinariesByRunner.Add(testRunner.Name, list);
-                            }
-
-                            list.Add(fi);
-                        }
-                    }
-                }
-
-                if (testBinariesByRunner.Count == 0)
-                {
-                    throw new Exception("No test binaries found");
-                }
-            }  
-
-            var ttr = testBinariesByRunner.SelectMany(kvp => 
-                kvp.Value.Select( i =>
-                    new TestBinary(testRunners.Single(r => r.Name.Equals(kvp.Key, StringComparison.OrdinalIgnoreCase)), i)));
-
-            return ttr.ToArray();
         }
 
         private static bool PdbFileExists(FileInfo assemblyFile)

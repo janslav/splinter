@@ -9,26 +9,31 @@ namespace Splinter.Test.Test.MSTest
         [TestMethod]
         public void ThisTestCoversOnlyUselessCode()
         {
-            new Subj.Subject().DummyAdd(0, 0);
+            new Subj.Subject().ThisDoesNothing();
         }
-
 
         [TestMethod]
         public void ThisTestDoesntAssert()
         {
-            new Subj.Subject().Add1(3, 0);
+            new Subj.Subject().Multiply(3, 7);
         }
 
         [TestMethod]
         public void ThisTestUsesImproperTestingData()
         {
-            Assert.AreEqual(3, new Subj.Subject().Add2(3, 0));
+            Assert.AreEqual(3, new Subj.Subject().Subtract(3, 0));
         }
 
         [TestMethod]
-        public void ThisTestShouldBeOk()
+        public void ThisTestsTheHappyPath()
         {
-            Assert.AreEqual(7, new Subj.Subject().Add3(3, 4));
+            Assert.AreEqual(7, new Subj.Subject().Divide(21, 3));
         }
+
+        //[TestMethod, ExpectedException(typeof(System.ArgumentException))]
+        //public void ThisTestsTheExceptionalCase()
+        //{
+        //    new Subj.Subject().Divide(21, 0);
+        //}
     }
 }

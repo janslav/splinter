@@ -1,25 +1,37 @@
-﻿namespace Splinter.Test.Subject.MSTest
+﻿using System;
+
+namespace Splinter.Test.Subject.MSTest
 {
     public class Subject
     {
-        public int DummyAdd(int left, int right)
+        public void ThisDoesNothing()
         {
-            return 0;
+            //return;
         }
 
-        public int Add1(int left, int right)
+        public int Add(int left, int right)
         {
             return left + right;
         }
 
-        public int Add2(int left, int right)
+        public int Subtract(int left, int right)
         {
-            return left + right;
+            return left - right;
         }
 
-        public int Add3(int left, int right)
+        public int Multiply(int left, int right)
         {
-            return left + right;
+            return left * right;
+        }
+
+        public int Divide(int left, int right)
+        {
+            if (right == 0)
+            {
+                throw new ArgumentException("Don't. Just don't.");
+            }
+
+            return left / right;
         }
     }
 }

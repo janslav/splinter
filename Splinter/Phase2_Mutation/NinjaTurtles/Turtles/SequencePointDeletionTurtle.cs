@@ -56,7 +56,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// </summary>
         protected override IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
         {
-            var sequence = new Dictionary<int, OpCode>();
+            var sequence = new SortedDictionary<int, OpCode>();
             int startIndex = -1;
             for (int index = 0; index < method.Body.Instructions.Count; index++)
             {

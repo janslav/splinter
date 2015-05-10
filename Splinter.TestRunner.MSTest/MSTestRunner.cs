@@ -21,15 +21,15 @@ namespace Splinter.TestRunner.MsTest
 
         private readonly ICodeCache codeCache;
 
-        private readonly IConsoleProcessFactory processFactory;
+        private readonly IExecutableUtils executableUtils;
 
         private FileInfo msTestExe;
 
-        public MSTestRunner(log4net.ILog log, ICodeCache codeCache, IConsoleProcessFactory processFactory)
+        public MSTestRunner(log4net.ILog log, ICodeCache codeCache, IExecutableUtils executableUtils)
         {
             this.log = log;
             this.codeCache = codeCache;
-            this.processFactory = processFactory;
+            this.executableUtils = executableUtils;
         }
 
         public bool IsReady(out string unavailableMessage)
@@ -38,20 +38,11 @@ namespace Splinter.TestRunner.MsTest
             {
                 var paths = this.GetMsExeSearchPaths();
 
-                var process = this.processFactory.CreateProcess("mstest.exe", "", paths.ToArray());
+                this.msTestExe = this.executableUtils.FindExecutable("mstest.exe", paths);
+                this.executableUtils.RunProcessAndWaitForExit(this.msTestExe);
 
-                this.msTestExe = new FileInfo(process.StartInfo.FileName);
-
-                if (process != null)
-                {
-                    process.Start();
-                    process.WaitForExit();
-
-                    unavailableMessage = null;
-                    return true;
-                }
-
-                throw new Exception("MsTest.exe not found.");
+                unavailableMessage = null;
+                return true;
             }
             catch (Exception e)
             {
@@ -83,7 +74,7 @@ namespace Splinter.TestRunner.MsTest
         }
 
         //code stolen from NinjaTurtles msbuild runner
-        private IEnumerable<string> GetMsExeSearchPaths()
+        private IReadOnlyCollection<string> GetMsExeSearchPaths()
         {
             var searchPath = new List<string>();
             string programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);

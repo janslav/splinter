@@ -7,22 +7,28 @@ namespace Splinter.Test.Test.MSTest
     public class SubjectTest
     {
         [TestMethod]
-        public void Dummy_Dummies()
+        public void ThisTestCoversOnlyUselessCode()
         {
-            Assert.AreEqual(0, new Subj.Subject().Dummy());
+            new Subj.Subject().DummyAdd(0, 0);
+        }
+
+
+        [TestMethod]
+        public void ThisTestDoesntAssert()
+        {
+            new Subj.Subject().Add1(3, 0);
         }
 
         [TestMethod]
-        public void Add_Works()
+        public void ThisTestUsesImproperTestingData()
         {
-            Assert.AreEqual(3, new Subj.Subject().Add(3, 0));
+            Assert.AreEqual(3, new Subj.Subject().Add2(3, 0));
         }
 
         [TestMethod]
-        public void WorkingAdd_Works()
+        public void ThisTestShouldBeOk()
         {
-            Assert.AreEqual(3, new Subj.Subject().WorkingAdd(3, 0));
-            Assert.AreEqual(7, new Subj.Subject().WorkingAdd(3, 4));
+            Assert.AreEqual(7, new Subj.Subject().Add3(3, 4));
         }
     }
 }

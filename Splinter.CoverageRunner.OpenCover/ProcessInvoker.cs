@@ -32,9 +32,12 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly ILog log;
 
-        public ProcessInvoker(ILog log)
+        private readonly IExecutableUtils executableUtils;
+
+        public ProcessInvoker(ILog log, IExecutableUtils executableUtils)
         {
             this.log = log;
+            this.executableUtils = executableUtils;
         }
 
         public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName)
@@ -48,8 +51,13 @@ namespace Splinter.CoverageRunner.OpenCover
                     this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
 
                     var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testRunner, testBinary, sd);
+                    var exitCode = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo);
 
-                    this.RunOpenCoverProcess(runnerName, openCoverProcessInfo);
+                    if (exitCode != 0)
+                    {
+                        //TODO: no logs to check atm
+                        throw new Exception("Test runner exitcode != 0. Check the logs.");
+                    }
 
                     //not using DirectoryInfo as the out value because the directory won't exist by the time
                     shadowDirFullName = sd.Shadow.FullName;
@@ -64,24 +72,6 @@ namespace Splinter.CoverageRunner.OpenCover
                 finally
                 {
                     this.log.InfoFormat("Done running tests contained in '{0}'.", testBinary.Name);
-                }
-            }
-        }
-
-        private void RunOpenCoverProcess(string runnerName, ProcessStartInfo openCoverProcessInfo)
-        {
-            using (var p = Process.Start(openCoverProcessInfo))
-            {
-                //TODO: redirecting doesn't work
-                p.OutputDataReceived += (_, e) => this.log.Debug(runnerName + ": " + e.Data);
-                p.ErrorDataReceived += (_, e) => this.log.Warn(runnerName + ": " + e.Data);
-
-                p.WaitForExit();
-
-                if (p.ExitCode != 0)
-                {
-                    //TODO: no logs to check atm
-                    throw new Exception("Test runner exitcode != 0. Check the logs.");
                 }
             }
         }

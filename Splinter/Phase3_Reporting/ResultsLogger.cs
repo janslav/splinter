@@ -32,9 +32,11 @@ namespace Splinter.Phase3_Reporting
                 return;
             }
 
-            var testsCount = results.Sum(r => r.FailingTests.Count + r.PassingTests.Count);
+            var realRunsResults = results.Where(r => !string.IsNullOrWhiteSpace(r.Description)).ToArray();
 
-            this.log.InfoFormat("Number of mutations: {0}", results.Count);
+            var testsCount = realRunsResults.Sum(r => r.FailingTests.Count + r.PassingTests.Count);
+
+            this.log.InfoFormat("Number of mutations: {0}", realRunsResults.Length);
             this.log.InfoFormat("Number of mutation tests run: {0}", testsCount);
 
 
@@ -44,18 +46,18 @@ namespace Splinter.Phase3_Reporting
                 return;
             }
 
-            if (0 == results.Sum(r => r.PassingTests.Count))
+            if (0 == realRunsResults.Sum(r => r.PassingTests.Count))
             {
                 this.log.Warn("All mutation tests failed. Something probably wet wrong. Or all your tests are beyond perfection.");
                 return;
             }
 
-            if (0 == results.Sum(r => r.FailingTests.Count))
+            if (0 == realRunsResults.Sum(r => r.FailingTests.Count))
             {
                 this.log.Warn("All mutation tests passed. Something probably wet wrong. Or all your tests are completely useless.");
             }
 
-            var survivingMutants = results.Where(r => r.FailingTests.Count == 0 && !string.IsNullOrWhiteSpace(r.Description)).ToArray();
+            var survivingMutants = realRunsResults.Where(r => r.FailingTests.Count == 0).ToArray();
 
             //now we want to write out unkilled mutants - those with zero failed tests.
             foreach (var result in survivingMutants)
@@ -67,7 +69,7 @@ namespace Splinter.Phase3_Reporting
                     result.InstructionIndex);
             }
 
-            //now we want to write out tests that killed no mutants - those which never failed.
+            //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
             var allPassing = results.SelectMany(r => r.PassingTests).Distinct().ToArray();
             var allFailing = results.SelectMany(r => r.FailingTests).Distinct().ToArray();
 
@@ -81,9 +83,9 @@ namespace Splinter.Phase3_Reporting
 
             this.log.InfoFormat(
                 "Out of {0} mutants, {1} survived. That's {2:0.0}% 'coverage-coverage'.",
-                results.Count,
+                realRunsResults.Length,
                 survivingMutants.Length,
-                100.0 - ((survivingMutants.Length * 100.0) / results.Count));
+                100.0 - ((survivingMutants.Length * 100.0) / realRunsResults.Length));
 
             var uniqueTests = allPassing.Union(allFailing).Count();
 

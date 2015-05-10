@@ -25,6 +25,7 @@ using Splinter.Contracts.DTOs;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Utils;
 using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase2_Mutation
@@ -47,11 +48,14 @@ namespace Splinter.Phase2_Mutation
 
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
-        public MutationTestSession(ILog log, IUnityContainer container, ICodeCache codeCache, IWindowsErrorReporting errorReportingSwitch)
+        private readonly IExecutableUtils executableUtils;
+
+        public MutationTestSession(ILog log, IUnityContainer container, IExecutableUtils executableUtils, ICodeCache codeCache, IWindowsErrorReporting errorReportingSwitch)
         {
             this.log = log;
             this.codeCache = codeCache;
             this.errorReportingSwitch = errorReportingSwitch;
+            this.executableUtils = executableUtils;
 
             this.ImportTurtles(container);
         }
@@ -114,23 +118,14 @@ namespace Splinter.Phase2_Mutation
                                     mutation.Description,
                                     mutation.Input.Subject.Method.FullName);
 
-                                using (var p = Process.Start(processInfo))
+                                var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo);
+                                if (exitCode == 0)
                                 {
-                                    var runnerName = test.Runner.Name;
-
-                                    p.OutputDataReceived += (_, e) => this.log.Debug(runnerName + ": " + e.Data);
-                                    p.ErrorDataReceived += (_, e) => this.log.Warn(runnerName + ": " + e.Data);
-
-                                    p.WaitForExit();
-
-                                    if (p.ExitCode == 0)
-                                    {
-                                        passingTests.Add(test.Method);
-                                    }
-                                    else
-                                    {
-                                        failingTests.Add(test.Method);
-                                    }
+                                    passingTests.Add(test.Method);
+                                }
+                                else
+                                {
+                                    failingTests.Add(test.Method);
                                 }
                             }
 

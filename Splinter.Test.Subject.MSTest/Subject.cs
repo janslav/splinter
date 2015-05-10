@@ -2,22 +2,22 @@
 {
     public class Subject
     {
-        public int Dummy()
+        public int DummyAdd(int left, int right)
         {
             return 0;
         }
 
-        public int Add(int left, int right)
+        public int Add1(int left, int right)
         {
             return left + right;
         }
 
-        public int WorkingAdd(int left, int right)
+        public int Add2(int left, int right)
         {
             return left + right;
         }
 
-        public int UncoveredAdd(int left, int right)
+        public int Add3(int left, int right)
         {
             return left + right;
         }

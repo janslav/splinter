@@ -31,16 +31,16 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private readonly ISubjectTestMappingParser mappingParser;
 
-        private readonly IConsoleProcessFactory processFactory;
+        private readonly IExecutableUtils executableUtils;
 
         private FileInfo ncoverExe;
 
-        public OpenCoverRunner(ILog log, IProcessInvoker invoker, ISubjectTestMappingParser mappingParser, IConsoleProcessFactory processFactory)
+        public OpenCoverRunner(ILog log, IProcessInvoker invoker, ISubjectTestMappingParser mappingParser, IExecutableUtils executableUtils)
         {
             this.log = log;
             this.invoker = invoker;
             this.mappingParser = mappingParser;
-            this.processFactory = processFactory;
+            this.executableUtils = executableUtils;
         }
 
         public bool IsReady(out string unavailableMessage)
@@ -48,20 +48,12 @@ namespace Splinter.CoverageRunner.OpenCover
             try
             {
                 var paths = new[] { this.GetOpenCoverExeInstallationPath() };
-                var process = this.processFactory.CreateProcess(OpenCoverExeName, "", paths);
 
-                if (process != null)
-                {
-                    process.Start();
-                    process.WaitForExit();
+                this.ncoverExe = this.executableUtils.FindExecutable(OpenCoverExeName, paths);
+                this.executableUtils.RunProcessAndWaitForExit(this.ncoverExe);
 
-                    this.ncoverExe = new FileInfo(process.StartInfo.FileName);
-
-                    unavailableMessage = null;
-                    return true;
-                }
-
-                throw new Exception(OpenCoverExeName + " not found.");
+                unavailableMessage = null;
+                return true;
             }
             catch (Exception e)
             {

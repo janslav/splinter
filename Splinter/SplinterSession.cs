@@ -133,6 +133,5 @@ namespace Splinter
 
             return coverageRunner;
         }
-
     }
 }

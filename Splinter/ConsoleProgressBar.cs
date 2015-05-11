@@ -12,7 +12,7 @@ namespace Splinter
     {
         private readonly Timer timer = new Timer(500);
 
-        private readonly ConcurrentDictionary<T, Tuple<int, int>> progressDict = new ConcurrentDictionary<T, Tuple<int, int>>();
+        private readonly ConcurrentDictionary<T, Tuple<int, int, int>> progressDict = new ConcurrentDictionary<T, Tuple<int, int, int>>();
 
         public ConsoleProgressBar()
         {
@@ -26,14 +26,14 @@ namespace Splinter
         void OnTimerTick(object sender, ElapsedEventArgs e)
         {
             var values = this.progressDict.Values.ToArray();
-            DrawTextProgressBar(values.Sum(v => v.Item1), values.Sum(v => v.Item2));
+            DrawTextProgressBar(values.Sum(v => v.Item1), values.Sum(v => v.Item2), values.Sum(v => v.Item3));
         }
 
-        internal Progress<Tuple<int, int>> CreateProgressReportingObject(T correlationObj)
+        internal Progress<Tuple<int, int, int>> CreateProgressReportingObject(T correlationObj)
         {
             if (Environment.UserInteractive)
             {
-                return new Progress<Tuple<int, int>>(t => progressDict[correlationObj] = t);
+                return new Progress<Tuple<int, int, int>>(t => progressDict[correlationObj] = t);
             }
             else
             {
@@ -43,7 +43,7 @@ namespace Splinter
 
         const int progressBarWidth = 50;
 
-        private static void DrawTextProgressBar(int progress, int total)
+        private static void DrawTextProgressBar(int done, int inProgress, int total)
         {
             //draw empty progress bar
             Console.CursorLeft = 0;
@@ -55,9 +55,17 @@ namespace Splinter
 
             //draw filled part
             int position = 1;
-            for (int i = 0; i < Math.Round(onechunk * progress); i++)
+            for (int i = 0; i < Math.Round(onechunk * done); i++)
             {
                 Console.BackgroundColor = ConsoleColor.White;
+                Console.CursorLeft = position++;
+                Console.Write(" ");
+            }
+
+            //draw filled part
+            for (int i = 0; i < Math.Round(onechunk * inProgress); i++)
+            {
+                Console.BackgroundColor = ConsoleColor.Gray;
                 Console.CursorLeft = position++;
                 Console.Write(" ");
             }
@@ -73,7 +81,8 @@ namespace Splinter
             //draw totals
             Console.CursorLeft = progressBarWidth + 5;
             Console.BackgroundColor = ConsoleColor.Black;
-            Console.Write(progress.ToString() + " of " + total.ToString() + "          "); //blanks at the end remove any excess
+            //blanks at the end remove any excess
+            Console.Write("{0:0000} + {1:0000} of {2:0000} ", done, inProgress, total);
         }
 
         public void Dispose()

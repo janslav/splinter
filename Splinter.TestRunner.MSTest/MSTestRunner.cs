@@ -97,7 +97,7 @@ namespace Splinter.TestRunner.MsTest
 
         private void AddSearchPathsForVisualStudioVersions(ICollection<string> searchPath, string baseFolder)
         {
-            for (int visualStudioVersion = 10; visualStudioVersion <= 15; visualStudioVersion++)
+            for (int visualStudioVersion = 15; visualStudioVersion >= 10; visualStudioVersion--)
             {
                 searchPath.Add(Path.Combine(baseFolder,
                     string.Format("Microsoft Visual Studio {0}.0\\Common7\\IDE", visualStudioVersion)));

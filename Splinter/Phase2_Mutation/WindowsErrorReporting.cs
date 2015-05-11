@@ -38,32 +38,28 @@ namespace Splinter.Phase2_Mutation
         {
             var r = new Switch();
 
-            //debugger attached = we don't care about default debug UI
-            if (!Debugger.IsAttached)
+            //try
             {
-                try
+                using (var key = Registry.LocalMachine.OpenSubKey(
+                    ERROR_REPORTING_KEY,
+                    RegistryKeyPermissionCheck.ReadWriteSubTree))
                 {
-                    using (var key = Registry.LocalMachine.OpenSubKey(
-                        ERROR_REPORTING_KEY,
-                        RegistryKeyPermissionCheck.ReadWriteSubTree))
+                    if (key != null)
                     {
-                        if (key != null)
-                        {
-                            r.originalValue = key.GetValue(ERROR_REPORTING_VALUE, null);
-                            key.SetValue(ERROR_REPORTING_VALUE, 1, RegistryValueKind.DWord);
-                            r.runRestore = true;
-                        }
+                        r.originalValue = key.GetValue(ERROR_REPORTING_VALUE, null);
+                        key.SetValue(ERROR_REPORTING_VALUE, 1, RegistryValueKind.DWord);
+                        r.runRestore = true;
                     }
                 }
-                catch (UnauthorizedAccessException) { }
             }
+            //catch (UnauthorizedAccessException) { }
 
             return r;
         }
 
         private static void RestoreErrorReporting(object errorReportingValue)
         {
-            try
+            //try
             {
                 using (var key = Registry.LocalMachine.OpenSubKey(
                     ERROR_REPORTING_KEY,
@@ -84,7 +80,7 @@ namespace Splinter.Phase2_Mutation
                     }
                 }
             }
-            catch (UnauthorizedAccessException) { }
+            //catch (UnauthorizedAccessException) { }
         }
     }
 }

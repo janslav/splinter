@@ -36,7 +36,9 @@ namespace Splinter.Phase2_Mutation
     /// </summary>
     public interface IMutationTestSession
     {
-        IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input, IProgress<Tuple<int, int>> progress = null);
+        IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
+            MutationTestSessionInput input,
+            IProgress<Tuple<int, int, int>> progress = null);
     }
 
     public class MutationTestSession : IMutationTestSession
@@ -51,7 +53,12 @@ namespace Splinter.Phase2_Mutation
 
         private IReadOnlyCollection<IMethodTurtle> allTurtles = null;
 
-        public MutationTestSession(ILog log, IUnityContainer container, IExecutableUtils executableUtils, ICodeCache codeCache, IWindowsErrorReporting errorReportingSwitch)
+        public MutationTestSession(
+            ILog log,
+            IUnityContainer container,
+            IExecutableUtils executableUtils,
+            ICodeCache codeCache,
+            IWindowsErrorReporting errorReportingSwitch)
         {
             this.log = log;
             this.codeCache = codeCache;
@@ -78,7 +85,9 @@ namespace Splinter.Phase2_Mutation
                 }).ToArray();
         }
 
-        public IReadOnlyCollection<SingleMutationTestResult> Run(MutationTestSessionInput input, IProgress<Tuple<int, int>> progress)
+        public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
+            MutationTestSessionInput input,
+            IProgress<Tuple<int, int, int>> progress)
         {
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
@@ -90,13 +99,14 @@ namespace Splinter.Phase2_Mutation
 
                     int testsCount = 0;
                     int testsFinishedCount = 0;
+                    int testsInProgressCount = 0;
 
                     var mutations = this.allTurtles.SelectMany(t =>
                     {
                         var mutants = t.TryCreateMutants(input);
 
                         Interlocked.Add(ref testsCount, mutants.Count * input.Subject.TestMethods.Count);
-                        ReportProgress(progress, testsCount, testsFinishedCount);
+                        ReportProgress(progress, testsFinishedCount, testsInProgressCount, testsCount);
 
                         if (mutants.Count == 0)
                         {
@@ -112,7 +122,7 @@ namespace Splinter.Phase2_Mutation
                         return mutants;
                     });
 
-                    var results = mutations.AsParallel().WithDegreeOfParallelism(Environment.ProcessorCount * 8)
+                    var results = mutations.AsParallel()// .WithDegreeOfParallelism(Environment.ProcessorCount * 4)
                         .Select(mutation =>
                     {
                         var failingTests = new List<MethodRef>();
@@ -123,6 +133,9 @@ namespace Splinter.Phase2_Mutation
                             //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
                             foreach (var test in mutation.Input.Subject.TestMethods)
                             {
+                                Interlocked.Increment(ref testsInProgressCount);
+                                ReportProgress(progress, testsFinishedCount, testsInProgressCount, testsCount);
+
                                 var testPassed = this.RunTestOnMutation(mutation, test);
                                 if (testPassed)
                                 {
@@ -133,8 +146,9 @@ namespace Splinter.Phase2_Mutation
                                     failingTests.Add(test.Method);
                                 }
 
+                                Interlocked.Decrement(ref testsInProgressCount);
                                 Interlocked.Increment(ref testsFinishedCount);
-                                ReportProgress(progress, testsCount, testsFinishedCount);
+                                ReportProgress(progress, testsFinishedCount, testsInProgressCount, testsCount);
                             }
                         }
 
@@ -175,11 +189,11 @@ namespace Splinter.Phase2_Mutation
             return exitCode == 0;
         }
 
-        private static void ReportProgress(IProgress<Tuple<int, int>> progress, int testsCount, int testsFinishedCount)
+        private static void ReportProgress(IProgress<Tuple<int, int, int>> progress, int testsFinishedCount, int testsInProgressCount, int testsCount)
         {
             if (progress != null)
             {
-                progress.Report(Tuple.Create(testsFinishedCount, testsCount));
+                progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
             }
         }
 

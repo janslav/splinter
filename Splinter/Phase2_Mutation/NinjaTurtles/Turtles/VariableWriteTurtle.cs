@@ -134,6 +134,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                 }
                 variables[type].Add(new Variable(VariableType.Local, variable.Index, variable.Name));
             }
+
             foreach (var field in method.DeclaringType.Fields)
             {
                 if (field.Name == "<>1__state") continue;
@@ -144,6 +145,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                 }
                 variables[type].Add(new Variable(VariableType.Field, -1, field.Name));
             }
+
             return variables;
         }
 
@@ -164,6 +166,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                         variable.Operand = instruction.Operand;
                     }
                 }
+
                 if (instruction.OpCode == OpCodes.Ldfld)
                 {
                     var fieldDefinition = (FieldReference)instruction.Operand;

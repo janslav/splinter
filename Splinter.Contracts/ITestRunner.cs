@@ -14,7 +14,7 @@ namespace Splinter.Contracts
     {
         bool IsTestBinary(FileInfo binary);
 
-        ProcessStartInfo GetProcessInfoToRunTests(DirectoryInfo workingDirectory, FileInfo testBinaries);
+        ProcessStartInfo GetProcessInfoToRunTests(DirectoryInfo workingDirectory, FileInfo testBinary);
 
         ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName);
     }

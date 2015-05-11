@@ -114,7 +114,7 @@ namespace Splinter.Phase1_Discovery
 
         private IEnumerable<Tuple<string, FileInfo>> AutoDiscoverBinaries(DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> allowedTestRunners)
         {
-            foreach (var fi in modelDirectory.EnumerateFiles("*.dll"))
+            foreach (var fi in modelDirectory.EnumerateFiles("*.dll", SearchOption.AllDirectories))
             {
                 if (!PdbFileExists(fi))
                 {

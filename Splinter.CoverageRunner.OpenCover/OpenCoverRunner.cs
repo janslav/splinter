@@ -117,18 +117,18 @@ namespace Splinter.CoverageRunner.OpenCover
         {
             //invoke tests and parse results
             var partialCoverages = testsToRun
-                .AsParallel()
+                //.AsParallel()
                 .Select(testBinary =>
                     {
                         string shadowDir;
                         var doc = this.invoker.RunTestsAndGetOutput(this.ncoverExe, modelDirectory, testBinary.Runner, testBinary.Binary, out shadowDir);
-                        return this.mappingParser.ParseMapping(testBinary.Runner, testBinary.Binary, doc, shadowDir);
+                        return this.mappingParser.ParseMapping(testBinary.Runner, testBinary.Binary, modelDirectory, doc, shadowDir);
                     });
 
             //one subject method can be tested by tests from several assemblies, so here we merge the lists.
             var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<TestMethodRef>>();
 
-            partialCoverages.SelectMany(i => i)
+            partialCoverages.SelectMany(i => i).AsParallel()
                 .ForAll(subject =>
                     dict.AddOrUpdate(
                         subject.Method,

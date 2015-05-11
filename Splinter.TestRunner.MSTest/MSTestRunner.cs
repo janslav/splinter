@@ -8,6 +8,8 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 
+using Mono.Cecil;
+
 using Splinter.Contracts.DTOs;
 using Splinter.Contracts;
 using Splinter.Utils;
@@ -64,9 +66,9 @@ namespace Splinter.TestRunner.MsTest
 
         public bool IsTestBinary(FileInfo binary)
         {
-            var assembly = Assembly.ReflectionOnlyLoadFrom(binary.FullName);
+            var assembly = AssemblyDefinition.ReadAssembly(binary.FullName);
 
-            var referencingFramework = assembly.GetReferencedAssemblies().Where(a => a.Name.Equals("Microsoft.VisualStudio.QualityTools.UnitTestFramework"));
+            var referencingFramework = assembly.MainModule.AssemblyReferences.Where(a => a.Name.Equals("Microsoft.VisualStudio.QualityTools.UnitTestFramework"));
 
             //if (referencingFramework.Any())
             //{

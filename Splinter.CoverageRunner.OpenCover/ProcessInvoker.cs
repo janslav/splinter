@@ -78,9 +78,10 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private ProcessStartInfo CreateOpenCoverStartInfo(FileInfo openCoverExe, ITestRunner testRunner, FileInfo testBinary, ShadowDirectory sd)
         {
-            var shadowTestBinary = Path.Combine(sd.Shadow.FullName, testBinary.Name);
 
-            var testRunnerProcessInfo = testRunner.GetProcessInfoToRunTests(sd.Shadow, new FileInfo(shadowTestBinary));
+            var shadowTestBinary = sd.GetEquivalentShadowPath(testBinary);
+
+            var testRunnerProcessInfo = testRunner.GetProcessInfoToRunTests(sd.Shadow, shadowTestBinary);
 
             var staticArgs = "-register:user -returntargetcode -mergebyhash -output:" + outputFileName; // -log:All
             var target = string.Format("\"-target:{0}\"", CmdLine.EncodeArgument(testRunnerProcessInfo.FileName));

@@ -23,7 +23,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Parses the subject-test mapping from opencover results.xml
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, XDocument resultsXml, string shadowDirFullName);
+        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName);
     }
 
     public class SubjectTestMappingParser : ISubjectTestMappingParser
@@ -35,13 +35,11 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, XDocument resultsXml, string shadowDirFullName)
+        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName)
         {
             var session = resultsXml.Root;
 
             var testBinaryHash = this.HashFile(testBinary);
-
-            var originalDir = testBinary.DirectoryName;
 
             var results = new List<TestSubjectMethodRef>();
 
@@ -64,7 +62,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 {
                     var relativePath = shadowAssembly.FullName.Substring(shadowDirFullName.Length);
                     //the file path from the original directory is the one we care about
-                    var originalAssembly = new FileInfo(originalDir + relativePath);
+                    var originalAssembly = new FileInfo(modelDir + relativePath);
 
                     foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
                     {
@@ -108,9 +106,14 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private byte[] HashFromString(string dashDelimitedHexNumbers)
         {
+            if (string.IsNullOrWhiteSpace(dashDelimitedHexNumbers))
+            {
+                return new byte[0];
+            }
+            
             return dashDelimitedHexNumbers.Split('-')
-                .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
-                .ToArray();
+                    .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
+                    .ToArray();
         }
     }
 }

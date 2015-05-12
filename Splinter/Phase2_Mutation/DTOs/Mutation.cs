@@ -34,8 +34,9 @@ namespace Splinter.Phase2_Mutation.DTOs
 {
     /// <summary>
     /// An immutable class containing metadata of a single mutation. Directory will be deleted on Dispose.
+    /// An equivalent of this class in NinjaTurtles is called MutantMetaData
     /// </summary>
-    [DebuggerDisplay("MutantMetaData {Input.Subject.Method.FullName} {Description}")]
+    [DebuggerDisplay("Mutation {Input.Subject.Method.FullName} {Description}")]
     public class Mutation : IDisposable
     {
         public Mutation(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int instructionIndex, string description)

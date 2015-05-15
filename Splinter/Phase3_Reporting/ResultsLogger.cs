@@ -32,7 +32,7 @@ namespace Splinter.Phase3_Reporting
                 return;
             }
 
-            var realRunsResults = results.Where(r => !string.IsNullOrWhiteSpace(r.Description)).ToArray();
+            var realRunsResults = results.Where(r => !string.IsNullOrWhiteSpace(r.MutationDescription)).ToArray();
 
             var testsCount = realRunsResults.Sum(r => r.FailingTests.Count + r.PassingTests.Count);
 
@@ -65,7 +65,7 @@ namespace Splinter.Phase3_Reporting
                 this.log.WarnFormat(
                     "Missed mutation: method '{0}', mutation '{1}', instruction {2}.",
                     result.Subject.FullName,
-                    result.Description,
+                    result.MutationDescription,
                     result.InstructionIndex);
             }
 

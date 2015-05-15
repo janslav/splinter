@@ -22,7 +22,7 @@ namespace Splinter.Phase2_Mutation.DTOs
         {
             this.Subject = subject;
             this.InstructionIndex = instructionIndex;
-            this.Description = description;
+            this.MutationDescription = description;
             this.PassingTests = passingTests;
             this.FailingTests = failingTests;
         }
@@ -31,7 +31,7 @@ namespace Splinter.Phase2_Mutation.DTOs
 
         public int InstructionIndex { get; private set; }
 
-        public string Description { get; private set; }
+        public string MutationDescription { get; private set; }
 
         public IReadOnlyCollection<MethodRef> PassingTests { get; private set; }
 

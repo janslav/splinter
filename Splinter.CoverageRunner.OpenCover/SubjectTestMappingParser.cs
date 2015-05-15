@@ -52,7 +52,7 @@ namespace Splinter.CoverageRunner.OpenCover
             {
                 var method = new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value);
 
-                testMethods.Add((uint) trackedMethodEl.Attribute("uid"), new TestMethodRef(method, testRunner));
+                testMethods.Add((uint)trackedMethodEl.Attribute("uid"), new TestMethodRef(method, testRunner));
             }
 
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))
@@ -73,7 +73,7 @@ namespace Splinter.CoverageRunner.OpenCover
                             foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
                             {
                                 TestMethodRef testMethod;
-                                if (testMethods.TryGetValue((uint) trackedMethodRefEl.Attribute("uid"), out testMethod))
+                                if (testMethods.TryGetValue((uint)trackedMethodRefEl.Attribute("uid"), out testMethod))
                                 {
                                     list.Add(testMethod);
                                 }
@@ -110,10 +110,11 @@ namespace Splinter.CoverageRunner.OpenCover
             {
                 return new byte[0];
             }
-            
+
             return dashDelimitedHexNumbers.Split('-')
                     .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
                     .ToArray();
         }
     }
 }
+

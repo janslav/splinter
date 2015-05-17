@@ -56,8 +56,6 @@
     <Compile Include="IPluginFactory{T}.cs" />
     <Compile Include="ITestRunner.cs" />
     <Compile Include="ICoverageRunner.cs" />
-    <Compile Include="ITestRunnerMetadata.cs" />
-    <Compile Include="ICoverageRunnerMetadata.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DTOs\TestBinary.cs" />
   </ItemGroup>

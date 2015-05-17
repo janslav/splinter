@@ -24,10 +24,10 @@ namespace Splinter.Phase1_Discovery
     public class PluginsContainer : IPluginsContainer
     {
         [ImportMany]
-        private IEnumerable<Lazy<IPluginFactory<ICoverageRunner>, ICoverageRunnerMetadata>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
+        private IEnumerable<Lazy<IPluginFactory<ICoverageRunner>>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
 
         [ImportMany]
-        private IEnumerable<Lazy<IPluginFactory<ITestRunner>, ITestRunnerMetadata>> lazyTestRunners = null; //assigning null to avoid compiler warning
+        private IEnumerable<Lazy<IPluginFactory<ITestRunner>>> lazyTestRunners = null; //assigning null to avoid compiler warning
 
         private readonly ILog log;
 

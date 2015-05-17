@@ -101,37 +101,10 @@ namespace Splinter.Utils.Cecil
 
         public void LoadDebugInformation()
         {
-            var reader = ResolveSymbolReader();
-            if (reader == null) return;
-
-            this.AssemblyDefinition.MainModule.ReadSymbols(reader);
-        }
-
-        private ISymbolReader ResolveSymbolReader()
-        {
-            string symbolLocation = null;
-            string pdbLocation = Path.ChangeExtension(this.AssemblyLocation.FullName, "pdb");
-            string mdbLocation = this.AssemblyLocation.FullName + ".mdb";
-            ISymbolReaderProvider provider = null;
-
-            if (File.Exists(pdbLocation))
+            foreach (var module in this.AssemblyDefinition.Modules)
             {
-                symbolLocation = pdbLocation;
-                provider = new PdbReaderProvider();
+                module.ReadSymbols();
             }
-            else if (File.Exists(mdbLocation))
-            {
-                symbolLocation = this.AssemblyLocation.FullName;
-                provider = new MdbReaderProvider();
-            }
-
-            if (provider == null)
-            {
-                return null;
-            }
-
-            var reader = provider.GetSymbolReader(this.AssemblyDefinition.MainModule, symbolLocation);
-            return reader;
         }
     }
 }

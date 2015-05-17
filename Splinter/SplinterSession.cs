@@ -71,6 +71,7 @@ namespace Splinter
 
             //Phase 1: find tests and run them to see who tests what
             var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
+            this.OutputDiscoverySetup(testBinaries);
 
             var subjectMethods = coverageRunner.DiscoverTestSubjectMapping(modelDirectory, testBinaries);
             if (subjectMethods.Count == 0)
@@ -79,7 +80,7 @@ namespace Splinter
                 return;
             }
 
-            this.OutputDiscoveryFindings(testBinaries, subjectMethods);
+            this.OutputDiscoveryFindings(subjectMethods);
 
             //Phase 2 - mutate away!
             SingleMutationTestResult[] mutationResults = CreateAndRunMutations(modelDirectory, subjectMethods);
@@ -99,6 +100,21 @@ namespace Splinter
             {
                 throw new Exception("No coverage runners available.");
             }
+        }
+
+        private DirectoryInfo CheckWorkingDirectory(ManualConfiguration cmdLine)
+        {
+            var modelDirectory = new DirectoryInfo(
+                !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
+
+            if (!modelDirectory.Exists)
+            {
+                throw new Exception(string.Format("Directory '{0}' doesn't exist.", modelDirectory.FullName));
+            }
+
+            this.log.DebugFormat("Operation root directory is '{0}'", modelDirectory.FullName);
+
+            return modelDirectory;
         }
 
         private ICoverageRunner PickCoverageRunner(ManualConfiguration cmdLine)
@@ -136,28 +152,16 @@ namespace Splinter
             return coverageRunner;
         }
 
-        private DirectoryInfo CheckWorkingDirectory(ManualConfiguration cmdLine)
+        private void OutputDiscoverySetup(IReadOnlyCollection<TestBinary> testBinaries)
         {
-            var modelDirectory = new DirectoryInfo(
-                !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
-
-            if (!modelDirectory.Exists)
-            {
-                throw new Exception(string.Format("Directory '{0}' doesn't exist.", modelDirectory.FullName));
-            }
-
-            this.log.DebugFormat("Operation root directory is '{0}'", modelDirectory.FullName);
-
-            return modelDirectory;
-        }
-
-        private void OutputDiscoveryFindings(IReadOnlyCollection<TestBinary> testBinaries, IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
-        {
-
-            var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
-            var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
             this.log.Info("Test runners: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
             this.log.Info("Test assemblies: " + string.Join(", ", testBinaries.Select(fi => fi.Binary.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
+        }
+
+        private void OutputDiscoveryFindings(IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
+        {
+            var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
+            var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
             this.log.Info("Covered subject code assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, subjectAssemblies));
             this.log.Info("Number of unique subject methods: " + subjectMethods.Count);
             this.log.Info("Number of unique test methods: " + testMethodsCount);

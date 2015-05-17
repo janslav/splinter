@@ -25,6 +25,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.ComponentModel.Composition;
+using System.Threading;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -67,6 +68,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     public abstract class MethodTurtleBase : IMethodTurtle
     {
         private readonly ILog log;
+
+        private static int counter;
 
         public MethodTurtleBase(ILog log)
         {
@@ -180,14 +183,17 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// applied.
         /// </param>
         protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
-        {
-            var shadow = new ShadowDirectory(this.log, input.ModelDirectory);
+        {            
+            var i = Interlocked.Increment(ref counter);
+            var mutationId = string.Format("Mutation{0:0000}:", i);
+
+            var shadow = new ShadowDirectory(this.log, input.ModelDirectory, mutationId);
 
             var shadowedPath = shadow.GetEquivalentShadowPath(input.Subject.Method.Assembly);
 
             mutant.Write(shadowedPath.FullName);
 
-            return new Mutation(input, shadow, shadowedPath, index, description);
+            return new Mutation(mutationId, input, shadow, shadowedPath, index, description);
         }
     }
 }

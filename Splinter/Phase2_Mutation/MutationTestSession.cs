@@ -179,7 +179,7 @@ namespace Splinter.Phase2_Mutation
                 mutation.Description,
                 mutation.Input.Subject.Method.FullName);
 
-            var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.TestDirectory.ShadowId);
+            var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.Id);
             return exitCode == 0;
         }
 

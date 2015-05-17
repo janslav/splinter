@@ -39,19 +39,25 @@ namespace Splinter.Phase2_Mutation.DTOs
     [DebuggerDisplay("Mutation {Input.Subject.Method.FullName} {Description}")]
     public class Mutation : IDisposable
     {
-        public Mutation(MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int instructionIndex, string description)
+        public Mutation(string id, MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int instructionIndex, string description)
         {
             this.Input = input;
             this.Mutant = mutant;
             this.Description = description;
             this.InstructionIndex = instructionIndex;
             this.TestDirectory = testDirectory;
+            this.Id = id;
         }
 
         /// <summary>
         /// Gets the description of the mutation test being run.
         /// </summary>
         public string Description { get; private set; }
+
+        /// <summary>
+        /// Identifies this mutation in the logs
+        /// </summary>
+        public string Id { get; private set; }
 
         /// <summary>
         /// Gets the location of the assembly containing the model method.

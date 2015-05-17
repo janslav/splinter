@@ -43,15 +43,16 @@ namespace Splinter.CoverageRunner.OpenCover
         public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName)
         {
             var runnerName = testRunner.Name;
+            const string operationId = "OpenCover";
 
-            using (var sd = new ShadowDirectory(this.log, modelDirectory))
+            using (var sd = new ShadowDirectory(this.log, modelDirectory, operationId))
             {
                 try
                 {
                     this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
 
                     var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testRunner, testBinary, sd);
-                    var exitCode = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, sd.ShadowId);
+                    var exitCode = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, operationId);
 
                     if (exitCode != 0)
                     {

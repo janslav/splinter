@@ -7,6 +7,8 @@ using System.Security;
 using System.Diagnostics;
 using Microsoft.Win32;
 
+using log4net;
+
 namespace Splinter.Phase2_Mutation
 {
     public interface IWindowsErrorReporting
@@ -18,6 +20,13 @@ namespace Splinter.Phase2_Mutation
     {
         private const string ERROR_REPORTING_KEY = @"SOFTWARE\Microsoft\Windows\Windows Error Reporting";
         private const string ERROR_REPORTING_VALUE = "DontShowUI";
+
+        private readonly ILog log;
+
+        public WindowsErrorReporting(ILog log)
+        {
+            this.log = log;
+        }
 
         private class Switch : IDisposable
         {
@@ -52,35 +61,34 @@ namespace Splinter.Phase2_Mutation
                     }
                 }
             }
-            catch (UnauthorizedAccessException) { }
+            catch (Exception e) 
+            {
+                this.log.Warn("Exception while trying to switch off the Windows Debug dialog.", e);
+            }
 
             return r;
         }
 
         private static void RestoreErrorReporting(object errorReportingValue)
         {
-            try
+            using (var key = Registry.LocalMachine.OpenSubKey(
+                ERROR_REPORTING_KEY,
+                RegistryKeyPermissionCheck.ReadWriteSubTree))
             {
-                using (var key = Registry.LocalMachine.OpenSubKey(
-                    ERROR_REPORTING_KEY,
-                    RegistryKeyPermissionCheck.ReadWriteSubTree))
+                if (key == null)
                 {
-                    if (key == null)
-                    {
-                        return;
-                    }
+                    return;
+                }
 
-                    if (errorReportingValue == null)
-                    {
-                        key.DeleteValue(ERROR_REPORTING_VALUE);
-                    }
-                    else
-                    {
-                        key.SetValue(ERROR_REPORTING_VALUE, errorReportingValue, RegistryValueKind.DWord);
-                    }
+                if (errorReportingValue == null)
+                {
+                    key.DeleteValue(ERROR_REPORTING_VALUE);
+                }
+                else
+                {
+                    key.SetValue(ERROR_REPORTING_VALUE, errorReportingValue, RegistryValueKind.DWord);
                 }
             }
-            catch (UnauthorizedAccessException) { }
         }
     }
 }

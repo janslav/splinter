@@ -6,6 +6,8 @@ using System.Text;
 using System.IO;
 using System.Reflection;
 
+using Mono.Options;
+
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Phase0_Boot;
@@ -21,6 +23,8 @@ namespace Splinter
     public interface ISplinterSession
     {
         void Run(ManualConfiguration cmdLine);
+
+        ManualConfiguration SetupCommandLineOptions(OptionSet os);
     }
 
     public class SplinterSession : ISplinterSession
@@ -47,9 +51,45 @@ namespace Splinter
             this.errorReportingSwitch = errorReportingSwitch;
         }
 
+        public ManualConfiguration SetupCommandLineOptions(OptionSet os)
+        {
+            var config = ManualConfiguration.SetupCommandLineOptions(os);
+
+            return config;
+        }
+
         public void Run(ManualConfiguration cmdLine)
         {
+            cmdLine.Validate();
+
             //Phase 0: configuration / plugins discovery
+            this.CheckPluginsArePresent();
+
+            var modelDirectory = this.CheckWorkingDirectory(cmdLine);
+            var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
+            var coverageRunner = this.PickCoverageRunner(cmdLine);
+
+            //Phase 1: find tests and run them to see who tests what
+            var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
+
+            var subjectMethods = coverageRunner.DiscoverTestSubjectMapping(modelDirectory, testBinaries);
+            if (subjectMethods.Count == 0)
+            {
+                this.log.Warn("No test methods discovered. Either there are none, or something went wrong.");
+                return;
+            }
+
+            this.OutputDiscoveryFindings(testBinaries, subjectMethods);
+
+            //Phase 2 - mutate away!
+            SingleMutationTestResult[] mutationResults = CreateAndRunMutations(modelDirectory, subjectMethods);
+
+            //Phase 3 - output results
+            this.resultsLogger.LogResults(mutationResults);
+        }
+
+        private void CheckPluginsArePresent()
+        {
             if (!this.plugins.DiscoveredTestRunners.EmptyIfNull().Any())
             {
                 throw new Exception("No test runners available.");
@@ -59,52 +99,6 @@ namespace Splinter
             {
                 throw new Exception("No coverage runners available.");
             }
-
-            var modelDirectory = new DirectoryInfo(
-                !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
-            this.log.DebugFormat("Operation root directory is '{0}'", modelDirectory.FullName);
-
-            var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
-            var coverageRunner = this.PickCoverageRunner(cmdLine);
-
-            this.log.Info("Coverage runner: " + coverageRunner.Name);
-
-            //Phase 1: find tests and run them to see who tests what
-            var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
-            this.log.Info("Test binaries: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name)));
-
-            var subjectMethods = coverageRunner.DiscoverTestSubjectMapping(modelDirectory, testBinaries);
-            if (subjectMethods.Count == 0)
-            {
-                this.log.Warn("No test methods discovered. Either there are none, or something went wrong.");
-                return;
-            }
-
-            var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
-            var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
-
-            this.log.Info("Covered subject code assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, subjectAssemblies));
-            this.log.Info("Number of unique subject methods: " + subjectMethods.Count);
-            this.log.Info("Number of unique test methods: " + testMethodsCount);
-
-            //Phase 2 - mutate away!
-            SingleMutationTestResult[] mutationResults;
-            this.log.Info("Starting mutation runs.");
-            using (this.errorReportingSwitch.TurnOffErrorReporting())
-            {
-                using (var pb = new ConsoleProgressBar<MethodRef>())
-                {
-                    mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
-                    {
-                        var progress = pb.CreateProgressReportingObject(subject.Method);
-                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress);
-                    }).ToArray();
-                }
-                this.log.Info("Mutation runs finished.");
-            }
-
-            //Phase 3 - output results
-            this.resultsLogger.LogResults(mutationResults);
         }
 
         private ICoverageRunner PickCoverageRunner(ManualConfiguration cmdLine)
@@ -137,7 +131,55 @@ namespace Splinter
                 this.log.Debug("Multiple coverage runners available and none picked manually, picking the first one.");
             }
 
+            this.log.Info("Coverage runner: " + coverageRunner.Name);
+
             return coverageRunner;
+        }
+
+        private DirectoryInfo CheckWorkingDirectory(ManualConfiguration cmdLine)
+        {
+            var modelDirectory = new DirectoryInfo(
+                !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
+
+            if (!modelDirectory.Exists)
+            {
+                throw new Exception(string.Format("Directory '{0}' doesn't exist.", modelDirectory.FullName));
+            }
+
+            this.log.DebugFormat("Operation root directory is '{0}'", modelDirectory.FullName);
+
+            return modelDirectory;
+        }
+
+        private void OutputDiscoveryFindings(IReadOnlyCollection<TestBinary> testBinaries, IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
+        {
+
+            var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
+            var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
+            this.log.Info("Test runners: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
+            this.log.Info("Test assemblies: " + string.Join(", ", testBinaries.Select(fi => fi.Binary.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
+            this.log.Info("Covered subject code assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, subjectAssemblies));
+            this.log.Info("Number of unique subject methods: " + subjectMethods.Count);
+            this.log.Info("Number of unique test methods: " + testMethodsCount);
+        }
+
+        private SingleMutationTestResult[] CreateAndRunMutations(DirectoryInfo modelDirectory, IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
+        {
+            SingleMutationTestResult[] mutationResults;
+            this.log.Info("Starting mutation runs.");
+            using (this.errorReportingSwitch.TurnOffErrorReporting())
+            {
+                using (var pb = new ConsoleProgressBar<MethodRef>())
+                {
+                    mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
+                    {
+                        var progress = pb.CreateProgressReportingObject(subject.Method);
+                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress);
+                    }).ToArray();
+                }
+                this.log.Info("Mutation runs finished.");
+            }
+            return mutationResults;
         }
     }
 }

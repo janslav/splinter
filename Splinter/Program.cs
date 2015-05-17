@@ -28,7 +28,9 @@ namespace Splinter
 
             try
             {
-                var cmdLine = ManualConfiguration.SetupCommandLineOptions(os);
+                var splinterSession = iocContainer.Resolve<ISplinterSession>();
+
+                var cmdLine = splinterSession.SetupCommandLineOptions(os);
 
                 bool showHelp = false;
                 os.Add("?|help", "Show this message and exit.", (string v) => showHelp = v != null);
@@ -43,7 +45,6 @@ namespace Splinter
                 }
                 else
                 {
-                    var splinterSession = iocContainer.Resolve<ISplinterSession>();
                     splinterSession.Run(cmdLine);
                 }
                 return 0;

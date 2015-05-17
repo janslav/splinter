@@ -24,7 +24,7 @@ namespace Splinter
     {
         void Run(ManualConfiguration cmdLine);
 
-        ManualConfiguration SetupCommandLineOptions(OptionSet os);
+        ManualConfiguration SetupCommandLineOptions(OptionSet options);
     }
 
     public class SplinterSession : ISplinterSession
@@ -51,9 +51,17 @@ namespace Splinter
             this.errorReportingSwitch = errorReportingSwitch;
         }
 
-        public ManualConfiguration SetupCommandLineOptions(OptionSet os)
+        public ManualConfiguration SetupCommandLineOptions(OptionSet options)
         {
-            var config = ManualConfiguration.SetupCommandLineOptions(os);
+            var config = ManualConfiguration.SetupCommandLineOptions(options);
+
+            IEnumerable<IPlugin> allPlugins = this.plugins.DiscoveredCoverageRunners;
+            allPlugins = allPlugins.Union(this.plugins.DiscoveredTestRunners);
+
+            foreach (var plugin in allPlugins)
+            {
+                plugin.SetupCommandLineOptions(options);
+            }
 
             return config;
         }

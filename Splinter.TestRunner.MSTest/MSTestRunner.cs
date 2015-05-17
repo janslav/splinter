@@ -34,6 +34,10 @@ namespace Splinter.TestRunner.MsTest
             this.executableUtils = executableUtils;
         }
 
+        public void SetupCommandLineOptions(Mono.Options.OptionSet options)
+        {
+        }
+
         public bool IsReady(out string unavailableMessage)
         {
             try

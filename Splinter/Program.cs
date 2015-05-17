@@ -47,6 +47,7 @@ namespace Splinter
                 {
                     splinterSession.Run(cmdLine);
                 }
+
                 return 0;
             }
             catch (OptionException e)

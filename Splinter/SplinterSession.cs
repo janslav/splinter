@@ -74,7 +74,7 @@ namespace Splinter
             this.CheckPluginsArePresent();
 
             var modelDirectory = this.CheckWorkingDirectory(cmdLine);
-            var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners, "test runner");
+            var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners);
             var coverageRunner = this.PickCoverageRunner(cmdLine);
 
             //Phase 1: find tests and run them to see who tests what
@@ -137,7 +137,7 @@ namespace Splinter
                 }
             }
 
-            var coverageRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredCoverageRunners, "coverage runner");
+            var coverageRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredCoverageRunners);
             if (coverageRunner != null)
             {
                 if (!coverageRunners.Contains(coverageRunner))

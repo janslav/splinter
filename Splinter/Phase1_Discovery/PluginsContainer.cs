@@ -18,7 +18,7 @@ namespace Splinter.Phase1_Discovery
 
         IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
 
-        IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin;
+        IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin;
     }
 
     public class PluginsContainer : IPluginsContainer
@@ -48,8 +48,10 @@ namespace Splinter.Phase1_Discovery
 
         public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
 
-        public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin
+        public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin
         {
+            var pluginType = typeof(T).Name;
+
             var readiness = plugins.Select(tr =>
             {
                 string msg;
@@ -64,7 +66,7 @@ namespace Splinter.Phase1_Discovery
             if (!readiness.Any(tr => tr.Ready))
             {
                 var msgs = string.Join(Environment.NewLine, readiness.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                throw new Exception(string.Format("No {0} ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs));
+                throw new Exception(string.Format("No plugins of type '{0}' ready/installed:{1}{2}", pluginType, Environment.NewLine, msgs));
             }
             else
             {
@@ -72,7 +74,7 @@ namespace Splinter.Phase1_Discovery
                 if (notReady.Any())
                 {
                     var msgs = string.Join(Environment.NewLine, notReady.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                    this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
+                    this.log.DebugFormat("Some plugins of type '{0}' not ready/installed:{1}{2}", pluginType, Environment.NewLine, msgs);
                 }
             }
 

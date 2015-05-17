@@ -35,13 +35,16 @@ namespace Splinter
 
         private readonly IResultsLogger resultsLogger;
 
-        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation, IResultsLogger resultsLogger)
+        private readonly IWindowsErrorReporting errorReportingSwitch;
+
+        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation, IResultsLogger resultsLogger, IWindowsErrorReporting errorReportingSwitch)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
             this.mutation = mutation;
             this.resultsLogger = resultsLogger;
+            this.errorReportingSwitch = errorReportingSwitch;
         }
 
         public void Run(ManualConfiguration cmdLine)
@@ -85,17 +88,20 @@ namespace Splinter
             this.log.Info("Number of unique test methods: " + testMethodsCount);
 
             //Phase 2 - mutate away!
-            this.log.Info("Starting mutation runs.");
             SingleMutationTestResult[] mutationResults;
-            using (var pb = new ConsoleProgressBar<MethodRef>())
+            this.log.Info("Starting mutation runs.");
+            using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
-                mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
+                using (var pb = new ConsoleProgressBar<MethodRef>())
                 {
-                    var progress = pb.CreateProgressReportingObject(subject.Method);
-                    return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress);
-                }).ToArray();
+                    mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
+                    {
+                        var progress = pb.CreateProgressReportingObject(subject.Method);
+                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress);
+                    }).ToArray();
+                }
+                this.log.Info("Mutation runs finished.");
             }
-            this.log.Info("Mutation runs finished.");
 
             //Phase 3 - output results
             this.resultsLogger.LogResults(mutationResults);

@@ -63,7 +63,7 @@ namespace Splinter
             finally
             {
                 log.Debug("Splinter terminating.");
-            }            
+            }
         }
 
         static void ShowHelp(OptionSet p, string msg = null)

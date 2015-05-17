@@ -37,17 +37,14 @@ namespace Splinter
 
         private readonly IMutationTestSession mutation;
 
-        private readonly IResultsLogger resultsLogger;
-
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
-        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation, IResultsLogger resultsLogger, IWindowsErrorReporting errorReportingSwitch)
+        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation, IWindowsErrorReporting errorReportingSwitch)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
             this.mutation = mutation;
-            this.resultsLogger = resultsLogger;
             this.errorReportingSwitch = errorReportingSwitch;
         }
 
@@ -68,9 +65,8 @@ namespace Splinter
 
         public void Run(ManualConfiguration cmdLine)
         {
-            cmdLine.Validate();
-
             //Phase 0: configuration / plugins discovery
+            cmdLine.Validate();
             this.CheckPluginsArePresent();
 
             var modelDirectory = this.CheckWorkingDirectory(cmdLine);
@@ -91,10 +87,10 @@ namespace Splinter
             this.OutputDiscoveryFindings(subjectMethods);
 
             //Phase 2 - mutate away!
-            SingleMutationTestResult[] mutationResults = CreateAndRunMutations(modelDirectory, subjectMethods);
+            var mutationResults = this.CreateAndRunMutations(modelDirectory, subjectMethods);
 
             //Phase 3 - output results
-            this.resultsLogger.LogResults(mutationResults);
+            this.ExportResults(mutationResults);
         }
 
         private void CheckPluginsArePresent()
@@ -192,6 +188,17 @@ namespace Splinter
                 this.log.Info("Mutation runs finished.");
             }
             return mutationResults;
+        }
+
+        private void ExportResults(SingleMutationTestResult[] mutationResults)
+        {
+            this.log.Debug("Exporting results.");
+            var resultExporters = this.plugins.FilterByAvailability(this.plugins.ResultExporters);
+            foreach (var resultExporter in resultExporters)
+            {
+                resultExporter.ExportResults(mutationResults);
+            }
+            this.log.Debug("Exporting results finished.");
         }
     }
 }

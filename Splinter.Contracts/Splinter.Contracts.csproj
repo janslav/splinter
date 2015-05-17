@@ -50,8 +50,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DTOs\MethodRef.cs" />
+    <Compile Include="DTOs\SingleMutationTestResult.cs" />
     <Compile Include="DTOs\TestMethodRef.cs" />
     <Compile Include="DTOs\TestSubjectMethodRef.cs" />
+    <Compile Include="IResultsExporter.cs" />
     <Compile Include="IPlugin.cs" />
     <Compile Include="IPluginFactory{T}.cs" />
     <Compile Include="ITestRunner.cs" />

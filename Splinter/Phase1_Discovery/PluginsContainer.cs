@@ -18,6 +18,8 @@ namespace Splinter.Phase1_Discovery
 
         IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
 
+        IReadOnlyCollection<IResultsExporter> ResultExporters { get; }
+
         IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin;
     }
 
@@ -28,6 +30,9 @@ namespace Splinter.Phase1_Discovery
 
         [ImportMany]
         private IEnumerable<Lazy<IPluginFactory<ITestRunner>>> lazyTestRunners = null; //assigning null to avoid compiler warning
+
+        [ImportMany]
+        private IEnumerable<Lazy<IPluginFactory<IResultsExporter>>> lazyResultExporters = null; //assigning null to avoid compiler warning
 
         private readonly ILog log;
 
@@ -42,11 +47,14 @@ namespace Splinter.Phase1_Discovery
 
             this.DiscoveredCoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
             this.DiscoveredTestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.ResultExporters = this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
         }
 
         public IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
 
         public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
+
+        public IReadOnlyCollection<IResultsExporter> ResultExporters { get; private set; }
 
         public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin
         {

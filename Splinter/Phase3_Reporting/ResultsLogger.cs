@@ -7,15 +7,20 @@ using System.Threading.Tasks;
 using log4net;
 
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Contracts;
+using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase3_Reporting
 {
-    public interface IResultsLogger
+    public class ResultsLoggerFactory : IPluginFactory<IResultsExporter>
     {
-        void LogResults(IReadOnlyCollection<SingleMutationTestResult> results);
+        public IResultsExporter GetPlugin(ILog log)
+        {
+            return new ResultsLogger(log);
+        }
     }
 
-    public class ResultsLogger : IResultsLogger
+    public class ResultsLogger : IResultsExporter
     {
         private readonly ILog log;
 
@@ -24,7 +29,7 @@ namespace Splinter.Phase3_Reporting
             this.log = log;
         }
 
-        public void LogResults(IReadOnlyCollection<SingleMutationTestResult> results)
+        public void ExportResults(IReadOnlyCollection<SingleMutationTestResult> results)
         {
             if (!results.Any())
             {
@@ -97,5 +102,22 @@ namespace Splinter.Phase3_Reporting
                 neverFailing.Length,
                 100.0 - ((neverFailing.Length * 100.0) / uniqueTests));
         }
+
+        #region IPlugin implementation
+        public string Name
+        {
+            get { return "ResultsLogger"; }
+        }
+
+        public void SetupCommandLineOptions(Mono.Options.OptionSet options)
+        {
+        }
+
+        public bool IsReady(out string unavailableMessage)
+        {
+            unavailableMessage = null;
+            return true;
+        }
+        #endregion
     }
 }

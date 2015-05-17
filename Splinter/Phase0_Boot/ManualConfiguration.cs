@@ -3,47 +3,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-using clipr;
+using Mono.Options;
 
 namespace Splinter.Phase0_Boot
 {
-    [ApplicationInfo(Description = "Splinter is a mutation analysis runner.")]
     public class ManualConfiguration
     {
-        //[NamedArgument('v', "verbose", Action = ParseAction.Count,
-        //    Description = "Increase the verbosity of the output.")]
-        //public int Verbosity { get; set; }
+        private List<string> testBinaries = new List<string>();
 
-        [NamedArgument("testRunner", 
-            Description = "The test runner engine name, such as mstest or nunit.")]
-        public string TestRunner { get; set; }
+        public string TestRunner { get; private set; }
 
-        [NamedArgument("coverageRunner",
-            Description = "The test coverage engine name, such as opencover.")]
-        public string CoverageRunner { get; set; }
+        public string CoverageRunner { get; private set; }
 
-        [NamedArgument("workingDirectory",
-            Description = "The directory containing the application being tested. Will be copied to temp locations with mutated code. When not specified, current dir is used.")]
-        public string WorkingDirectory { get; set; }
+        public string WorkingDirectory { get; private set; }
 
-        //[PositionalArgument(0, MetaVar = "OUT",
-        //    Description = "Output file.")]
-        //public string OutputFile { get; set; }
+        public IReadOnlyCollection<string> TestBinaries { get { return this.testBinaries; } }
 
-        //[PositionalArgument(1, MetaVar = "N",
-        //    NumArgs = 1,
-        //    Constraint = NumArgsConstraint.AtLeast,
-        //    Description = "Numbers to sum.")]
-        //public List<int> Numbers { get; set; }
-
-        [PositionalArgument(0,
-            //MetaVar = "TestBinary",
-            NumArgs = 0,
-            Constraint = NumArgsConstraint.AtLeast,
-            Description = "Path(s) to assembl(ies) containing tests.")]
-        public IEnumerable<string> TestBinaries { get; set; }
-
-        [PostParse]
         public void Validate()
         {
             if (this.TestBinaries.Any())
@@ -54,6 +29,18 @@ namespace Splinter.Phase0_Boot
                 }
             }
         }
-        
+
+        public static ManualConfiguration SetupCommandLineOptions(OptionSet options)
+        {
+            var config = new ManualConfiguration();
+
+            options.Add("testRunner=", "The test runner engine name, such as mstest or nunit.", v => config.TestRunner = v);
+            options.Add("coverageRunner=", "The test coverage engine name, such as opencover.", v => config.CoverageRunner = v);
+            options.Add("workingDirectory=", "The directory containing the application being tested. Will be copied to temp locations with mutated code. When not specified, current dir is used.", v => config.WorkingDirectory = v);
+
+            options.Add("<>", config.testBinaries.Add);
+
+            return config;
+        }
     }
 }

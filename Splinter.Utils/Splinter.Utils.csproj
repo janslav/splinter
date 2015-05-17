@@ -65,6 +65,7 @@
     <Compile Include="Cecil\CodeCache.cs" />
     <Compile Include="ExecutableUtils.cs" />
     <Compile Include="FileSystemInfoComparer.cs" />
+    <Compile Include="Mono.Options\Options.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="ShadowDirectory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

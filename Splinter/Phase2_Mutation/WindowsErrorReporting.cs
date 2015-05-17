@@ -38,7 +38,7 @@ namespace Splinter.Phase2_Mutation
         {
             var r = new Switch();
 
-            //try
+            try
             {
                 using (var key = Registry.LocalMachine.OpenSubKey(
                     ERROR_REPORTING_KEY,
@@ -52,14 +52,14 @@ namespace Splinter.Phase2_Mutation
                     }
                 }
             }
-            //catch (UnauthorizedAccessException) { }
+            catch (UnauthorizedAccessException) { }
 
             return r;
         }
 
         private static void RestoreErrorReporting(object errorReportingValue)
         {
-            //try
+            try
             {
                 using (var key = Registry.LocalMachine.OpenSubKey(
                     ERROR_REPORTING_KEY,
@@ -80,7 +80,7 @@ namespace Splinter.Phase2_Mutation
                     }
                 }
             }
-            //catch (UnauthorizedAccessException) { }
+            catch (UnauthorizedAccessException) { }
         }
     }
 }

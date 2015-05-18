@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -44,6 +45,10 @@ namespace Splinter.Utils.Cecil
         MethodDefinition GetMethodByFullName(string fullName);
 
         void LoadDebugInformation();
+
+        SequencePoint GetSequencePoint(string methodFullName, int instructionIndex);
+        
+        SourceFile GetSourceFile(Document reference);
     }
 
     public class AssemblyCode : IAssemblyCode
@@ -51,6 +56,12 @@ namespace Splinter.Utils.Cecil
         private static readonly object locker = new object();
 
         private readonly ConcurrentDictionary<string, MethodDefinition> methodsByFullName = new ConcurrentDictionary<string, MethodDefinition>();
+
+        private readonly ConcurrentDictionary<Tuple<string, int>, SequencePoint> sequencePointsByInstruction =
+            new ConcurrentDictionary<Tuple<string, int>, SequencePoint>();
+
+        private readonly ConcurrentDictionary<byte[], SourceFile> sourceFilesByHash =
+            new ConcurrentDictionary<byte[], SourceFile>();
 
         public AssemblyCode(FileInfo assemblyLocation)
         {
@@ -103,8 +114,46 @@ namespace Splinter.Utils.Cecil
         {
             foreach (var module in this.AssemblyDefinition.Modules)
             {
-                module.ReadSymbols();
+                if (!module.HasSymbols)
+                {
+                    module.ReadSymbols();
+                }
             }
+        }
+
+        public SequencePoint GetSequencePoint(string methodFullName, int instructionIndex)
+        {
+            this.LoadDebugInformation();
+
+            return this.sequencePointsByInstruction.GetOrAdd(
+                Tuple.Create(methodFullName, instructionIndex),
+                t =>
+                {
+                    var methodRef = this.GetMethodByFullName(t.Item1);
+                    var sp = CalculateNearestSequencePoint(methodRef, t.Item2);
+                    return sp;
+                });
+        }
+
+        internal static SequencePoint CalculateNearestSequencePoint(MethodDefinition method, int index)
+        {
+            var instruction = method.Body.Instructions[index];
+            while ((instruction.SequencePoint == null
+                    || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
+            {
+                index--;
+                instruction = method.Body.Instructions[index];
+            }
+
+            var sequencePoint = instruction.SequencePoint;
+            return sequencePoint;
+        }
+
+        public SourceFile GetSourceFile(Document reference)
+        {
+            return this.sourceFilesByHash.GetOrAdd(
+                reference.Hash,
+                _ => new SourceFile(reference));
         }
     }
 }

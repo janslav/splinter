@@ -8,10 +8,19 @@ using Mono.Options;
 
 namespace Splinter.Contracts
 {
+    /// <summary>
+    /// The base interface of all plugins
+    /// </summary>
     public interface IPlugin
     {
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
         void SetupCommandLineOptions(OptionSet options);
 
         /// <summary>

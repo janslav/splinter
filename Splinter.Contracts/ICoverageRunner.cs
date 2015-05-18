@@ -9,6 +9,9 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.Contracts
 {
+    /// <summary>
+    /// Coverage plugin. Its job is to find the mapping between tests and their subjects.
+    /// </summary>
     public interface ICoverageRunner : IPlugin
     {
         /// <summary>
@@ -17,8 +20,6 @@ namespace Splinter.Contracts
         /// We also get the "ordinary" coverage number which may then be part of the report.
         /// The most important information we derive here is the per-test method tree - mapping which test is running which method.
         /// </summary>
-        /// <param name="testsToRun"></param>
-        /// <returns></returns>
         IReadOnlyCollection<TestSubjectMethodRef> DiscoverTestSubjectMapping(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun);
     }
 }

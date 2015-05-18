@@ -14,14 +14,23 @@ namespace Splinter.Contracts.DTOs
     [DebuggerDisplay("TestBinary {Binary.Name}")]
     public class TestBinary
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestBinary"/> class.
+        /// </summary>
         public TestBinary(ITestRunner runner, FileInfo binary)
         {
             this.Runner = runner;
             this.Binary = binary;
         }
 
+        /// <summary>
+        /// Gets the runner for tests in this binary.
+        /// </summary>
         public ITestRunner Runner { get; private set; }
 
+        /// <summary>
+        /// Gets the location of the binary.
+        /// </summary>
         public FileInfo Binary { get; private set; }
     }
 }

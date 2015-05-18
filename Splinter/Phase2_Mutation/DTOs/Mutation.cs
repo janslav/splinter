@@ -79,6 +79,9 @@ namespace Splinter.Phase2_Mutation.DTOs
         /// </summary>
         public ShadowDirectory TestDirectory { get; private set; }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             var s = this.TestDirectory;

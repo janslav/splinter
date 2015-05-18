@@ -20,13 +20,25 @@ using log4net;
 
 namespace Splinter
 {
+    /// <summary>
+    /// This is the central business class of Splinter.
+    /// </summary>
     public interface ISplinterSession
     {
-        void Run(ManualConfiguration cmdLine);
-
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
         ManualConfiguration SetupCommandLineOptions(OptionSet options);
+
+        /// <summary>
+        /// Runs everything.
+        /// </summary>
+        void Run(ManualConfiguration cmdLine);
     }
 
+    /// <summary>
+    /// This is the central business class of Splinter.
+    /// </summary>
     public class SplinterSession : ISplinterSession
     {
         private readonly ILog log;
@@ -48,6 +60,11 @@ namespace Splinter
             this.errorReportingSwitch = errorReportingSwitch;
         }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
+        /// <param name="options"></param>
+        /// <returns></returns>
         public ManualConfiguration SetupCommandLineOptions(OptionSet options)
         {
             var config = ManualConfiguration.SetupCommandLineOptions(options);
@@ -63,6 +80,10 @@ namespace Splinter
             return config;
         }
 
+        /// <summary>
+        /// Runs everything.
+        /// </summary>
+        /// <param name="cmdLine"></param>
         public void Run(ManualConfiguration cmdLine)
         {
             //Phase 0: configuration / plugins discovery

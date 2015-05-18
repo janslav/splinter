@@ -7,18 +7,36 @@ using Mono.Options;
 
 namespace Splinter.Phase0_Boot
 {
+    /// <summary>
+    /// Represents the command line options of splinter (without the plugin-specific parts)
+    /// </summary>
     public class ManualConfiguration
     {
         private List<string> testBinaries = new List<string>();
 
+        /// <summary>
+        /// Gets the test runner name.
+        /// </summary>
         public string TestRunner { get; private set; }
 
+        /// <summary>
+        /// Gets the coverage runner name.
+        /// </summary>
         public string CoverageRunner { get; private set; }
 
+        /// <summary>
+        /// Gets the working directory path.
+        /// </summary>
         public string WorkingDirectory { get; private set; }
 
+        /// <summary>
+        /// Gets the test binaries.
+        /// </summary>
         public IReadOnlyCollection<string> TestBinaries { get { return this.testBinaries; } }
 
+        /// <summary>
+        /// Validates this instance.
+        /// </summary>
         public void Validate()
         {
             if (this.TestBinaries.Any())
@@ -30,6 +48,9 @@ namespace Splinter.Phase0_Boot
             }
         }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
         public static ManualConfiguration SetupCommandLineOptions(OptionSet options)
         {
             var config = new ManualConfiguration();

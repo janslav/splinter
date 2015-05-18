@@ -36,11 +36,17 @@ namespace Splinter.Phase2_Mutation
     /// </summary>
     public interface IMutationTestSession
     {
+        /// <summary>
+        /// Creates the mutants and runs tests on them.
+        /// </summary>
         IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             MutationTestSessionInput input,
             IProgress<Tuple<int, int, int>> progress = null);
     }
 
+    /// <summary>
+    /// The creation of mutated assemblies and running tests against them is driven from here.
+    /// </summary>
     public class MutationTestSession : IMutationTestSession
     {
         private readonly ILog log;
@@ -81,6 +87,9 @@ namespace Splinter.Phase2_Mutation
                 }).ToArray();
         }
 
+        /// <summary>
+        /// Creates the mutants and runs tests on them.
+        /// </summary>
         public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             MutationTestSessionInput input,
             IProgress<Tuple<int, int, int>> progress)

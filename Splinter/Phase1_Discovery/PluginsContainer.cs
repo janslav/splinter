@@ -12,17 +12,36 @@ using Splinter.Contracts;
 
 namespace Splinter.Phase1_Discovery
 {
+    /// <summary>
+    /// Discovers and lists the splinter plugins
+    /// </summary>
     public interface IPluginsContainer
     {
+        /// <summary>
+        /// Gets the discovered coverage runners.
+        /// </summary>
         IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; }
 
+        /// <summary>
+        /// Gets the discovered test runners.
+        /// </summary>
         IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
 
+        /// <summary>
+        /// Gets the result exporters.
+        /// </summary>
         IReadOnlyCollection<IResultsExporter> ResultExporters { get; }
 
+        /// <summary>
+        /// Filters the specified plugins by availability.
+        /// Logs warnings for ones that are not available.
+        /// </summary>
         IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin;
     }
 
+    /// <summary>
+    /// Discovers and lists the splinter plugins
+    /// </summary>
     public class PluginsContainer : IPluginsContainer
     {
         [ImportMany]
@@ -36,6 +55,9 @@ namespace Splinter.Phase1_Discovery
 
         private readonly ILog log;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginsContainer"/> class.
+        /// </summary>
         public PluginsContainer(ILog log)
         {
             this.log = log;
@@ -50,12 +72,25 @@ namespace Splinter.Phase1_Discovery
             this.ResultExporters = this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
         }
 
+        /// <summary>
+        /// Gets the discovered coverage runners.
+        /// </summary>
         public IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
 
+        /// <summary>
+        /// Gets the discovered test runners.
+        /// </summary>
         public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
 
+        /// <summary>
+        /// Gets the result exporters.
+        /// </summary>
         public IReadOnlyCollection<IResultsExporter> ResultExporters { get; private set; }
 
+        /// <summary>
+        /// Filters the specified plugins by availability.
+        /// Logs warnings for ones that are not available.
+        /// </summary>
         public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin
         {
             var pluginType = typeof(T).Name;

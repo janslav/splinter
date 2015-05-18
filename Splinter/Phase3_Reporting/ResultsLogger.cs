@@ -13,14 +13,23 @@ using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase3_Reporting
 {
+    /// <summary>
+    /// Factory for the ResultsLogger "plugin"
+    /// </summary>
     public class ResultsLoggerFactory : IPluginFactory<IResultsExporter>
     {
+        /// <summary>
+        /// Creates and returns the plugin.
+        /// </summary>
         public IResultsExporter GetPlugin(ILog log)
         {
             return new ResultsLogger(log, CodeCache.Instance);
         }
     }
 
+    /// <summary>
+    /// Used to output splinter run results to console and log file.
+    /// </summary>
     public class ResultsLogger : IResultsExporter
     {
         private readonly ILog log;
@@ -33,6 +42,9 @@ namespace Splinter.Phase3_Reporting
             this.codeCache = codeCache;
         }
 
+        /// <summary>
+        /// Exports the results to logs and console.
+        /// </summary>
         public void ExportResults(IReadOnlyCollection<SingleMutationTestResult> results)
         {
             if (!results.Any())
@@ -140,15 +152,27 @@ namespace Splinter.Phase3_Reporting
         }
 
         #region IPlugin implementation
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
         public string Name
         {
             get { return "ResultsLogger"; }
         }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
+        /// <param name="options"></param>
         public void SetupCommandLineOptions(Mono.Options.OptionSet options)
         {
         }
 
+        /// <summary>
+        /// Returns true if the plugin is available, i.e. has its binaries installed, registered, etc.
+        /// </summary>
+        /// <param name="unavailableMessage"></param>
+        /// <returns></returns>
         public bool IsReady(out string unavailableMessage)
         {
             unavailableMessage = null;

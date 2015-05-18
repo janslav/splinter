@@ -11,11 +11,21 @@ using log4net;
 
 namespace Splinter.Phase2_Mutation
 {
+    /// <summary>
+    /// Used to switch windows "want to debug?" dialog in Windows.
+    /// </summary>
     public interface IWindowsErrorReporting
     {
+        /// <summary>
+        /// Turns off the error reporting.
+        /// </summary>
+        /// <returns>An object that, when disposed, resets the error reporting to the state it was before.</returns>
         IDisposable TurnOffErrorReporting();
     }
 
+    /// <summary>
+    /// Used to switch windows "want to debug?" dialog in Windows.
+    /// </summary>
     public class WindowsErrorReporting : IWindowsErrorReporting
     {
         private const string ERROR_REPORTING_KEY = @"SOFTWARE\Microsoft\Windows\Windows Error Reporting";
@@ -43,6 +53,12 @@ namespace Splinter.Phase2_Mutation
             }
         }
 
+        /// <summary>
+        /// Turns off the error reporting.
+        /// </summary>
+        /// <returns>
+        /// An object that, when disposed, resets the error reporting to the state it was before.
+        /// </returns>
         public IDisposable TurnOffErrorReporting()
         {
             var r = new Switch();

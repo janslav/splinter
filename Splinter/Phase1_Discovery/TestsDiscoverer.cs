@@ -29,15 +29,32 @@ namespace Splinter.Phase1_Discovery
         IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners);
     }
 
+    /// <summary>
+    /// Performs the discovery of test binaries that are to be run.
+    /// </summary>
     public class TestsDiscoverer : ITestsDiscoverer
     {
         ILog log;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TestsDiscoverer"/> class.
+        /// </summary>
         public TestsDiscoverer(ILog log)
         {
             this.log = log;
         }
 
+        /// <summary>
+        /// Discovers test binaries that are to be run, and the related test runner.
+        /// Uses manually specified configuration, if any.
+        /// </summary>
+        /// <param name="cmdLine">Manual configuration via command line.</param>
+        /// <param name="modelDirectory"></param>
+        /// <param name="testRunners">Available test runners.</param>
+        /// <returns>
+        /// The test runner implementations and the related tests
+        /// </returns>
+        /// <exception cref="System.Exception">No test binaries found</exception>
         public IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners)
         {
             IEnumerable<Tuple<string, FileInfo>> testBinariesWithRunner;

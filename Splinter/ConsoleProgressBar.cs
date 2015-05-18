@@ -8,12 +8,20 @@ using System.Timers;
 
 namespace Splinter
 {
+    /// <summary>
+    /// Displays a progress bar on the console.
+    /// Stps redrawing when disposed.
+    /// </summary>
+    /// <typeparam name="T">The correlation object type.</typeparam>
     public class ConsoleProgressBar<T> : IDisposable
     {
         private readonly Timer timer = new Timer(500);
 
         private readonly ConcurrentDictionary<T, Tuple<int, int, int>> progressDict = new ConcurrentDictionary<T, Tuple<int, int, int>>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ConsoleProgressBar{T}"/> class.
+        /// </summary>
         public ConsoleProgressBar()
         {
             if (Environment.UserInteractive)
@@ -29,7 +37,12 @@ namespace Splinter
             DrawTextProgressBar(values.Sum(v => v.Item1), values.Sum(v => v.Item2), values.Sum(v => v.Item3));
         }
 
-        internal Progress<Tuple<int, int, int>> CreateProgressReportingObject(T correlationObj)
+        /// <summary>
+        /// Creates the progress reporting object.
+        /// The numbers to report are "done", "in progress" and "total"
+        /// Multiple partial progressing operations can be run, those are identified by the correlation object.
+        /// </summary>
+        public Progress<Tuple<int, int, int>> CreateProgressReportingObject(T correlationObj)
         {
             if (Environment.UserInteractive)
             {
@@ -85,6 +98,9 @@ namespace Splinter
             Console.Write("{0:0000} + {1:0000} of {2:0000} ", done, inProgress, total);
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             if (Environment.UserInteractive)

@@ -9,6 +9,7 @@ using log4net;
 using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
+using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase3_Reporting
 {
@@ -16,7 +17,7 @@ namespace Splinter.Phase3_Reporting
     {
         public IResultsExporter GetPlugin(ILog log)
         {
-            return new ResultsLogger(log);
+            return new ResultsLogger(log, CodeCache.Instance);
         }
     }
 
@@ -24,9 +25,12 @@ namespace Splinter.Phase3_Reporting
     {
         private readonly ILog log;
 
-        public ResultsLogger(ILog log)
+        private readonly ICodeCache codeCache;
+
+        public ResultsLogger(ILog log, ICodeCache codeCache)
         {
             this.log = log;
+            this.codeCache = codeCache;
         }
 
         public void ExportResults(IReadOnlyCollection<SingleMutationTestResult> results)
@@ -72,6 +76,8 @@ namespace Splinter.Phase3_Reporting
                     result.Subject.FullName,
                     result.MutationDescription,
                     result.InstructionIndex);
+
+                //this.RenderCodeLine(result);
             }
 
             //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
@@ -101,6 +107,36 @@ namespace Splinter.Phase3_Reporting
                 uniqueTests,
                 neverFailing.Length,
                 100.0 - ((neverFailing.Length * 100.0) / uniqueTests));
+        }
+
+        private void RenderCodeLine(SingleMutationTestResult result)
+        {
+            var a = this.codeCache.GetAssembly(result.Subject.Assembly);
+            var sp = a.GetSequencePoint(result.Subject.FullName, result.InstructionIndex);
+            var source = a.GetSourceFile(sp.Document);
+            string line = source.Lines[sp.StartLine];
+
+            string beginning = line.Substring(0, sp.StartColumn - 1);
+            string highlight;
+            string ending;
+
+            if (sp.StartLine == sp.EndLine)
+            {
+                highlight = line.Substring(sp.StartColumn - 1, sp.EndColumn - sp.StartColumn);
+                ending = line.Substring(sp.EndColumn - 1, line.Length - (sp.EndColumn - 1));
+            }
+            else
+            {
+                highlight = line.Substring(sp.StartColumn - 1);
+                ending = "";
+            }
+
+            var color = Console.BackgroundColor;
+            Console.Write(beginning);
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.Write(highlight);
+            Console.BackgroundColor = color;
+            Console.WriteLine(ending);
         }
 
         #region IPlugin implementation

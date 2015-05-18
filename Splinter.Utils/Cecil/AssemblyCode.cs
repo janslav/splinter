@@ -33,24 +33,45 @@ using Mono.Cecil.Pdb;
 namespace Splinter.Utils.Cecil
 {
     /// <summary>
-    /// Class representing the main module of a .NET assembly.
-    /// Code mostly taken from NinjaTurtles class Module
+    /// Class representinga .NET assembly.
     /// </summary>
     public interface IAssemblyCode
     {
+        /// <summary>
+        /// Gets the location of the assembly on disk .
+        /// </summary>
         FileInfo AssemblyLocation { get; }
 
+        /// <summary>
+        /// Gets the <see cref="AssemblyDefinition" />.
+        /// </summary>
         AssemblyDefinition AssemblyDefinition { get; }
 
+        /// <summary>
+        /// Gets the method definition by its full name.
+        /// </summary>
         MethodDefinition GetMethodByFullName(string fullName);
 
+        /// <summary>
+        /// Loads debug information.
+        /// </summary>
         void LoadDebugInformation();
 
+        /// <summary>
+        /// Gets the sequence point (line of code) of the specified instruction.
+        /// </summary>
         SequencePoint GetSequencePoint(string methodFullName, int instructionIndex);
-        
+
+        /// <summary>
+        /// Gets the source file loaded using the specified Document instance.
+        /// </summary>
         SourceFile GetSourceFile(Document reference);
     }
 
+    /// <summary>
+    /// Class representinga .NET assembly.
+    /// Code mostly taken from NinjaTurtles class Module
+    /// </summary>
     public class AssemblyCode : IAssemblyCode
     {
         private static readonly object locker = new object();
@@ -63,6 +84,9 @@ namespace Splinter.Utils.Cecil
         private readonly ConcurrentDictionary<byte[], SourceFile> sourceFilesByHash =
             new ConcurrentDictionary<byte[], SourceFile>();
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssemblyCode"/> class.
+        /// </summary>
         public AssemblyCode(FileInfo assemblyLocation)
         {
             this.AssemblyLocation = assemblyLocation;
@@ -70,7 +94,7 @@ namespace Splinter.Utils.Cecil
         }
 
         /// <summary>
-        /// Gets the location on disk of the assembly.
+        /// Gets the location of the assembly on disk .
         /// </summary>
         public FileInfo AssemblyLocation { get; private set; }
 
@@ -79,6 +103,11 @@ namespace Splinter.Utils.Cecil
         /// </summary>
         public AssemblyDefinition AssemblyDefinition { get; private set; }
 
+        /// <summary>
+        /// Gets the method definition by its full name.
+        /// </summary>
+        /// <param name="fullName"></param>
+        /// <returns></returns>
         public MethodDefinition GetMethodByFullName(string fullName)
         {
             return this.methodsByFullName.GetOrAdd(
@@ -110,6 +139,9 @@ namespace Splinter.Utils.Cecil
             }
         }
 
+        /// <summary>
+        /// Loads debug information.
+        /// </summary>
         public void LoadDebugInformation()
         {
             foreach (var module in this.AssemblyDefinition.Modules)
@@ -121,6 +153,9 @@ namespace Splinter.Utils.Cecil
             }
         }
 
+        /// <summary>
+        /// Gets the sequence point (line of code) of the specified instruction.
+        /// </summary>
         public SequencePoint GetSequencePoint(string methodFullName, int instructionIndex)
         {
             this.LoadDebugInformation();
@@ -149,6 +184,9 @@ namespace Splinter.Utils.Cecil
             return sequencePoint;
         }
 
+        /// <summary>
+        /// Gets the source file loaded using the specified Document instance.
+        /// </summary>
         public SourceFile GetSourceFile(Document reference)
         {
             return this.sourceFilesByHash.GetOrAdd(

@@ -10,11 +10,20 @@ using Splinter.Utils;
 
 namespace Splinter.Utils.Cecil
 {
+    /// <summary>
+    /// Caches loaded IAssemblyCode instances
+    /// </summary>
     public interface ICodeCache
     {
-        IAssemblyCode GetAssembly(FileInfo location);
+        /// <summary>
+        /// Gets the assembly definition.
+        /// </summary>
+        IAssemblyCode GetAssemblyDefinition(FileInfo location);
     }
 
+    /// <summary>
+    /// Caches loaded IAssemblyCode instances
+    /// </summary>
     public class CodeCache : ICodeCache
     {
         public static CodeCache Instance = new CodeCache();
@@ -22,8 +31,10 @@ namespace Splinter.Utils.Cecil
         private readonly ConcurrentDictionary<FileInfo, AssemblyCode> assemblies =
             new ConcurrentDictionary<FileInfo, AssemblyCode>(new FileSystemInfoComparer());
 
-
-        public IAssemblyCode GetAssembly(FileInfo location)
+        /// <summary>
+        /// Gets the assembly definition.
+        /// </summary>
+        public IAssemblyCode GetAssemblyDefinition(FileInfo location)
         {
             return this.assemblies.GetOrAdd(location, l => new AssemblyCode(l));
         }

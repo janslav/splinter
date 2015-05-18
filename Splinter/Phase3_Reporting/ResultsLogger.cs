@@ -123,7 +123,7 @@ namespace Splinter.Phase3_Reporting
 
         private void RenderCodeLine(SingleMutationTestResult result)
         {
-            var a = this.codeCache.GetAssembly(result.Subject.Assembly);
+            var a = this.codeCache.GetAssemblyDefinition(result.Subject.Assembly);
             var sp = a.GetSequencePoint(result.Subject.FullName, result.InstructionIndex);
             var source = a.GetSourceFile(sp.Document);
             string line = source.Lines[sp.StartLine];

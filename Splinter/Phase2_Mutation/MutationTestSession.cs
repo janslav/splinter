@@ -202,7 +202,7 @@ namespace Splinter.Phase2_Mutation
 
         private MethodDefinition GetMethodDef(MethodRef method)
         {
-            return this.codeCache.GetAssembly(method.Assembly).GetMethodByFullName(method.FullName);
+            return this.codeCache.GetAssemblyDefinition(method.Assembly).GetMethodByFullName(method.FullName);
         }
     }
 }

@@ -63,7 +63,7 @@ namespace Splinter.Utils.Cecil
         public Document Document { get; set; }
 
         /// <summary>
-        /// Gets or sets a list of <see cref="Line" />s of code in the file. 
+        /// Gets or sets a list of lines of code in the file. 
         /// </summary>
         public IDictionary<int, string> Lines { get; set; }
     }

@@ -16,8 +16,14 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
+    /// <summary>
+    /// Creates the OpenCoverRunner objects
+    /// </summary>
     public class OpenCoverRunnerFactory : IPluginFactory<ICoverageRunner>
     {
+        /// <summary>
+        /// Creates and returns the plugin.
+        /// </summary>
         public ICoverageRunner GetPlugin(ILog log)
         {
             var container = new UnityBootstrapper(log).CreateContainer();

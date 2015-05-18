@@ -17,6 +17,9 @@ using Splinter.Utils.Cecil;
 
 namespace Splinter.TestRunner.MsTest
 {
+    /// <summary>
+    /// Runs tests implemented using the MsTest (visual studio unit testing) framework.
+    /// </summary>
     public class MSTestRunner : ITestRunner
     {
         private readonly log4net.ILog log;
@@ -27,6 +30,9 @@ namespace Splinter.TestRunner.MsTest
 
         private FileInfo msTestExe;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MSTestRunner"/> class.
+        /// </summary>
         public MSTestRunner(log4net.ILog log, ICodeCache codeCache, IExecutableUtils executableUtils)
         {
             this.log = log;
@@ -34,10 +40,16 @@ namespace Splinter.TestRunner.MsTest
             this.executableUtils = executableUtils;
         }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
         public void SetupCommandLineOptions(Mono.Options.OptionSet options)
         {
         }
 
+        /// <summary>
+        /// Returns true if the mstest.exe can be located.
+        /// </summary>
         public bool IsReady(out string unavailableMessage)
         {
             try
@@ -63,11 +75,17 @@ namespace Splinter.TestRunner.MsTest
             }
         }
 
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
         public string Name
         {
             get { return "MsTest"; }
         }
 
+        /// <summary>
+        /// Determines whether the specified binary contains tests.
+        /// </summary>
         public bool IsTestBinary(FileInfo binary)
         {
             var assembly = AssemblyDefinition.ReadAssembly(binary.FullName);
@@ -142,7 +160,9 @@ namespace Splinter.TestRunner.MsTest
         //    return result;
         //}
 
-
+        /// <summary>
+        /// Gets the process information to run all tests from a binary.
+        /// </summary>
         public ProcessStartInfo GetProcessInfoToRunTests(DirectoryInfo workingDirectory, FileInfo testBinary)
         {
 
@@ -164,9 +184,12 @@ namespace Splinter.TestRunner.MsTest
             return r;
         }
 
+        /// <summary>
+        /// Gets the process information to run one test from a binary.
+        /// </summary>
         public ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName)
         {
-            var testMethodDef = this.codeCache.GetAssembly(testBinary).GetMethodByFullName(methodFullName);
+            var testMethodDef = this.codeCache.GetAssemblyDefinition(testBinary).GetMethodByFullName(methodFullName);
 
             var escapedTestBinary = CmdLine.EncodeArgument(testBinary.FullName);
 
@@ -183,6 +206,14 @@ namespace Splinter.TestRunner.MsTest
             return r;
         }
 
+        #region Equals & GetHashCode
+        /// <summary>
+        /// Determines whether the specified <see cref="System.Object" />, is equal to this instance.
+        /// </summary>
+        /// <param name="obj">The <see cref="System.Object" /> to compare with this instance.</param>
+        /// <returns>
+        ///   <c>true</c> if the specified <see cref="System.Object" /> is equal to this instance; otherwise, <c>false</c>.
+        /// </returns>
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -193,9 +224,16 @@ namespace Splinter.TestRunner.MsTest
             return this.GetType() == obj.GetType();
         }
 
+        /// <summary>
+        /// Returns a hash code for this instance.
+        /// </summary>
+        /// <returns>
+        /// A hash code for this instance, suitable for use in hashing algorithms and data structures like a hash table. 
+        /// </returns>
         public override int GetHashCode()
         {
             return this.GetType().GetHashCode();
         }
+        #endregion
     }
 }

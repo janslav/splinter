@@ -18,6 +18,9 @@ using Splinter.Utils;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
+    /// <summary>
+    /// Parses the opencover results
+    /// </summary>
     public interface ISubjectTestMappingParser
     {
         /// <summary>
@@ -26,6 +29,9 @@ namespace Splinter.CoverageRunner.OpenCover
         IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName);
     }
 
+    /// <summary>
+    /// Parses the opencover results
+    /// </summary>
     public class SubjectTestMappingParser : ISubjectTestMappingParser
     {
         private readonly ILog log;
@@ -35,6 +41,9 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
+        /// <summary>
+        /// Parses the subject-test mapping from opencover results.xml
+        /// </summary>
         public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName)
         {
             var session = resultsXml.Root;

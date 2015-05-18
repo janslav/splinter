@@ -18,6 +18,9 @@ using Splinter.Utils;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
+    /// <summary>
+    /// The OpenCover coverage plugin
+    /// </summary>
     public class OpenCoverRunner : ICoverageRunner
     {
         private const string OpenCoverRegKey = @"SOFTWARE\OpenCover\";
@@ -35,6 +38,9 @@ namespace Splinter.CoverageRunner.OpenCover
 
         private FileInfo ncoverExe;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="OpenCoverRunner"/> class.
+        /// </summary>
         public OpenCoverRunner(ILog log, IProcessInvoker invoker, ISubjectTestMappingParser mappingParser, IExecutableUtils executableUtils)
         {
             this.log = log;
@@ -43,10 +49,17 @@ namespace Splinter.CoverageRunner.OpenCover
             this.executableUtils = executableUtils;
         }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
+        /// <param name="options"></param>
         public void SetupCommandLineOptions(Mono.Options.OptionSet options)
         {
         }
 
+        /// <summary>
+        /// Returns true if opencover.exe can be located.
+        /// </summary>
         public bool IsReady(out string unavailableMessage)
         {
             try
@@ -68,6 +81,9 @@ namespace Splinter.CoverageRunner.OpenCover
             }
         }
 
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
         public string Name
         {
             get { return "OpenCover"; }
@@ -117,6 +133,12 @@ namespace Splinter.CoverageRunner.OpenCover
             return Path.GetFullPath(path);
         }
 
+        /// <summary>
+        /// This is supposed to perform the first "dry" run, i.e. with nonmutated subjects.
+        /// We check all tests pass, as it makes no sense to mutation-analyse a testsuite that's already broken.
+        /// We also get the "ordinary" coverage number which may then be part of the report.
+        /// The most important information we derive here is the per-test method tree - mapping which test is running which method.
+        /// </summary>
         public IReadOnlyCollection<TestSubjectMethodRef> DiscoverTestSubjectMapping(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun)
         {
             //invoke tests and parse results

@@ -28,9 +28,9 @@ namespace Splinter.Phase1_Discovery
         IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
 
         /// <summary>
-        /// Gets the result exporters.
+        /// Gets the discovered result exporters.
         /// </summary>
-        IReadOnlyCollection<IResultsExporter> ResultExporters { get; }
+        IReadOnlyCollection<IResultsExporter> DiscoveredResultExporters { get; }
 
         /// <summary>
         /// Filters the specified plugins by availability.
@@ -69,7 +69,7 @@ namespace Splinter.Phase1_Discovery
 
             this.DiscoveredCoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
             this.DiscoveredTestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
-            this.ResultExporters = this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.DiscoveredResultExporters = this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
         }
 
         /// <summary>
@@ -83,9 +83,9 @@ namespace Splinter.Phase1_Discovery
         public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
 
         /// <summary>
-        /// Gets the result exporters.
+        /// Gets the discovered result exporters.
         /// </summary>
-        public IReadOnlyCollection<IResultsExporter> ResultExporters { get; private set; }
+        public IReadOnlyCollection<IResultsExporter> DiscoveredResultExporters { get; private set; }
 
         /// <summary>
         /// Filters the specified plugins by availability.

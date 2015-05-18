@@ -71,6 +71,7 @@ namespace Splinter
 
             IEnumerable<IPlugin> allPlugins = this.plugins.DiscoveredCoverageRunners;
             allPlugins = allPlugins.Union(this.plugins.DiscoveredTestRunners);
+            allPlugins = allPlugins.Union(this.plugins.DiscoveredResultExporters);
 
             foreach (var plugin in allPlugins)
             {
@@ -214,7 +215,7 @@ namespace Splinter
         private void ExportResults(SingleMutationTestResult[] mutationResults)
         {
             this.log.Debug("Exporting results.");
-            var resultExporters = this.plugins.FilterByAvailability(this.plugins.ResultExporters);
+            var resultExporters = this.plugins.FilterByAvailability(this.plugins.DiscoveredResultExporters);
             foreach (var resultExporter in resultExporters)
             {
                 resultExporter.ExportResults(mutationResults);

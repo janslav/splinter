@@ -33,7 +33,7 @@ namespace Splinter
                 var cmdLine = splinterSession.SetupCommandLineOptions(os);
 
                 bool showHelp = false;
-                os.Add("?|help", "Show this message and exit.", (string v) => showHelp = v != null);
+                os.Add("h|?|help", "Show this message and exit.", (string v) => showHelp = v != null);
 
                 os.Parse(args);
 

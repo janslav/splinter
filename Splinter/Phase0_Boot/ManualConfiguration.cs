@@ -5,6 +5,8 @@ using System.Text;
 
 using Mono.Options;
 
+using Splinter.Phase1_Discovery;
+
 namespace Splinter.Phase0_Boot
 {
     /// <summary>
@@ -13,6 +15,11 @@ namespace Splinter.Phase0_Boot
     public class ManualConfiguration
     {
         private List<string> testBinaries = new List<string>();
+
+        public ManualConfiguration()
+        {
+            this.DetectUnusedTest = false;
+        }
 
         /// <summary>
         /// Gets the test runner name.
@@ -28,6 +35,11 @@ namespace Splinter.Phase0_Boot
         /// Gets the working directory path.
         /// </summary>
         public string WorkingDirectory { get; private set; }
+
+        /// <summary>
+        /// Gets a value indicating whether to detect unused test.
+        /// </summary>
+        public bool DetectUnusedTest { get; private set; }
 
         /// <summary>
         /// Gets the test binaries.
@@ -51,13 +63,17 @@ namespace Splinter.Phase0_Boot
         /// <summary>
         /// Sets up the command line options.
         /// </summary>
-        public static ManualConfiguration SetupCommandLineOptions(OptionSet options)
+        public static ManualConfiguration SetupCommandLineOptions(OptionSet options, IPluginsContainer plugins)
         {
             var config = new ManualConfiguration();
 
-            options.Add("testRunner=", "The test runner engine name, such as mstest or nunit.", v => config.TestRunner = v);
-            options.Add("coverageRunner=", "The test coverage engine name, such as opencover.", v => config.CoverageRunner = v);
-            options.Add("workingDirectory=", "The directory containing the application being tested. Will be copied to temp locations with mutated code. When not specified, current dir is used.", v => config.WorkingDirectory = v);
+            var testRunnerPlugins = string.Join(", ", plugins.DiscoveredTestRunners.Select(tr => tr.Name));
+            var coveragePlugins = string.Join(", ", plugins.DiscoveredCoverageRunners.Select(tr => tr.Name));
+
+            options.Add("testRunner=", "The test runner engine name. Available: " + testRunnerPlugins, v => config.TestRunner = v);
+            options.Add("coverageRunner=", "The test coverage engine name. Available: " + coveragePlugins, v => config.CoverageRunner = v);
+            options.Add("workingDirectory=", "The directory containing the testing and tested code. Default: current dir.", v => config.WorkingDirectory = v);
+            options.Add("detectUnusedTests", "Detect tests that don't contribute to killing mutants. Default: false", v => config.DetectUnusedTest = !string.IsNullOrWhiteSpace(v));
 
             options.Add("<>", config.testBinaries.Add);
 

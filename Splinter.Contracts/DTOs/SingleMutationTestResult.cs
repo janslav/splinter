@@ -23,13 +23,15 @@ namespace Splinter.Contracts.DTOs
             int instructionIndex,
             string description,
             IReadOnlyCollection<MethodRef> passingTests,
-            IReadOnlyCollection<MethodRef> failingTests)
+            IReadOnlyCollection<MethodRef> failingTests,
+            IReadOnlyCollection<MethodRef> testsNotRun)
         {
             this.Subject = subject;
             this.InstructionIndex = instructionIndex;
             this.MutationDescription = description;
             this.PassingTests = passingTests;
             this.FailingTests = failingTests;
+            this.NotRunTests = testsNotRun;
         }
 
         /// <summary>
@@ -56,5 +58,10 @@ namespace Splinter.Contracts.DTOs
         /// Gets the tests that did kill this mutation.
         /// </summary>
         public IReadOnlyCollection<MethodRef> FailingTests { get; private set; }
+
+        /// <summary>
+        /// Gets the tests that were not run against this mutation.
+        /// </summary>
+        public IReadOnlyCollection<MethodRef> NotRunTests { get; private set; }
     }
 }

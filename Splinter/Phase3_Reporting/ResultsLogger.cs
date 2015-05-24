@@ -95,9 +95,16 @@ namespace Splinter.Phase3_Reporting
             //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
             var allPassing = results.SelectMany(r => r.PassingTests).Distinct().ToArray();
             var allFailing = results.SelectMany(r => r.FailingTests).Distinct().ToArray();
-
             var neverFailing = allPassing.Except(allFailing).ToArray();
-            foreach (var useless in neverFailing)
+
+            var testsNotGivenChanceToFail = realRunsResults.SelectMany(r => r.NotRunTests).Intersect(neverFailing).Distinct().ToArray(); ;
+            if (testsNotGivenChanceToFail.Length > 0)
+            {
+                this.log.WarnFormat("Some tests were not run against all mutations. The 'never failing' test list could be incomplete. "
+                    + "For a complete lis, run Splinter with -detectUnusedTests switch.");
+            }
+
+            foreach (var useless in neverFailing.Except(testsNotGivenChanceToFail))
             {
                 this.log.WarnFormat("Never failing test: {0}", useless.FullName);
             }

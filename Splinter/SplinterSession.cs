@@ -67,7 +67,7 @@ namespace Splinter
         /// <returns></returns>
         public ManualConfiguration SetupCommandLineOptions(OptionSet options)
         {
-            var config = ManualConfiguration.SetupCommandLineOptions(options);
+            var config = ManualConfiguration.SetupCommandLineOptions(options, this.plugins);
 
             IEnumerable<IPlugin> allPlugins = this.plugins.DiscoveredCoverageRunners;
             allPlugins = allPlugins.Union(this.plugins.DiscoveredTestRunners);
@@ -109,7 +109,7 @@ namespace Splinter
             this.OutputDiscoveryFindings(subjectMethods);
 
             //Phase 2 - mutate away!
-            var mutationResults = this.CreateAndRunMutations(modelDirectory, subjectMethods);
+            var mutationResults = this.CreateAndRunMutations(modelDirectory, subjectMethods, cmdLine.DetectUnusedTest);
 
             //Phase 3 - output results
             this.ExportResults(mutationResults);
@@ -193,7 +193,10 @@ namespace Splinter
             this.log.Info("Number of unique test methods: " + testMethodsCount);
         }
 
-        private SingleMutationTestResult[] CreateAndRunMutations(DirectoryInfo modelDirectory, IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
+        private SingleMutationTestResult[] CreateAndRunMutations(
+            DirectoryInfo modelDirectory, 
+            IReadOnlyCollection<TestSubjectMethodRef> subjectMethods,
+            bool runAllTests)
         {
             SingleMutationTestResult[] mutationResults;
             this.log.Info("Starting mutation runs.");
@@ -204,7 +207,7 @@ namespace Splinter
                     mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
                     {
                         var progress = pb.CreateProgressReportingObject(subject.Method);
-                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress);
+                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress, runAllTests);
                     }).ToArray();
                 }
                 this.log.Info("Mutation runs finished.");

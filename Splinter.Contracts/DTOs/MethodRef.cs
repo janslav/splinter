@@ -17,7 +17,7 @@ namespace Splinter.Contracts.DTOs
         public MethodRef(FileInfo assembly, string fullName)
         {
             this.Assembly = assembly;
-            this.FullName = fullName;
+            this.FullName = string.Intern(fullName);
         }
 
         /// <summary>

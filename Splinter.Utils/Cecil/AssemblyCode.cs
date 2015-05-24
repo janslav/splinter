@@ -111,7 +111,7 @@ namespace Splinter.Utils.Cecil
         public MethodDefinition GetMethodByFullName(string fullName)
         {
             return this.methodsByFullName.GetOrAdd(
-                fullName,
+                string.Intern(fullName),
                 n =>
                 {
                     lock (locker)
@@ -161,7 +161,7 @@ namespace Splinter.Utils.Cecil
             this.LoadDebugInformation();
 
             return this.sequencePointsByInstruction.GetOrAdd(
-                Tuple.Create(methodFullName, instructionIndex),
+                Tuple.Create(string.Intern(methodFullName), instructionIndex),
                 t =>
                 {
                     var methodRef = this.GetMethodByFullName(t.Item1);

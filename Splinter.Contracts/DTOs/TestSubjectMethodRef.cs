@@ -17,16 +17,7 @@ namespace Splinter.Contracts.DTOs
         /// <summary>
         /// Initializes a new instance of the <see cref="TestSubjectMethodRef"/> class.
         /// </summary>
-        public TestSubjectMethodRef(MethodRef method, IImmutableSet<TestMethodRef> testMethods)
-        {
-            this.Method = method;
-            this.TestMethods = testMethods;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TestSubjectMethodRef"/> class.
-        /// </summary>
-        public TestSubjectMethodRef(MethodRef method, IEnumerable<TestMethodRef> testMethods)
+        public TestSubjectMethodRef(MethodRef method, IReadOnlyCollection<TestMethodRef> testMethods)
         {
             this.Method = method;
             this.TestMethods = ImmutableHashSet.CreateRange(testMethods);

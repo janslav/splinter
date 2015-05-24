@@ -70,6 +70,7 @@
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
     <Compile Include="ShadowDirectory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeBasedEqualityImplementation.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">

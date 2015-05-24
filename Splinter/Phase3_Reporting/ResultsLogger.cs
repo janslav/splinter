@@ -9,6 +9,7 @@ using log4net;
 using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
+using Splinter.Utils;
 using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase3_Reporting
@@ -16,7 +17,7 @@ namespace Splinter.Phase3_Reporting
     /// <summary>
     /// Factory for the ResultsLogger "plugin"
     /// </summary>
-    public class ResultsLoggerFactory : IPluginFactory<IResultsExporter>
+    public class ResultsLoggerFactory : TypeBasedEqualityImplementation, IPluginFactory<IResultsExporter>
     {
         /// <summary>
         /// Creates and returns the plugin.
@@ -30,7 +31,7 @@ namespace Splinter.Phase3_Reporting
     /// <summary>
     /// Used to output splinter run results to console and log file.
     /// </summary>
-    public class ResultsLogger : IResultsExporter
+    public class ResultsLogger : TypeBasedEqualityImplementation, IResultsExporter
     {
         private readonly ILog log;
 

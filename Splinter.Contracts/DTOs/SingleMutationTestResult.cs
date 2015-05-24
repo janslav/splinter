@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
@@ -29,9 +30,9 @@ namespace Splinter.Contracts.DTOs
             this.Subject = subject;
             this.InstructionIndex = instructionIndex;
             this.MutationDescription = description;
-            this.PassingTests = passingTests;
-            this.FailingTests = failingTests;
-            this.NotRunTests = testsNotRun;
+            this.PassingTests = ImmutableHashSet.CreateRange(passingTests);
+            this.FailingTests = ImmutableHashSet.CreateRange(failingTests);
+            this.NotRunTests = ImmutableHashSet.CreateRange(testsNotRun);
         }
 
         /// <summary>
@@ -52,16 +53,16 @@ namespace Splinter.Contracts.DTOs
         /// <summary>
         /// Gets the tests that didn't kill this mutation.
         /// </summary>
-        public IReadOnlyCollection<MethodRef> PassingTests { get; private set; }
+        public IImmutableSet<MethodRef> PassingTests { get; private set; }
 
         /// <summary>
         /// Gets the tests that did kill this mutation.
         /// </summary>
-        public IReadOnlyCollection<MethodRef> FailingTests { get; private set; }
+        public IImmutableSet<MethodRef> FailingTests { get; private set; }
 
         /// <summary>
         /// Gets the tests that were not run against this mutation.
         /// </summary>
-        public IReadOnlyCollection<MethodRef> NotRunTests { get; private set; }
+        public IImmutableSet<MethodRef> NotRunTests { get; private set; }
     }
 }

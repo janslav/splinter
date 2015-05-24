@@ -21,7 +21,7 @@ namespace Splinter.CoverageRunner.OpenCover
     /// <summary>
     /// The OpenCover coverage plugin
     /// </summary>
-    public class OpenCoverRunner : ICoverageRunner
+    public class OpenCoverRunner : TypeBasedEqualityImplementation, ICoverageRunner
     {
         private const string OpenCoverRegKey = @"SOFTWARE\OpenCover\";
         private const string OpenCoverRegKeyWow6432 = @"SOFTWARE\Wow6432Node\OpenCover\";

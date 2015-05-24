@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,23 +21,23 @@ namespace Splinter.Phase1_Discovery
         /// <summary>
         /// Gets the discovered coverage runners.
         /// </summary>
-        IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; }
+        IImmutableSet<ICoverageRunner> DiscoveredCoverageRunners { get; }
 
         /// <summary>
         /// Gets the discovered test runners.
         /// </summary>
-        IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
+        IImmutableSet<ITestRunner> DiscoveredTestRunners { get; }
 
         /// <summary>
         /// Gets the discovered result exporters.
         /// </summary>
-        IReadOnlyCollection<IResultsExporter> DiscoveredResultExporters { get; }
+        IImmutableSet<IResultsExporter> DiscoveredResultExporters { get; }
 
         /// <summary>
         /// Filters the specified plugins by availability.
         /// Logs warnings for ones that are not available.
         /// </summary>
-        IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin;
+        IReadOnlyCollection<T> FilterByAvailability<T>(IReadOnlyCollection<T> plugins) where T : IPlugin;
     }
 
     /// <summary>
@@ -67,31 +68,31 @@ namespace Splinter.Phase1_Discovery
             var compositionContainer = new CompositionContainer(catalog);
             compositionContainer.ComposeParts(this);
 
-            this.DiscoveredCoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
-            this.DiscoveredTestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
-            this.DiscoveredResultExporters = this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.DiscoveredCoverageRunners = ImmutableHashSet.CreateRange(this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
+            this.DiscoveredTestRunners = ImmutableHashSet.CreateRange(this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
+            this.DiscoveredResultExporters = ImmutableHashSet.CreateRange(this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
         }
 
         /// <summary>
         /// Gets the discovered coverage runners.
         /// </summary>
-        public IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
+        public IImmutableSet<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
 
         /// <summary>
         /// Gets the discovered test runners.
         /// </summary>
-        public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
+        public IImmutableSet<ITestRunner> DiscoveredTestRunners { get; private set; }
 
         /// <summary>
         /// Gets the discovered result exporters.
         /// </summary>
-        public IReadOnlyCollection<IResultsExporter> DiscoveredResultExporters { get; private set; }
+        public IImmutableSet<IResultsExporter> DiscoveredResultExporters { get; private set; }
 
         /// <summary>
         /// Filters the specified plugins by availability.
         /// Logs warnings for ones that are not available.
         /// </summary>
-        public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins) where T : IPlugin
+        public IReadOnlyCollection<T> FilterByAvailability<T>(IReadOnlyCollection<T> plugins) where T : IPlugin
         {
             var pluginType = typeof(T).Name;
 

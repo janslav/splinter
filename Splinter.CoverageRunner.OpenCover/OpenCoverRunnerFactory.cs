@@ -13,13 +13,14 @@ using log4net;
 
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
+using Splinter.Utils;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
     /// <summary>
     /// Creates the OpenCoverRunner objects
     /// </summary>
-    public class OpenCoverRunnerFactory : IPluginFactory<ICoverageRunner>
+    public class OpenCoverRunnerFactory : TypeBasedEqualityImplementation, IPluginFactory<ICoverageRunner>
     {
         /// <summary>
         /// Creates and returns the plugin.

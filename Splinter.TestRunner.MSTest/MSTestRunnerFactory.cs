@@ -20,7 +20,7 @@ namespace Splinter.TestRunner.MsTest
     /// <summary>
     /// Produces the mstest runner plugin
     /// </summary>
-    public class MSTestRunnerFactory : IPluginFactory<ITestRunner>
+    public class MSTestRunnerFactory : TypeBasedEqualityImplementation, IPluginFactory<ITestRunner>
     {
         /// <summary>
         /// Creates and returns the plugin.

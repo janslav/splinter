@@ -77,7 +77,7 @@ namespace Splinter.CoverageRunner.OpenCover
                     {
                         foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                         {
-                            var list = new HashSet<TestMethodRef>();
+                            var list = new List<TestMethodRef>();
 
                             foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
                             {

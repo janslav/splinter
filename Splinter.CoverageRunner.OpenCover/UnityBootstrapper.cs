@@ -9,6 +9,9 @@ using Microsoft.Practices.Unity;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
+    /// <summary>
+    /// Bootstraps Unity
+    /// </summary>
     public class UnityBootstrapper
     {
         private log4net.ILog log;
@@ -18,6 +21,10 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
+        /// <summary>
+        /// Creates and initializes the container.
+        /// </summary>
+        /// <returns></returns>
         public IUnityContainer CreateContainer()
         {
             var container = new UnityContainer();
@@ -36,6 +43,10 @@ namespace Splinter.CoverageRunner.OpenCover
             return container;
         }
 
+        /// <summary>
+        /// Bootstraps the logging.
+        /// </summary>
+        /// <param name="container">The container.</param>
         protected virtual void BootstrapLogging(UnityContainer container)
         {
             container.RegisterInstance(this.log);

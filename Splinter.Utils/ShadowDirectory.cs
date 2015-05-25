@@ -34,34 +34,36 @@ namespace Splinter.Utils
     {
         private readonly ILog log;
 
-        private static int counter;
+        private readonly string operationId;
 
         /// <summary>
-        /// Creates a ShadowProcess instance.
+        /// Initializes a new instance of the <see cref="ShadowDirectory"/> class.
         /// </summary>
-        public ShadowDirectory(ILog log, DirectoryInfo source)
+        public ShadowDirectory(ILog log, DirectoryInfo source, string operationId)
         {
             this.log = log;
             this.Source = source;
+            this.operationId = operationId;
 
             this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Splinter", Path.GetRandomFileName()));
 
-            counter++;
-            this.ShadowId = "#" + counter + "#: ";
-
-            this.log.DebugFormat("{0}Copying root directory to '{1}'.", this.ShadowId, this.Shadow.FullName);
+            this.log.DebugFormat("{0}Copying root directory to '{1}'.", this.operationId, this.Shadow.FullName);
             DirectoryCopy(source, this.Shadow);
         }
 
+        /// <summary>
+        /// Gets the source directory.
+        /// </summary>
         public DirectoryInfo Source { get; private set; }
 
+        /// <summary>
+        /// Gets the shadow directory.
+        /// </summary>
         public DirectoryInfo Shadow { get; private set; }
 
         /// <summary>
-        /// A unique string identifying this instance. To be used for logging purposes.
+        /// Gets the equivalent shadow path of a specified "source" path
         /// </summary>
-        public string ShadowId { get; private set; }
-
         public FileInfo GetEquivalentShadowPath(FileInfo fileInSourceDir)
         {
             if (!fileInSourceDir.FullName.StartsWith(this.Source.FullName, StringComparison.OrdinalIgnoreCase))
@@ -76,17 +78,27 @@ namespace Splinter.Utils
             return shadowed;
         }
 
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
         public void Dispose()
         {
             this.Dispose(true);
             GC.SuppressFinalize(this);
         }
 
+        /// <summary>
+        /// Finalizes an instance of the <see cref="ShadowDirectory"/> class.
+        /// </summary>
         ~ShadowDirectory()
         {
             this.Dispose(false);
         }
 
+        /// <summary>
+        /// Releases unmanaged and - optionally - managed resources.
+        /// </summary>
+        /// <param name="disposing"><c>true</c> to release both managed and unmanaged resources; <c>false</c> to release only unmanaged resources.</param>
         private void Dispose(bool disposing)
         {
             try
@@ -94,7 +106,7 @@ namespace Splinter.Utils
                 var s = this.Shadow;
                 if (s != null)
                 {
-                    this.log.DebugFormat("{0}Deleting directory '{1}'.", this.ShadowId, this.Shadow.FullName);
+                    this.log.DebugFormat("{0}Deleting directory '{1}'.", this.operationId, this.Shadow.FullName);
                     s.Delete(true);
                     this.Shadow = null;
                 }

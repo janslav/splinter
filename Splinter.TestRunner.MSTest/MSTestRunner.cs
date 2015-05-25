@@ -8,6 +8,8 @@ using System.IO;
 using System.Reflection;
 using System.Diagnostics;
 
+using Mono.Cecil;
+
 using Splinter.Contracts.DTOs;
 using Splinter.Contracts;
 using Splinter.Utils;
@@ -15,7 +17,10 @@ using Splinter.Utils.Cecil;
 
 namespace Splinter.TestRunner.MsTest
 {
-    public class MSTestRunner : ITestRunner
+    /// <summary>
+    /// Runs tests implemented using the MsTest (visual studio unit testing) framework.
+    /// </summary>
+    public class MSTestRunner : TypeBasedEqualityImplementation, ITestRunner
     {
         private readonly log4net.ILog log;
 
@@ -25,6 +30,9 @@ namespace Splinter.TestRunner.MsTest
 
         private FileInfo msTestExe;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MSTestRunner"/> class.
+        /// </summary>
         public MSTestRunner(log4net.ILog log, ICodeCache codeCache, IExecutableUtils executableUtils)
         {
             this.log = log;
@@ -32,6 +40,16 @@ namespace Splinter.TestRunner.MsTest
             this.executableUtils = executableUtils;
         }
 
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
+        public void SetupCommandLineOptions(Mono.Options.OptionSet options)
+        {
+        }
+
+        /// <summary>
+        /// Returns true if the mstest.exe can be located.
+        /// </summary>
         public bool IsReady(out string unavailableMessage)
         {
             try
@@ -57,16 +75,22 @@ namespace Splinter.TestRunner.MsTest
             }
         }
 
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
         public string Name
         {
             get { return "MsTest"; }
         }
 
+        /// <summary>
+        /// Determines whether the specified binary contains tests.
+        /// </summary>
         public bool IsTestBinary(FileInfo binary)
         {
-            var assembly = Assembly.ReflectionOnlyLoadFrom(binary.FullName);
+            var assembly = AssemblyDefinition.ReadAssembly(binary.FullName);
 
-            var referencingFramework = assembly.GetReferencedAssemblies().Where(a => a.Name.Equals("Microsoft.VisualStudio.QualityTools.UnitTestFramework"));
+            var referencingFramework = assembly.MainModule.AssemblyReferences.Where(a => a.Name.Equals("Microsoft.VisualStudio.QualityTools.UnitTestFramework"));
 
             //if (referencingFramework.Any())
             //{
@@ -136,7 +160,9 @@ namespace Splinter.TestRunner.MsTest
         //    return result;
         //}
 
-
+        /// <summary>
+        /// Gets the process information to run all tests from a binary.
+        /// </summary>
         public ProcessStartInfo GetProcessInfoToRunTests(DirectoryInfo workingDirectory, FileInfo testBinary)
         {
 
@@ -158,9 +184,12 @@ namespace Splinter.TestRunner.MsTest
             return r;
         }
 
+        /// <summary>
+        /// Gets the process information to run one test from a binary.
+        /// </summary>
         public ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName)
         {
-            var testMethodDef = this.codeCache.GetAssembly(testBinary).GetMethodByFullName(methodFullName);
+            var testMethodDef = this.codeCache.GetAssemblyDefinition(testBinary).GetMethodByFullName(methodFullName);
 
             var escapedTestBinary = CmdLine.EncodeArgument(testBinary.FullName);
 
@@ -175,21 +204,6 @@ namespace Splinter.TestRunner.MsTest
                     };
 
             return r;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj == null)
-            {
-                return false;
-            }
-
-            return this.GetType() == obj.GetType();
-        }
-
-        public override int GetHashCode()
-        {
-            return this.GetType().GetHashCode();
         }
     }
 }

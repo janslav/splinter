@@ -17,8 +17,16 @@ using Splinter.Utils.Cecil;
 
 namespace Splinter.TestRunner.MsTest
 {
-    public class MSTestRunnerFactory : IPluginFactory<ITestRunner>
+    /// <summary>
+    /// Produces the mstest runner plugin
+    /// </summary>
+    public class MSTestRunnerFactory : TypeBasedEqualityImplementation, IPluginFactory<ITestRunner>
     {
+        /// <summary>
+        /// Creates and returns the plugin.
+        /// </summary>
+        /// <param name="log"></param>
+        /// <returns></returns>
         ITestRunner IPluginFactory<ITestRunner>.GetPlugin(log4net.ILog log)
         {
             var container = new UnityBootstrapper(log).CreateContainer();

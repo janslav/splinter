@@ -11,15 +11,24 @@ using Splinter.Utils.Cecil;
 
 namespace Splinter.TestRunner.MsTest
 {
+    /// <summary>
+    /// Bootstraps unity
+    /// </summary>
     public class UnityBootstrapper
     {
         private log4net.ILog log;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UnityBootstrapper"/> class.
+        /// </summary>
         public UnityBootstrapper(log4net.ILog log)
         {
             this.log = log;
         }
 
+        /// <summary>
+        /// Creates and initializes the container.
+        /// </summary>
         public IUnityContainer CreateContainer()
         {
             var container = new UnityContainer();
@@ -38,6 +47,10 @@ namespace Splinter.TestRunner.MsTest
             return container;
         }
 
+        /// <summary>
+        /// Bootstraps the logging.
+        /// </summary>
+        /// <param name="container">The container.</param>
         protected virtual void BootstrapLogging(UnityContainer container)
         {
             container.RegisterInstance(this.log);

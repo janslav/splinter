@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,25 +13,52 @@ using Splinter.Contracts;
 
 namespace Splinter.Phase1_Discovery
 {
+    /// <summary>
+    /// Discovers and lists the splinter plugins
+    /// </summary>
     public interface IPluginsContainer
     {
-        IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; }
+        /// <summary>
+        /// Gets the discovered coverage runners.
+        /// </summary>
+        IImmutableSet<ICoverageRunner> DiscoveredCoverageRunners { get; }
 
-        IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; }
+        /// <summary>
+        /// Gets the discovered test runners.
+        /// </summary>
+        IImmutableSet<ITestRunner> DiscoveredTestRunners { get; }
 
-        IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin;
+        /// <summary>
+        /// Gets the discovered result exporters.
+        /// </summary>
+        IImmutableSet<IResultsExporter> DiscoveredResultExporters { get; }
+
+        /// <summary>
+        /// Filters the specified plugins by availability.
+        /// Logs warnings for ones that are not available.
+        /// </summary>
+        IReadOnlyCollection<T> FilterByAvailability<T>(IReadOnlyCollection<T> plugins) where T : IPlugin;
     }
 
+    /// <summary>
+    /// Discovers and lists the splinter plugins
+    /// </summary>
     public class PluginsContainer : IPluginsContainer
     {
         [ImportMany]
-        private IEnumerable<Lazy<IPluginFactory<ICoverageRunner>, ICoverageRunnerMetadata>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
+        private IEnumerable<Lazy<IPluginFactory<ICoverageRunner>>> lazyCoverageRunners = null; //assigning null to avoid compiler warning
 
         [ImportMany]
-        private IEnumerable<Lazy<IPluginFactory<ITestRunner>, ITestRunnerMetadata>> lazyTestRunners = null; //assigning null to avoid compiler warning
+        private IEnumerable<Lazy<IPluginFactory<ITestRunner>>> lazyTestRunners = null; //assigning null to avoid compiler warning
+
+        [ImportMany]
+        private IEnumerable<Lazy<IPluginFactory<IResultsExporter>>> lazyResultExporters = null; //assigning null to avoid compiler warning
 
         private readonly ILog log;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PluginsContainer"/> class.
+        /// </summary>
         public PluginsContainer(ILog log)
         {
             this.log = log;
@@ -40,16 +68,34 @@ namespace Splinter.Phase1_Discovery
             var compositionContainer = new CompositionContainer(catalog);
             compositionContainer.ComposeParts(this);
 
-            this.DiscoveredCoverageRunners = this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
-            this.DiscoveredTestRunners = this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)).ToArray();
+            this.DiscoveredCoverageRunners = ImmutableHashSet.CreateRange(this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
+            this.DiscoveredTestRunners = ImmutableHashSet.CreateRange(this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
+            this.DiscoveredResultExporters = ImmutableHashSet.CreateRange(this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
         }
 
-        public IReadOnlyCollection<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
+        /// <summary>
+        /// Gets the discovered coverage runners.
+        /// </summary>
+        public IImmutableSet<ICoverageRunner> DiscoveredCoverageRunners { get; private set; }
 
-        public IReadOnlyCollection<ITestRunner> DiscoveredTestRunners { get; private set; }
+        /// <summary>
+        /// Gets the discovered test runners.
+        /// </summary>
+        public IImmutableSet<ITestRunner> DiscoveredTestRunners { get; private set; }
 
-        public IReadOnlyCollection<T> FilterByAvailability<T>(IEnumerable<T> plugins, string categoryName) where T : IPlugin
+        /// <summary>
+        /// Gets the discovered result exporters.
+        /// </summary>
+        public IImmutableSet<IResultsExporter> DiscoveredResultExporters { get; private set; }
+
+        /// <summary>
+        /// Filters the specified plugins by availability.
+        /// Logs warnings for ones that are not available.
+        /// </summary>
+        public IReadOnlyCollection<T> FilterByAvailability<T>(IReadOnlyCollection<T> plugins) where T : IPlugin
         {
+            var pluginType = typeof(T).Name;
+
             var readiness = plugins.Select(tr =>
             {
                 string msg;
@@ -64,7 +110,7 @@ namespace Splinter.Phase1_Discovery
             if (!readiness.Any(tr => tr.Ready))
             {
                 var msgs = string.Join(Environment.NewLine, readiness.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                throw new Exception(string.Format("No {0} ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs));
+                throw new Exception(string.Format("No plugins of type '{0}' ready/installed:{1}{2}", pluginType, Environment.NewLine, msgs));
             }
             else
             {
@@ -72,7 +118,7 @@ namespace Splinter.Phase1_Discovery
                 if (notReady.Any())
                 {
                     var msgs = string.Join(Environment.NewLine, notReady.Select(tr => tr.Runner.Name + ": " + tr.Msg));
-                    this.log.DebugFormat("Some {0} not ready/installed:{1}{2}", categoryName, Environment.NewLine, msgs);
+                    this.log.DebugFormat("Some plugins of type '{0}' not ready/installed:{1}{2}", pluginType, Environment.NewLine, msgs);
                 }
             }
 

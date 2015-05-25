@@ -18,14 +18,20 @@ using Splinter.Utils;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
+    /// <summary>
+    /// Parses the opencover results
+    /// </summary>
     public interface ISubjectTestMappingParser
     {
         /// <summary>
         /// Parses the subject-test mapping from opencover results.xml
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, XDocument resultsXml, string shadowDirFullName);
+        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName);
     }
 
+    /// <summary>
+    /// Parses the opencover results
+    /// </summary>
     public class SubjectTestMappingParser : ISubjectTestMappingParser
     {
         private readonly ILog log;
@@ -35,13 +41,14 @@ namespace Splinter.CoverageRunner.OpenCover
             this.log = log;
         }
 
-        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, XDocument resultsXml, string shadowDirFullName)
+        /// <summary>
+        /// Parses the subject-test mapping from opencover results.xml
+        /// </summary>
+        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName)
         {
             var session = resultsXml.Root;
 
             var testBinaryHash = this.HashFile(testBinary);
-
-            var originalDir = testBinary.DirectoryName;
 
             var results = new List<TestSubjectMethodRef>();
 
@@ -64,13 +71,13 @@ namespace Splinter.CoverageRunner.OpenCover
                 {
                     var relativePath = shadowAssembly.FullName.Substring(shadowDirFullName.Length);
                     //the file path from the original directory is the one we care about
-                    var originalAssembly = new FileInfo(originalDir + relativePath);
+                    var originalAssembly = new FileInfo(modelDir + relativePath);
 
                     foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
                     {
                         foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                         {
-                            var list = new HashSet<TestMethodRef>();
+                            var list = new List<TestMethodRef>();
 
                             foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
                             {
@@ -112,12 +119,11 @@ namespace Splinter.CoverageRunner.OpenCover
             {
                 return new byte[0];
             }
-            else
-            {
-                return dashDelimitedHexNumbers.Split('-')
+
+            return dashDelimitedHexNumbers.Split('-')
                     .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
                     .ToArray();
-            }
         }
     }
 }
+

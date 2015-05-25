@@ -7,24 +7,46 @@ using System.Threading.Tasks;
 using log4net;
 
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Contracts;
+using Splinter.Contracts.DTOs;
+using Splinter.Utils;
+using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase3_Reporting
 {
-    public interface IResultsLogger
+    /// <summary>
+    /// Factory for the ResultsLogger "plugin"
+    /// </summary>
+    public class ResultsLoggerFactory : TypeBasedEqualityImplementation, IPluginFactory<IResultsExporter>
     {
-        void LogResults(IReadOnlyCollection<SingleMutationTestResult> results);
+        /// <summary>
+        /// Creates and returns the plugin.
+        /// </summary>
+        public IResultsExporter GetPlugin(ILog log)
+        {
+            return new ResultsLogger(log, CodeCache.Instance);
+        }
     }
 
-    public class ResultsLogger : IResultsLogger
+    /// <summary>
+    /// Used to output splinter run results to console and log file.
+    /// </summary>
+    public class ResultsLogger : TypeBasedEqualityImplementation, IResultsExporter
     {
         private readonly ILog log;
 
-        public ResultsLogger(ILog log)
+        private readonly ICodeCache codeCache;
+
+        public ResultsLogger(ILog log, ICodeCache codeCache)
         {
             this.log = log;
+            this.codeCache = codeCache;
         }
 
-        public void LogResults(IReadOnlyCollection<SingleMutationTestResult> results)
+        /// <summary>
+        /// Exports the results to logs and console.
+        /// </summary>
+        public void ExportResults(IReadOnlyCollection<SingleMutationTestResult> results)
         {
             if (!results.Any())
             {
@@ -67,14 +89,23 @@ namespace Splinter.Phase3_Reporting
                     result.Subject.FullName,
                     result.MutationDescription,
                     result.InstructionIndex);
+
+                //this.RenderCodeLine(result);
             }
 
             //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
             var allPassing = results.SelectMany(r => r.PassingTests).Distinct().ToArray();
             var allFailing = results.SelectMany(r => r.FailingTests).Distinct().ToArray();
-
             var neverFailing = allPassing.Except(allFailing).ToArray();
-            foreach (var useless in neverFailing)
+
+            var testsNotGivenChanceToFail = realRunsResults.SelectMany(r => r.NotRunTests).Intersect(neverFailing).Distinct().ToArray(); ;
+            if (testsNotGivenChanceToFail.Length > 0)
+            {
+                this.log.WarnFormat("Some tests were not run against all mutations. The 'never failing' test list could be incomplete. "
+                    + "For a complete lis, run Splinter with -detectUnusedTests switch.");
+            }
+
+            foreach (var useless in neverFailing.Except(testsNotGivenChanceToFail))
             {
                 this.log.WarnFormat("Never failing test: {0}", useless.FullName);
             }
@@ -97,5 +128,64 @@ namespace Splinter.Phase3_Reporting
                 neverFailing.Length,
                 100.0 - ((neverFailing.Length * 100.0) / uniqueTests));
         }
+
+        private void RenderCodeLine(SingleMutationTestResult result)
+        {
+            var a = this.codeCache.GetAssemblyDefinition(result.Subject.Assembly);
+            var sp = a.GetSequencePoint(result.Subject.FullName, result.InstructionIndex);
+            var source = a.GetSourceFile(sp.Document);
+            string line = source.Lines[sp.StartLine];
+
+            string beginning = line.Substring(0, sp.StartColumn - 1);
+            string highlight;
+            string ending;
+
+            if (sp.StartLine == sp.EndLine)
+            {
+                highlight = line.Substring(sp.StartColumn - 1, sp.EndColumn - sp.StartColumn);
+                ending = line.Substring(sp.EndColumn - 1, line.Length - (sp.EndColumn - 1));
+            }
+            else
+            {
+                highlight = line.Substring(sp.StartColumn - 1);
+                ending = "";
+            }
+
+            var color = Console.BackgroundColor;
+            Console.Write(beginning);
+            Console.BackgroundColor = ConsoleColor.DarkGray;
+            Console.Write(highlight);
+            Console.BackgroundColor = color;
+            Console.WriteLine(ending);
+        }
+
+        #region IPlugin implementation
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
+        public string Name
+        {
+            get { return "ResultsLogger"; }
+        }
+
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
+        /// <param name="options"></param>
+        public void SetupCommandLineOptions(Mono.Options.OptionSet options)
+        {
+        }
+
+        /// <summary>
+        /// Returns true if the plugin is available, i.e. has its binaries installed, registered, etc.
+        /// </summary>
+        /// <param name="unavailableMessage"></param>
+        /// <returns></returns>
+        public bool IsReady(out string unavailableMessage)
+        {
+            unavailableMessage = null;
+            return true;
+        }
+        #endregion
     }
 }

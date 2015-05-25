@@ -36,18 +36,23 @@ namespace Splinter.Phase2_Mutation
     /// </summary>
     public interface IMutationTestSession
     {
+        /// <summary>
+        /// Creates the mutants and runs tests on them.
+        /// </summary>
         IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             MutationTestSessionInput input,
-            IProgress<Tuple<int, int, int>> progress = null);
+            IProgress<Tuple<int, int, int>> progress,
+            bool keepTryingNonfailedTests);
     }
 
+    /// <summary>
+    /// The creation of mutated assemblies and running tests against them is driven from here.
+    /// </summary>
     public class MutationTestSession : IMutationTestSession
     {
         private readonly ILog log;
 
         private readonly ICodeCache codeCache;
-
-        private readonly IWindowsErrorReporting errorReportingSwitch;
 
         private readonly IExecutableUtils executableUtils;
 
@@ -57,12 +62,10 @@ namespace Splinter.Phase2_Mutation
             ILog log,
             IUnityContainer container,
             IExecutableUtils executableUtils,
-            ICodeCache codeCache,
-            IWindowsErrorReporting errorReportingSwitch)
+            ICodeCache codeCache)
         {
             this.log = log;
             this.codeCache = codeCache;
-            this.errorReportingSwitch = errorReportingSwitch;
             this.executableUtils = executableUtils;
 
             this.ImportTurtles(container);
@@ -85,93 +88,105 @@ namespace Splinter.Phase2_Mutation
                 }).ToArray();
         }
 
+        /// <summary>
+        /// Creates the mutants and runs tests on them.
+        /// </summary>
         public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             MutationTestSessionInput input,
-            IProgress<Tuple<int, int, int>> progress)
+            IProgress<Tuple<int, int, int>> progress,
+            bool keepTryingNonfailedTests)
         {
-            using (this.errorReportingSwitch.TurnOffErrorReporting())
+            var allMutants = new List<Mutation>();
+
+            try
             {
-                var allMutants = new List<Mutation>();
+                var allMutationResults = new List<SingleMutationTestResult>();
 
-                try
+                int testsCount = 0;
+                int testsFinishedCount = 0;
+                int testsInProgressCount = 0;
+
+                var mutations = this.allTurtles.SelectMany(t =>
                 {
-                    var unmutableMethods = new List<SingleMutationTestResult>();
+                    var mutants = t.TryCreateMutants(input);
 
-                    int testsCount = 0;
-                    int testsFinishedCount = 0;
-                    int testsInProgressCount = 0;
+                    ReportMutantsCreated(input, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
 
-                    var mutations = this.allTurtles.SelectMany(t =>
+                    if (mutants.Count == 0)
                     {
-                        var mutants = t.TryCreateMutants(input);
-
-                        Interlocked.Add(ref testsCount, mutants.Count * input.Subject.TestMethods.Count);
-                        ReportProgress(progress, testsFinishedCount, testsInProgressCount, testsCount);
-
-                        if (mutants.Count == 0)
-                        {
-                            unmutableMethods.Add(new SingleMutationTestResult(
-                                    input.Subject.Method,
-                                    0,
-                                    "",
-                                    input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
-                                    new MethodRef[0]));
-                        }
-
-                        allMutants.AddRange(mutants);
-                        return mutants;
-                    });
-
-                    var results = mutations.AsParallel()// .WithDegreeOfParallelism(Environment.ProcessorCount * 4)
-                        .Select(mutation =>
-                    {
-                        var failingTests = new List<MethodRef>();
-                        var passingTests = new List<MethodRef>();
-
-                        using (mutation)
-                        {
-                            //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
-                            foreach (var test in mutation.Input.Subject.TestMethods)
-                            {
-                                Interlocked.Increment(ref testsInProgressCount);
-                                ReportProgress(progress, testsFinishedCount, testsInProgressCount, testsCount);
-
-                                var testPassed = this.RunTestOnMutation(mutation, test);
-                                if (testPassed)
-                                {
-                                    passingTests.Add(test.Method);
-                                }
-                                else
-                                {
-                                    failingTests.Add(test.Method);
-                                }
-
-                                Interlocked.Decrement(ref testsInProgressCount);
-                                Interlocked.Increment(ref testsFinishedCount);
-                                ReportProgress(progress, testsFinishedCount, testsInProgressCount, testsCount);
-                            }
-                        }
-
-                        return new SingleMutationTestResult(
-                            mutation.Input.Subject.Method,
-                            mutation.InstructionIndex,
-                            mutation.Description,
-                            passingTests,
-                            failingTests);
-                    });
-
-                    unmutableMethods.AddRange(results);
-                    return unmutableMethods;
-                }
-                finally
-                {
-                    //a second failsafe. We really don't want to leave the copied directories around.
-                    foreach (var m in allMutants)
-                    {
-                        m.Dispose();
+                        allMutationResults.Add(CreateResultForUnmutableMethod(input));
                     }
+
+                    allMutants.AddRange(mutants);
+                    return mutants;
+                });
+
+                var mutationRuns = mutations.AsParallel()// .WithDegreeOfParallelism(Environment.ProcessorCount * 4)
+                    .Select(mutation =>
+                {
+                    var failingTests = new List<MethodRef>();
+                    var passingTests = new List<MethodRef>();
+
+                    //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
+                    foreach (var test in mutation.Input.Subject.TestMethods)
+                    {
+                        if (!keepTryingNonfailedTests && failingTests.Count > 0)
+                        {
+                            break;
+                        }
+
+                        ReportTestRunStarting(progress, testsCount, testsFinishedCount, ref testsInProgressCount);
+
+                        var testPassed = this.RunTestOnMutation(mutation, test);
+                        if (testPassed)
+                        {
+                            passingTests.Add(test.Method);
+                        }
+                        else
+                        {
+                            failingTests.Add(test.Method);
+                        }
+
+                        ReportTestRunFinished(progress, testsCount, ref testsFinishedCount, ref testsInProgressCount);
+                    }
+
+                    return CreateResultObject(mutation, failingTests, passingTests);
+                });
+
+                allMutationResults.AddRange(mutationRuns);
+                return allMutationResults;
+            }
+            finally
+            {
+                foreach (var m in allMutants)
+                {
+                    m.Dispose();
                 }
             }
+        }
+
+        private static SingleMutationTestResult CreateResultObject(Mutation mutation, List<MethodRef> failingTests, List<MethodRef> passingTests)
+        {
+            var notRun = mutation.Input.Subject.TestMethods.Select(tm => tm.Method).Except(passingTests).Except(failingTests);
+
+            return new SingleMutationTestResult(
+                mutation.Input.Subject.Method,
+                mutation.InstructionIndex,
+                mutation.Description,
+                passingTests,
+                failingTests,
+                notRun.ToArray());
+        }
+
+        private static SingleMutationTestResult CreateResultForUnmutableMethod(MutationTestSessionInput input)
+        {
+            return new SingleMutationTestResult(
+                input.Subject.Method,
+                0,
+                "",
+                input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
+                new MethodRef[0],
+                new MethodRef[0]);
         }
 
         private bool RunTestOnMutation(Mutation mutation, TestMethodRef test)
@@ -185,21 +200,41 @@ namespace Splinter.Phase2_Mutation
                 mutation.Description,
                 mutation.Input.Subject.Method.FullName);
 
-            var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.TestDirectory.ShadowId);
+            var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.Id);
             return exitCode == 0;
         }
 
-        private static void ReportProgress(IProgress<Tuple<int, int, int>> progress, int testsFinishedCount, int testsInProgressCount, int testsCount)
+        private static void ReportTestRunFinished(IProgress<Tuple<int, int, int>> progress, int testsCount, ref int testsFinishedCount, ref int testsInProgressCount)
         {
             if (progress != null)
             {
+                Interlocked.Decrement(ref testsInProgressCount);
+                Interlocked.Increment(ref testsFinishedCount);
+                progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
+            }
+        }
+
+        private static void ReportTestRunStarting(IProgress<Tuple<int, int, int>> progress, int testsCount, int testsFinishedCount, ref int testsInProgressCount)
+        {
+            if (progress != null)
+            {
+                Interlocked.Increment(ref testsInProgressCount);
+                progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
+            }
+        }
+
+        private static void ReportMutantsCreated(MutationTestSessionInput input, IProgress<Tuple<int, int, int>> progress, IReadOnlyCollection<Mutation> mutants, ref int testsCount, int testsFinishedCount, int testsInProgressCount)
+        {
+            if (progress != null)
+            {
+                Interlocked.Add(ref testsCount, mutants.Count * input.Subject.TestMethods.Count);
                 progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
             }
         }
 
         private MethodDefinition GetMethodDef(MethodRef method)
         {
-            return this.codeCache.GetAssembly(method.Assembly).GetMethodByFullName(method.FullName);
+            return this.codeCache.GetAssemblyDefinition(method.Assembly).GetMethodByFullName(method.FullName);
         }
     }
 }

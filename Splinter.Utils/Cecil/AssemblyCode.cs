@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
+using System;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -32,26 +33,60 @@ using Mono.Cecil.Pdb;
 namespace Splinter.Utils.Cecil
 {
     /// <summary>
-    /// Class representing the main module of a .NET assembly.
-    /// Code mostly taken from NinjaTurtles class Module
+    /// Class representinga .NET assembly.
     /// </summary>
     public interface IAssemblyCode
     {
+        /// <summary>
+        /// Gets the location of the assembly on disk .
+        /// </summary>
         FileInfo AssemblyLocation { get; }
 
+        /// <summary>
+        /// Gets the <see cref="AssemblyDefinition" />.
+        /// </summary>
         AssemblyDefinition AssemblyDefinition { get; }
 
+        /// <summary>
+        /// Gets the method definition by its full name.
+        /// </summary>
         MethodDefinition GetMethodByFullName(string fullName);
 
+        /// <summary>
+        /// Loads debug information.
+        /// </summary>
         void LoadDebugInformation();
+
+        /// <summary>
+        /// Gets the sequence point (line of code) of the specified instruction.
+        /// </summary>
+        SequencePoint GetSequencePoint(string methodFullName, int instructionIndex);
+
+        /// <summary>
+        /// Gets the source file loaded using the specified Document instance.
+        /// </summary>
+        SourceFile GetSourceFile(Document reference);
     }
 
+    /// <summary>
+    /// Class representinga .NET assembly.
+    /// Code mostly taken from NinjaTurtles class Module
+    /// </summary>
     public class AssemblyCode : IAssemblyCode
     {
         private static readonly object locker = new object();
 
         private readonly ConcurrentDictionary<string, MethodDefinition> methodsByFullName = new ConcurrentDictionary<string, MethodDefinition>();
 
+        private readonly ConcurrentDictionary<Tuple<string, int>, SequencePoint> sequencePointsByInstruction =
+            new ConcurrentDictionary<Tuple<string, int>, SequencePoint>();
+
+        private readonly ConcurrentDictionary<byte[], SourceFile> sourceFilesByHash =
+            new ConcurrentDictionary<byte[], SourceFile>();
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AssemblyCode"/> class.
+        /// </summary>
         public AssemblyCode(FileInfo assemblyLocation)
         {
             this.AssemblyLocation = assemblyLocation;
@@ -59,7 +94,7 @@ namespace Splinter.Utils.Cecil
         }
 
         /// <summary>
-        /// Gets the location on disk of the assembly.
+        /// Gets the location of the assembly on disk .
         /// </summary>
         public FileInfo AssemblyLocation { get; private set; }
 
@@ -68,6 +103,11 @@ namespace Splinter.Utils.Cecil
         /// </summary>
         public AssemblyDefinition AssemblyDefinition { get; private set; }
 
+        /// <summary>
+        /// Gets the method definition by its full name.
+        /// </summary>
+        /// <param name="fullName"></param>
+        /// <returns></returns>
         public MethodDefinition GetMethodByFullName(string fullName)
         {
             return this.methodsByFullName.GetOrAdd(
@@ -99,39 +139,59 @@ namespace Splinter.Utils.Cecil
             }
         }
 
+        /// <summary>
+        /// Loads debug information.
+        /// </summary>
         public void LoadDebugInformation()
         {
-            var reader = ResolveSymbolReader();
-            if (reader == null) return;
-
-            this.AssemblyDefinition.MainModule.ReadSymbols(reader);
+            foreach (var module in this.AssemblyDefinition.Modules)
+            {
+                if (!module.HasSymbols)
+                {
+                    module.ReadSymbols();
+                }
+            }
         }
 
-        private ISymbolReader ResolveSymbolReader()
+        /// <summary>
+        /// Gets the sequence point (line of code) of the specified instruction.
+        /// </summary>
+        public SequencePoint GetSequencePoint(string methodFullName, int instructionIndex)
         {
-            string symbolLocation = null;
-            string pdbLocation = Path.ChangeExtension(this.AssemblyLocation.FullName, "pdb");
-            string mdbLocation = this.AssemblyLocation.FullName + ".mdb";
-            ISymbolReaderProvider provider = null;
+            this.LoadDebugInformation();
 
-            if (File.Exists(pdbLocation))
+            return this.sequencePointsByInstruction.GetOrAdd(
+                Tuple.Create(methodFullName, instructionIndex),
+                t =>
+                {
+                    var methodRef = this.GetMethodByFullName(t.Item1);
+                    var sp = CalculateNearestSequencePoint(methodRef, t.Item2);
+                    return sp;
+                });
+        }
+
+        internal static SequencePoint CalculateNearestSequencePoint(MethodDefinition method, int index)
+        {
+            var instruction = method.Body.Instructions[index];
+            while ((instruction.SequencePoint == null
+                    || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
             {
-                symbolLocation = pdbLocation;
-                provider = new PdbReaderProvider();
-            }
-            else if (File.Exists(mdbLocation))
-            {
-                symbolLocation = this.AssemblyLocation.FullName;
-                provider = new MdbReaderProvider();
+                index--;
+                instruction = method.Body.Instructions[index];
             }
 
-            if (provider == null)
-            {
-                return null;
-            }
+            var sequencePoint = instruction.SequencePoint;
+            return sequencePoint;
+        }
 
-            var reader = provider.GetSymbolReader(this.AssemblyDefinition.MainModule, symbolLocation);
-            return reader;
+        /// <summary>
+        /// Gets the source file loaded using the specified Document instance.
+        /// </summary>
+        public SourceFile GetSourceFile(Document reference)
+        {
+            return this.sourceFilesByHash.GetOrAdd(
+                reference.Hash,
+                _ => new SourceFile(reference));
         }
     }
 }

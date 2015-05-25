@@ -29,6 +29,9 @@ using log4net;
 
 namespace Splinter.Utils
 {
+    /// <summary>
+    /// Utility code for launching of processes
+    /// </summary>
     public interface IExecutableUtils
     {
         /// <summary>
@@ -36,12 +39,21 @@ namespace Splinter.Utils
         /// </summary>
         FileInfo FindExecutable(string exeName, IEnumerable<string> additionalSearchLocations = null);
 
+        /// <summary>
+        /// Runs a process with arguments and waits for it to exit.
+        /// </summary>
         int RunProcessAndWaitForExit(FileInfo executable, string shadowId, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null);
 
+        /// <summary>
+        /// Runs a process with no arguments and waits for it to exit.
+        /// </summary>
         int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId);
     }
 
-    // Code mostly taken from NinjaTurtles class Module
+    /// <summary>
+    /// Utility code for launching of processes
+    /// Some code taken from NinjaTurtles
+    /// </summary>
     public class ExecutableUtils : IExecutableUtils
     {
         private readonly ILog log;
@@ -69,6 +81,9 @@ namespace Splinter.Utils
             throw new Exception(string.Format("Couldn't find '{0}' executable.", exeName));
         }
 
+        /// <summary>
+        /// Runs a process with arguments and waits for it to exit.
+        /// </summary>
         public int RunProcessAndWaitForExit(FileInfo executable, string shadowId, IEnumerable<string> arguments, DirectoryInfo workingDirectory)
         {
             var r = new ProcessStartInfo(
@@ -81,6 +96,9 @@ namespace Splinter.Utils
             return this.RunProcessAndWaitForExit(r, shadowId);
         }
 
+        /// <summary>
+        /// Runs a process with no arguments and waits for it to exit.
+        /// </summary>
         public int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId)
         {
             this.log.DebugFormat("{0}Starting process '{1}' with arguments '{2}'.", shadowId, startInfo.FileName, startInfo.Arguments);

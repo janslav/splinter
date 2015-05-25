@@ -42,19 +42,19 @@ namespace Splinter.Phase3_Reporting
 
             if (0 == testsCount)
             {
-                this.log.Warn("No mutation tests run. Something probably wet wrong.");
+                this.log.Warn("No mutation tests run. Something probably went wrong.");
                 return;
             }
 
             if (0 == realRunsResults.Sum(r => r.PassingTests.Count))
             {
-                this.log.Warn("All mutation tests failed. Something probably wet wrong. Or all your tests are beyond perfection.");
+                this.log.Warn("All mutation tests failed. Something probably went wrong. Or all your tests are beyond perfection.");
                 return;
             }
 
             if (0 == realRunsResults.Sum(r => r.FailingTests.Count))
             {
-                this.log.Warn("All mutation tests passed. Something probably wet wrong. Or all your tests are completely useless.");
+                this.log.Warn("All mutation tests passed. Something probably went wrong. Or all your tests are completely useless.");
             }
 
             var survivingMutants = realRunsResults.Where(r => r.FailingTests.Count == 0).ToArray();

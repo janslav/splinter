@@ -42,6 +42,7 @@ namespace Splinter.Phase2_Mutation
         IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             MutationTestSessionInput input,
             IProgress<Tuple<int, int, int>> progress,
+            IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonfailedTests);
     }
 
@@ -94,6 +95,7 @@ namespace Splinter.Phase2_Mutation
         public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             MutationTestSessionInput input,
             IProgress<Tuple<int, int, int>> progress,
+            IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonfailedTests)
         {
             var allMutants = new List<Mutation>();
@@ -128,7 +130,7 @@ namespace Splinter.Phase2_Mutation
                     var passingTests = new List<MethodRef>();
 
                     //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
-                    foreach (var test in mutation.Input.Subject.TestMethods)
+                    foreach (var test in orderingStrategy.OrderTestsForRunning(mutation))
                     {
                         if (!keepTryingNonfailedTests && failingTests.Count > 0)
                         {
@@ -141,10 +143,12 @@ namespace Splinter.Phase2_Mutation
                         if (testPassed)
                         {
                             passingTests.Add(test.Method);
+                            orderingStrategy.NotifyTestPased(mutation, test);
                         }
                         else
                         {
                             failingTests.Add(test.Method);
+                            orderingStrategy.NotifyTestFailed(mutation, test);
                         }
 
                         ReportTestRunFinished(progress, testsCount, ref testsFinishedCount, ref testsInProgressCount);

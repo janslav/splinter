@@ -202,12 +202,14 @@ namespace Splinter
             this.log.Info("Starting mutation runs.");
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
+                var stats = new MutationTestOrderingByStatistics();
+
                 using (var pb = new ConsoleProgressBar<MethodRef>())
                 {
                     mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
                     {
                         var progress = pb.CreateProgressReportingObject(subject.Method);
-                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress, runAllTests);
+                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress, stats, runAllTests);
                     }).ToArray();
                 }
                 this.log.Info("Mutation runs finished.");

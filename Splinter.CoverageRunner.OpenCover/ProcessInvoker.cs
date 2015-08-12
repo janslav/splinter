@@ -68,8 +68,8 @@ namespace Splinter.CoverageRunner.OpenCover
 
                     if (exitCode != 0)
                     {
-                        //TODO: no logs to check atm
-                        throw new Exception("Test runner exitcode != 0. Check the logs.");
+                        //TODO: parse the usual suspects (some tests failed, no tests run)
+                        throw new Exception("OpenCover runner exitcode != 0. Check the logs.");
                     }
 
                     //not using DirectoryInfo as the out value because the directory won't exist by the time

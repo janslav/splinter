@@ -59,7 +59,7 @@ namespace Splinter.Phase1_Discovery
         {
             IEnumerable<Tuple<string, FileInfo>> testBinariesWithRunner;
 
-            var selectedTestRunner = SelectTestRunnerIfManuallySpecified(cmdLine, testRunners);
+            var selectedTestRunner = this.SelectTestRunnerIfManuallySpecified(cmdLine, testRunners);
 
             if (cmdLine.TestBinaries.EmptyIfNull().Any())
             {

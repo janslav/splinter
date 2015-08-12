@@ -181,7 +181,7 @@ namespace Splinter
         private void OutputDiscoverySetup(IReadOnlyCollection<TestBinary> testBinaries)
         {
             this.log.Info("Test runners: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
-            this.log.Info("Test assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, testBinaries.Select(fi => fi.Binary.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
+            this.log.Info("Test assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, testBinaries.Select(fi => fi.Binary.FullName).Distinct(StringComparer.OrdinalIgnoreCase)));
         }
 
         private void OutputDiscoveryFindings(IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
@@ -214,6 +214,7 @@ namespace Splinter
                 }
                 this.log.Info("Mutation runs finished.");
             }
+
             return mutationResults;
         }
 
@@ -225,6 +226,7 @@ namespace Splinter
             {
                 resultExporter.ExportResults(mutationResults);
             }
+
             this.log.Debug("Exporting results finished.");
         }
     }

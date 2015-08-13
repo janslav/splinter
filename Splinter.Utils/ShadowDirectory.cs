@@ -47,7 +47,7 @@ namespace Splinter.Utils
 
             this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Splinter", Path.GetRandomFileName()));
 
-            this.log.DebugFormat("{0}Copying root directory to '{1}'.", this.operationId, this.Shadow.FullName);
+            this.log.DebugFormat("{0}: Copying root directory to '{1}'.", this.operationId, this.Shadow.FullName);
             DirectoryCopy(source, this.Shadow);
         }
 
@@ -106,7 +106,7 @@ namespace Splinter.Utils
                 var s = this.Shadow;
                 if (s != null)
                 {
-                    this.log.DebugFormat("{0}Deleting directory '{1}'.", this.operationId, this.Shadow.FullName);
+                    this.log.DebugFormat("{0}: Deleting directory '{1}'.", this.operationId, this.Shadow.FullName);
                     s.Delete(true);
                     this.Shadow = null;
                 }

@@ -97,7 +97,7 @@ namespace Splinter
 
             //Phase 1: find tests and run them to see who tests what
             var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
-            this.OutputDiscoverySetup(testBinaries);
+            this.LogDiscoverySetup(testBinaries);
 
             var subjectMethods = coverageRunner.DiscoverTestSubjectMapping(modelDirectory, testBinaries);
             if (subjectMethods.Count == 0)
@@ -106,7 +106,7 @@ namespace Splinter
                 return;
             }
 
-            this.OutputDiscoveryFindings(subjectMethods);
+            this.LogDiscoveryFindings(subjectMethods);
 
             //Phase 2 - mutate away!
             var mutationResults = this.CreateAndRunMutations(modelDirectory, subjectMethods, cmdLine.DetectUnusedTest);
@@ -178,13 +178,13 @@ namespace Splinter
             return coverageRunner;
         }
 
-        private void OutputDiscoverySetup(IReadOnlyCollection<TestBinary> testBinaries)
+        private void LogDiscoverySetup(IReadOnlyCollection<TestBinary> testBinaries)
         {
             this.log.Info("Test runners: " + string.Join(", ", testBinaries.Select(fi => fi.Runner.Name).Distinct(StringComparer.OrdinalIgnoreCase)));
             this.log.Info("Test assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, testBinaries.Select(fi => fi.Binary.FullName).Distinct(StringComparer.OrdinalIgnoreCase)));
         }
 
-        private void OutputDiscoveryFindings(IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
+        private void LogDiscoveryFindings(IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
         {
             var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
             var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();

@@ -185,10 +185,10 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
         {
             var i = Interlocked.Increment(ref counter);
-            var mutationId = string.Format("Mutation{0:0000}:", i);
+            var mutationId = string.Format("Mutation{0:00000}", i);
 
             this.log.DebugFormat(
-                "{0}Creating mutation of method '{1}' from assembly '{2}: {3}.'",
+                "{0}: Creating mutation of method '{1}' from assembly '{2}: {3}.'",
                 mutationId,
                 input.Subject.Method.FullName,
                 input.Subject.Method.Assembly.Name,

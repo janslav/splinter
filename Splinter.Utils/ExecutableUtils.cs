@@ -101,7 +101,7 @@ namespace Splinter.Utils
         /// </summary>
         public int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId)
         {
-            this.log.DebugFormat("{0}Starting process '{1}' with arguments '{2}'.", shadowId, startInfo.FileName, startInfo.Arguments);
+            this.log.DebugFormat("{0}: Starting process '{1}' with arguments '{2}'.", shadowId, startInfo.FileName, startInfo.Arguments);
 
             startInfo.RedirectStandardError = true;
             startInfo.RedirectStandardOutput = true;
@@ -112,8 +112,8 @@ namespace Splinter.Utils
             {
                 p.EnableRaisingEvents = true;
 
-                p.OutputDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Debug(shadowId + e.Data); };
-                p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Warn(shadowId + e.Data); };
+                p.OutputDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Debug(shadowId + ": " + e.Data); };
+                p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Warn(shadowId + ": " + e.Data); };
 
                 p.Start();
 
@@ -122,7 +122,7 @@ namespace Splinter.Utils
 
                 p.WaitForExit();
 
-                this.log.DebugFormat("{0}Process exited.", shadowId);
+                this.log.DebugFormat("{0}: Process exited.", shadowId);
 
                 return p.ExitCode;
             }

@@ -57,7 +57,7 @@ namespace Splinter.TestRunner.MsTest
                 var paths = this.GetMsExeSearchPaths();
 
                 this.msTestExe = this.executableUtils.FindExecutable("mstest.exe", paths);
-                var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "msTestDiscovery: ", new[] { "/help" });
+                var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "MsTest Discovery", new[] { "/help" });
 
                 if (exitCode != 0)
                 {

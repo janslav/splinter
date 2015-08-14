@@ -29,6 +29,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Mdb;
 using Mono.Cecil.Pdb;
+using System.Reflection;
 
 namespace Splinter.Utils.Cecil
 {
@@ -48,9 +49,14 @@ namespace Splinter.Utils.Cecil
         AssemblyDefinition AssemblyDefinition { get; }
 
         /// <summary>
-        /// Gets the method definition by its full name.
+        /// Gets a method definition by its full name.
         /// </summary>
         MethodDefinition GetMethodByFullName(string fullName);
+
+        /// <summary>
+        /// Gets a method definition by its class full name and method name.
+        /// </summary>
+        MethodDefinition GetMethodByClassAndMethodName(string classFullName, string methodName);
 
         /// <summary>
         /// Loads debug information.
@@ -77,6 +83,8 @@ namespace Splinter.Utils.Cecil
         private static readonly object locker = new object();
 
         private readonly ConcurrentDictionary<string, MethodDefinition> methodsByFullName = new ConcurrentDictionary<string, MethodDefinition>();
+
+        private readonly ConcurrentDictionary<string, TypeDefinition> classesByFullName = new ConcurrentDictionary<string, TypeDefinition>();
 
         private readonly ConcurrentDictionary<Tuple<string, int>, SequencePoint> sequencePointsByInstruction =
             new ConcurrentDictionary<Tuple<string, int>, SequencePoint>();
@@ -123,6 +131,28 @@ namespace Splinter.Utils.Cecil
                             .Single(m => m.FullName.Equals(n));
                     }
                 });
+        }
+
+        /// <summary>
+        /// Gets a method definition by its class full name and method name.
+        /// </summary>
+        public MethodDefinition GetMethodByClassAndMethodName(string classFullName, string methodName)
+        {
+            var type = this.classesByFullName.GetOrAdd(
+                string.Intern(classFullName),
+                n =>
+                {
+                    var nameWithNameSpaceOnly = n.Split(',')[0];
+                    lock (locker)
+                    {
+                        return this.AssemblyDefinition.Modules
+                            .SelectMany(m => m.Types)
+                            .SelectMany(t => ListNestedTypesRecursively(t))
+                            .Single(t => t.FullName.Equals(nameWithNameSpaceOnly));
+                    }
+                });
+
+            return type.Methods.Single(m => m.Name.Equals(methodName));
         }
 
         private IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)

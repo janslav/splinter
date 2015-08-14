@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.ComponentModel.Composition;
 using System.IO;
@@ -14,6 +15,7 @@ using Splinter.Contracts.DTOs;
 using Splinter.Contracts;
 using Splinter.Utils;
 using Splinter.Utils.Cecil;
+using System.Xml.Linq;
 
 namespace Splinter.TestRunner.MsTest
 {
@@ -57,7 +59,7 @@ namespace Splinter.TestRunner.MsTest
                 var paths = this.GetMsExeSearchPaths();
 
                 this.msTestExe = this.executableUtils.FindExecutable("mstest.exe", paths);
-                var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "MsTest Discovery", new[] { "/help" });
+                var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.msTestExe, "MsTest Discovery", new[] { "/help" }).ExitCode;
 
                 if (exitCode != 0)
                 {
@@ -204,6 +206,79 @@ namespace Splinter.TestRunner.MsTest
                     };
 
             return r;
+        }
+
+        private static Regex resulsFileLineRe = new Regex(@"Results file:\s*(?<fileName>.+)", RegexOptions.Compiled | RegexOptions.Singleline);
+
+        /// <summary>
+        /// Extracts the test methods with additional metadata (such as test run time) using the console output of the coverage process.
+        /// </summary>
+        public IReadOnlyCollection<TestMethodRef> ParseTestMethodsList(FileInfo testBinary, string testRunConsoleOut)
+        {
+            //we look for the line "Results file: filepath/of/xml/result" in the console output, then we parse the file at the path
+            string resultsXmlFileName = null;
+
+            var reader = new StringReader(testRunConsoleOut);
+            string line;
+
+            while (null != (line = reader.ReadLine()))
+            {
+                var match = resulsFileLineRe.Match(line);
+                if (match.Success)
+                {
+                    resultsXmlFileName = match.Groups["fileName"].Value;
+                    break;
+                }
+            }
+
+            if (string.IsNullOrWhiteSpace(resultsXmlFileName))
+            {
+                throw new Exception("Could not extract mstest result xml file location from the process output.");
+            }
+
+            var resultsXmlFile = new FileInfo(resultsXmlFileName);
+
+            if (!resultsXmlFile.Exists)
+            {
+                throw new Exception(string.Format("Could not find mstest result xml file at '{0}'.", resultsXmlFileName));
+            }
+
+            var resultsXmlDoc = XDocument.Load(resultsXmlFile.FullName);
+
+            var unitTestsByDefinitionId = new Dictionary<string, Tuple<string, TimeSpan>>();
+
+            var assemblyDef = this.codeCache.GetAssemblyDefinition(testBinary);
+
+            var ns = resultsXmlDoc.Root.GetDefaultNamespace().NamespaceName;
+
+            //there is a TestDefinitions element with the method/class names and then Results with the start/finish times
+            foreach (var unitTestElement in resultsXmlDoc.Root.Element(XName.Get("TestDefinitions", ns)).Elements(XName.Get("UnitTest", ns)))
+            {
+                var id = unitTestElement.Attribute("id").Value;
+                var testMethodElement = unitTestElement.Element(XName.Get("TestMethod", ns));
+                var classFullName = testMethodElement.Attribute("className").Value;
+                var methodName = testMethodElement.Attribute("name").Value;
+
+                var method = assemblyDef.GetMethodByClassAndMethodName(classFullName, methodName);
+
+                unitTestsByDefinitionId.Add(id, Tuple.Create(method.FullName, TimeSpan.Zero));
+            }
+
+            foreach (var unitTestResultElement in resultsXmlDoc.Root.Element(XName.Get("Results", ns)).Elements(XName.Get("UnitTestResult", ns)))
+            {
+                var id = unitTestResultElement.Attribute("testId").Value;
+                var startTime = (DateTime)unitTestResultElement.Attribute("startTime");
+                var endTime = (DateTime)unitTestResultElement.Attribute("endTime");
+                var runTime = endTime - startTime;
+
+                var t = unitTestsByDefinitionId[id];
+                if (t.Item2 < runTime)
+                {
+                    unitTestsByDefinitionId[id] = Tuple.Create(t.Item1, runTime);
+                }
+            }
+
+            return unitTestsByDefinitionId.Values.Select(t => new TestMethodRef(new MethodRef(testBinary, t.Item1), this, t.Item2)).ToArray();
         }
     }
 }

@@ -28,12 +28,12 @@ namespace Splinter
         /// <summary>
         /// Sets up the command line options.
         /// </summary>
-        ManualConfiguration SetupCommandLineOptions(OptionSet options);
+        CmdLineConfiguration SetupCommandLineOptions(OptionSet options);
 
         /// <summary>
         /// Runs everything.
         /// </summary>
-        void Run(ManualConfiguration cmdLine);
+        void Run(CmdLineConfiguration cmdLine);
     }
 
     /// <summary>
@@ -65,9 +65,9 @@ namespace Splinter
         /// </summary>
         /// <param name="options"></param>
         /// <returns></returns>
-        public ManualConfiguration SetupCommandLineOptions(OptionSet options)
+        public CmdLineConfiguration SetupCommandLineOptions(OptionSet options)
         {
-            var config = ManualConfiguration.SetupCommandLineOptions(options, this.plugins);
+            var config = CmdLineConfiguration.SetupCommandLineOptions(options, this.plugins);
 
             IEnumerable<IPlugin> allPlugins = this.plugins.DiscoveredCoverageRunners;
             allPlugins = allPlugins.Union(this.plugins.DiscoveredTestRunners);
@@ -85,7 +85,7 @@ namespace Splinter
         /// Runs everything.
         /// </summary>
         /// <param name="cmdLine"></param>
-        public void Run(ManualConfiguration cmdLine)
+        public void Run(CmdLineConfiguration cmdLine)
         {
             //Phase 0: configuration / plugins discovery
             cmdLine.Validate();
@@ -128,7 +128,7 @@ namespace Splinter
             }
         }
 
-        private DirectoryInfo CheckWorkingDirectory(ManualConfiguration cmdLine)
+        private DirectoryInfo CheckWorkingDirectory(CmdLineConfiguration cmdLine)
         {
             var modelDirectory = new DirectoryInfo(
                 !string.IsNullOrWhiteSpace(cmdLine.WorkingDirectory) ? cmdLine.WorkingDirectory : Environment.CurrentDirectory);
@@ -143,7 +143,7 @@ namespace Splinter
             return modelDirectory;
         }
 
-        private ICoverageRunner PickCoverageRunner(ManualConfiguration cmdLine)
+        private ICoverageRunner PickCoverageRunner(CmdLineConfiguration cmdLine)
         {
             ICoverageRunner coverageRunner = null;
             if (!string.IsNullOrWhiteSpace(cmdLine.CoverageRunner))

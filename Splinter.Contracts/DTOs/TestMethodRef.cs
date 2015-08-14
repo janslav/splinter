@@ -17,10 +17,11 @@ namespace Splinter.Contracts.DTOs
         /// <summary>
         /// Initializes a new instance of the <see cref="TestMethodRef"/> class.
         /// </summary>
-        public TestMethodRef(MethodRef method, ITestRunner testRunner)
+        public TestMethodRef(MethodRef method, ITestRunner testRunner, TimeSpan longestRunningTime)
         {
             this.Method = method;
             this.Runner = testRunner;
+            this.LongestRunningTime = longestRunningTime;
         }
 
         /// <summary>
@@ -32,6 +33,11 @@ namespace Splinter.Contracts.DTOs
         /// Gets the runner that was used to run this test method.
         /// </summary>
         public ITestRunner Runner { get; private set; }
+
+        /// <summary>
+        /// Gets the longest running time of this test method as recorded in the initial "coverage" run.
+        /// </summary>
+        public TimeSpan LongestRunningTime { get; private set; }
 
         #region Equals & GetHashCode
         /// <summary>

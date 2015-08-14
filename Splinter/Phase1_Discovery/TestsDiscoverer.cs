@@ -26,7 +26,7 @@ namespace Splinter.Phase1_Discovery
         /// <param name="cmdLine">Manual configuration via command line.</param>
         /// <param name="testRunners">Available test runners.</param>
         /// <returns>The test runner implementations and the related tests</returns>
-        IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners);
+        IReadOnlyCollection<TestBinary> DiscoverTestBinaries(CmdLineConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ namespace Splinter.Phase1_Discovery
         /// The test runner implementations and the related tests
         /// </returns>
         /// <exception cref="System.Exception">No test binaries found</exception>
-        public IReadOnlyCollection<TestBinary> DiscoverTestBinaries(ManualConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners)
+        public IReadOnlyCollection<TestBinary> DiscoverTestBinaries(CmdLineConfiguration cmdLine, DirectoryInfo modelDirectory, IReadOnlyCollection<ITestRunner> testRunners)
         {
             IEnumerable<Tuple<string, FileInfo>> testBinariesWithRunner;
 
@@ -89,7 +89,7 @@ namespace Splinter.Phase1_Discovery
             return ttr.ToArray();
         }
 
-        private ITestRunner SelectTestRunnerIfManuallySpecified(ManualConfiguration cmdLine, IReadOnlyCollection<ITestRunner> testRunners)
+        private ITestRunner SelectTestRunnerIfManuallySpecified(CmdLineConfiguration cmdLine, IReadOnlyCollection<ITestRunner> testRunners)
         {
             ITestRunner selectedTestRunner = null;
 
@@ -105,7 +105,7 @@ namespace Splinter.Phase1_Discovery
             return selectedTestRunner;
         }
 
-        private IEnumerable<FileInfo> DiscoverManuallySpecifiedBinaries(ManualConfiguration cmdLine)
+        private IEnumerable<FileInfo> DiscoverManuallySpecifiedBinaries(CmdLineConfiguration cmdLine)
         {
             foreach (var path in cmdLine.TestBinaries)
             {

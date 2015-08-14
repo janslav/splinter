@@ -12,11 +12,11 @@ namespace Splinter.Phase0_Boot
     /// <summary>
     /// Represents the command line options of splinter (without the plugin-specific parts)
     /// </summary>
-    public class ManualConfiguration
+    public class CmdLineConfiguration
     {
         private List<string> testBinaries = new List<string>();
 
-        public ManualConfiguration()
+        public CmdLineConfiguration()
         {
             this.DetectUnusedTest = false;
         }
@@ -63,9 +63,9 @@ namespace Splinter.Phase0_Boot
         /// <summary>
         /// Sets up the command line options.
         /// </summary>
-        public static ManualConfiguration SetupCommandLineOptions(OptionSet options, IPluginsContainer plugins)
+        public static CmdLineConfiguration SetupCommandLineOptions(OptionSet options, IPluginsContainer plugins)
         {
-            var config = new ManualConfiguration();
+            var config = new CmdLineConfiguration();
 
             var testRunnerPlugins = string.Join(", ", plugins.DiscoveredTestRunners.Select(tr => tr.Name));
             var coveragePlugins = string.Join(", ", plugins.DiscoveredCoverageRunners.Select(tr => tr.Name));

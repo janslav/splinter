@@ -14,12 +14,12 @@ namespace Splinter.Contracts
     public interface IPlugin
     {
         /// <summary>
-        /// Gets the name.
+        /// Gets the name of the plugin.
         /// </summary>
         string Name { get; }
 
         /// <summary>
-        /// Sets up the command line options.
+        /// Sets up command line options specific to this plugin to splinter.
         /// </summary>
         void SetupCommandLineOptions(OptionSet options);
 

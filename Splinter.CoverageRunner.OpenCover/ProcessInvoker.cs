@@ -26,7 +26,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Runs opencover.exe and reads its xml output
         /// </summary>
-        XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName);
+        XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName, out IReadOnlyCollection<TestMethodRef> testMethods);
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Runs opencover.exe and reads its xml output
         /// </summary>
-        public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName)
+        public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName, out IReadOnlyCollection<TestMethodRef> testMethods)
         {
             var runnerName = testRunner.Name;
             const string operationId = "OpenCover";
@@ -64,13 +64,15 @@ namespace Splinter.CoverageRunner.OpenCover
                     this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
 
                     var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testRunner, testBinary, sd);
-                    var exitCode = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, operationId);
+                    var processResult = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, operationId);
 
-                    if (exitCode != 0)
+                    if (processResult.ExitCode != 0)
                     {
                         //TODO: parse the usual suspects (some tests failed, no tests run)
                         throw new Exception("OpenCover runner exitcode != 0. Check the logs.");
                     }
+
+                    testMethods = testRunner.ParseTestMethodsList(testBinary, processResult.ConsoleOut);
 
                     //not using DirectoryInfo as the out value because the directory won't exist by the time
                     shadowDirFullName = sd.Shadow.FullName;

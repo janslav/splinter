@@ -26,7 +26,13 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Parses the subject-test mapping from opencover results.xml
         /// </summary>
-        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName);
+        IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(
+            ITestRunner testRunner,
+            FileInfo testBinary,
+            DirectoryInfo modelDir,
+            XDocument resultsXml,
+            string shadowDirFullName,
+            IReadOnlyCollection<TestMethodRef> knownTestMethods);
     }
 
     /// <summary>
@@ -44,7 +50,13 @@ namespace Splinter.CoverageRunner.OpenCover
         /// <summary>
         /// Parses the subject-test mapping from opencover results.xml
         /// </summary>
-        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(ITestRunner testRunner, FileInfo testBinary, DirectoryInfo modelDir, XDocument resultsXml, string shadowDirFullName)
+        public IReadOnlyCollection<TestSubjectMethodRef> ParseMapping(
+            ITestRunner testRunner,
+            FileInfo testBinary,
+            DirectoryInfo modelDir,
+            XDocument resultsXml,
+            string shadowDirFullName,
+            IReadOnlyCollection<TestMethodRef> knownTestMethods)
         {
             var session = resultsXml.Root;
 
@@ -52,7 +64,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
             var results = new List<TestSubjectMethodRef>();
 
-            var testMethods = new Dictionary<uint, TestMethodRef>();
+            var testMethodsDictionary = new Dictionary<uint, TestMethodRef>();
 
             var testModule = session.Element("Modules").Elements("Module")
                 .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
@@ -61,7 +73,14 @@ namespace Splinter.CoverageRunner.OpenCover
             {
                 var method = new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value);
 
-                testMethods.Add((uint)trackedMethodEl.Attribute("uid"), new TestMethodRef(method, testRunner));
+                var testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(method));
+                if (testMethod == null)
+                {
+                    throw new Exception(
+                        string.Format("Test method '{0}' from the coverage run result not found in the list recognized by the test runner. This is needed for test timing.", method.FullName));
+                }
+
+                testMethodsDictionary.Add((uint)trackedMethodEl.Attribute("uid"), testMethod);
             }
 
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))
@@ -82,7 +101,7 @@ namespace Splinter.CoverageRunner.OpenCover
                             foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
                             {
                                 TestMethodRef testMethod;
-                                if (testMethods.TryGetValue((uint)trackedMethodRefEl.Attribute("uid"), out testMethod))
+                                if (testMethodsDictionary.TryGetValue((uint)trackedMethodRefEl.Attribute("uid"), out testMethod))
                                 {
                                     list.Add(testMethod);
                                 }
@@ -121,8 +140,8 @@ namespace Splinter.CoverageRunner.OpenCover
             }
 
             return dashDelimitedHexNumbers.Split('-')
-                    .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
-                    .ToArray();
+                .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
+                .ToArray();
         }
     }
 }

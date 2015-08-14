@@ -20,6 +20,7 @@
 #endregion
 
 using System;
+using System.Text;
 using System.Linq;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -42,12 +43,25 @@ namespace Splinter.Utils
         /// <summary>
         /// Runs a process with arguments and waits for it to exit.
         /// </summary>
-        int RunProcessAndWaitForExit(FileInfo executable, string shadowId, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null);
+        ProcessRunResult RunProcessAndWaitForExit(FileInfo executable, string opertionId, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null);
 
         /// <summary>
         /// Runs a process with no arguments and waits for it to exit.
         /// </summary>
-        int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId);
+        ProcessRunResult RunProcessAndWaitForExit(ProcessStartInfo startInfo, string operationId);
+    }
+
+    public class ProcessRunResult
+    {
+        public ProcessRunResult(int exitCode, string consoleOut)
+        {
+            this.ExitCode = exitCode;
+            this.ConsoleOut = consoleOut;
+        }
+
+        public int ExitCode { get; private set; }
+
+        public string ConsoleOut { get; private set; }
     }
 
     /// <summary>
@@ -84,7 +98,7 @@ namespace Splinter.Utils
         /// <summary>
         /// Runs a process with arguments and waits for it to exit.
         /// </summary>
-        public int RunProcessAndWaitForExit(FileInfo executable, string shadowId, IEnumerable<string> arguments, DirectoryInfo workingDirectory)
+        public ProcessRunResult RunProcessAndWaitForExit(FileInfo executable, string operationId, IEnumerable<string> arguments, DirectoryInfo workingDirectory)
         {
             var r = new ProcessStartInfo(
                     executable.FullName,
@@ -93,27 +107,50 @@ namespace Splinter.Utils
                 WorkingDirectory = workingDirectory == null ? Environment.CurrentDirectory : workingDirectory.FullName,
             };
 
-            return this.RunProcessAndWaitForExit(r, shadowId);
+            return this.RunProcessAndWaitForExit(r, operationId);
         }
 
         /// <summary>
         /// Runs a process with no arguments and waits for it to exit.
         /// </summary>
-        public int RunProcessAndWaitForExit(ProcessStartInfo startInfo, string shadowId)
+        public ProcessRunResult RunProcessAndWaitForExit(ProcessStartInfo startInfo, string operationId)
         {
-            this.log.DebugFormat("{0}: Starting process '{1}' with arguments '{2}'.", shadowId, startInfo.FileName, startInfo.Arguments);
+            this.log.DebugFormat("{0}: Starting process '{1}' with arguments '{2}'.", operationId, startInfo.FileName, startInfo.Arguments);
 
             startInfo.RedirectStandardError = true;
             startInfo.RedirectStandardOutput = true;
             startInfo.CreateNoWindow = true;
             startInfo.UseShellExecute = false;
 
+            var sbLock = new object();
+            var sb = new StringBuilder();
+            var rememberConsoleLine = new Action<string>(s =>
+            {
+                lock (sbLock)
+                {
+                    sb.AppendLine(s);
+                }
+            });
+
             using (var p = new Process { StartInfo = startInfo })
             {
                 p.EnableRaisingEvents = true;
 
-                p.OutputDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Debug(shadowId + ": " + e.Data); };
-                p.ErrorDataReceived += (_, e) => { if (!string.IsNullOrWhiteSpace(e.Data)) this.log.Warn(shadowId + ": " + e.Data); };
+                p.OutputDataReceived += (_, e) =>
+                {
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        this.log.Debug(operationId + ": " + e.Data);
+                        rememberConsoleLine(e.Data);
+                    }
+                };
+                p.ErrorDataReceived += (_, e) => {
+                    if (!string.IsNullOrWhiteSpace(e.Data))
+                    {
+                        this.log.Warn(operationId + ": " + e.Data);
+                        rememberConsoleLine(e.Data);
+                    }
+                };
 
                 p.Start();
 
@@ -122,9 +159,9 @@ namespace Splinter.Utils
 
                 p.WaitForExit();
 
-                this.log.DebugFormat("{0}: Process exited.", shadowId);
+                this.log.DebugFormat("{0}: Process exited.", operationId);
 
-                return p.ExitCode;
+                return new ProcessRunResult(p.ExitCode, sb.ToString());
             }
         }
     }

@@ -29,5 +29,10 @@ namespace Splinter.Contracts
         /// Gets the process information to run one test from a binary.
         /// </summary>
         ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName);
+
+        /// <summary>
+        /// Extracts the test methods with additional metadata (such as test run time) using the console output of the coverage process.
+        /// </summary>
+        IReadOnlyCollection<TestMethodRef> ParseTestMethodsList(FileInfo testBinary, string testRunConsoleOut);
     }
 }

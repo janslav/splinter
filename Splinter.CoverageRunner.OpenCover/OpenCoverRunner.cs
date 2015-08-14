@@ -147,8 +147,9 @@ namespace Splinter.CoverageRunner.OpenCover
                 .Select(testBinary =>
                     {
                         string shadowDir;
-                        var doc = this.invoker.RunTestsAndGetOutput(this.ncoverExe, modelDirectory, testBinary.Runner, testBinary.Binary, out shadowDir);
-                        return this.mappingParser.ParseMapping(testBinary.Runner, testBinary.Binary, modelDirectory, doc, shadowDir);
+                        IReadOnlyCollection<TestMethodRef> testMethods;
+                        var doc = this.invoker.RunTestsAndGetOutput(this.ncoverExe, modelDirectory, testBinary.Runner, testBinary.Binary, out shadowDir, out testMethods);
+                        return this.mappingParser.ParseMapping(testBinary.Runner, testBinary.Binary, modelDirectory, doc, shadowDir, testMethods);
                     });
 
             //one subject method can be tested by tests from several assemblies, so here we merge the lists.

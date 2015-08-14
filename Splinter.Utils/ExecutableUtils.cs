@@ -43,21 +43,24 @@ namespace Splinter.Utils
         /// <summary>
         /// Runs a process with arguments and waits for it to exit.
         /// </summary>
-        ProcessRunResult RunProcessAndWaitForExit(FileInfo executable, string opertionId, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null);
+        ProcessRunResult RunProcessAndWaitForExit(FileInfo executable, string opertionId, IEnumerable<string> arguments = null, DirectoryInfo workingDirectory = null, TimeSpan timeOut = new TimeSpan());
 
         /// <summary>
         /// Runs a process with no arguments and waits for it to exit.
         /// </summary>
-        ProcessRunResult RunProcessAndWaitForExit(ProcessStartInfo startInfo, string operationId);
+        ProcessRunResult RunProcessAndWaitForExit(ProcessStartInfo startInfo, string operationId, TimeSpan timeOut = new TimeSpan());
     }
 
     public class ProcessRunResult
     {
-        public ProcessRunResult(int exitCode, string consoleOut)
+        public ProcessRunResult(int exitCode, string consoleOut, bool timedOut = false)
         {
             this.ExitCode = exitCode;
             this.ConsoleOut = consoleOut;
+            this.TimedOut = timedOut;
         }
+
+        public bool TimedOut { get; private set; }
 
         public int ExitCode { get; private set; }
 
@@ -98,7 +101,7 @@ namespace Splinter.Utils
         /// <summary>
         /// Runs a process with arguments and waits for it to exit.
         /// </summary>
-        public ProcessRunResult RunProcessAndWaitForExit(FileInfo executable, string operationId, IEnumerable<string> arguments, DirectoryInfo workingDirectory)
+        public ProcessRunResult RunProcessAndWaitForExit(FileInfo executable, string operationId, IEnumerable<string> arguments, DirectoryInfo workingDirectory, TimeSpan timeOut)
         {
             var r = new ProcessStartInfo(
                     executable.FullName,
@@ -107,13 +110,13 @@ namespace Splinter.Utils
                 WorkingDirectory = workingDirectory == null ? Environment.CurrentDirectory : workingDirectory.FullName,
             };
 
-            return this.RunProcessAndWaitForExit(r, operationId);
+            return this.RunProcessAndWaitForExit(r, operationId, timeOut);
         }
 
         /// <summary>
         /// Runs a process with no arguments and waits for it to exit.
         /// </summary>
-        public ProcessRunResult RunProcessAndWaitForExit(ProcessStartInfo startInfo, string operationId)
+        public ProcessRunResult RunProcessAndWaitForExit(ProcessStartInfo startInfo, string operationId, TimeSpan timeOut)
         {
             this.log.DebugFormat("{0}: Starting process '{1}' with arguments '{2}'.", operationId, startInfo.FileName, startInfo.Arguments);
 
@@ -144,7 +147,8 @@ namespace Splinter.Utils
                         rememberConsoleLine(e.Data);
                     }
                 };
-                p.ErrorDataReceived += (_, e) => {
+                p.ErrorDataReceived += (_, e) =>
+                {
                     if (!string.IsNullOrWhiteSpace(e.Data))
                     {
                         this.log.Warn(operationId + ": " + e.Data);
@@ -157,7 +161,27 @@ namespace Splinter.Utils
                 p.BeginOutputReadLine();
                 p.BeginErrorReadLine();
 
-                p.WaitForExit();
+                if (timeOut > new TimeSpan())
+                {
+                    if (!p.WaitForExit((int)timeOut.TotalMilliseconds))
+                    {
+                        try
+                        {
+                            p.Kill();
+                            this.log.DebugFormat("{0}: Process run timed out and was killed.", operationId);
+                        }
+                        catch (Exception e)
+                        {
+                            this.log.Warn(string.Format("{0}: Process run timed out and kill attempt failed.", operationId), e);
+                        }
+
+                        return new ProcessRunResult(-1, sb.ToString(), true);
+                    }
+                }
+                else
+                {
+                    p.WaitForExit();
+                }
 
                 this.log.DebugFormat("{0}: Process exited.", operationId);
 

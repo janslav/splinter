@@ -22,7 +22,7 @@ namespace Splinter.Phase0_Boot
         /// Gets the maximum mutation running time constant in seconds.
         /// The total max time allowed for a mutation run is MaxMutationRunningTimeConstantInSeconds + (originalTime * MaxMutationRunningTimeFactor)
         /// </summary>
-        [ConfigurationProperty(_MaxMutationRunningTimeConstantInSeconds, DefaultValue = 5)]
+        [ConfigurationProperty(_MaxMutationRunningTimeConstantInSeconds, DefaultValue = 30)]
         public int MaxMutationRunningTimeConstantInSeconds
         {
             get

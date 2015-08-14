@@ -28,6 +28,7 @@ using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
 using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Utils;
 using Splinter.Utils.Cecil;
+using Splinter.Phase0_Boot;
 
 namespace Splinter.Phase2_Mutation
 {
@@ -57,17 +58,21 @@ namespace Splinter.Phase2_Mutation
 
         private readonly IExecutableUtils executableUtils;
 
+        private readonly SplinterConfigurationSection configuration;
+
         private IReadOnlyCollection<IMethodTurtle> allTurtles = null;
 
         public MutationTestSession(
             ILog log,
             IUnityContainer container,
             IExecutableUtils executableUtils,
-            ICodeCache codeCache)
+            ICodeCache codeCache,
+            SplinterConfigurationSection configuration)
         {
             this.log = log;
             this.codeCache = codeCache;
             this.executableUtils = executableUtils;
+            this.configuration = configuration;
 
             this.ImportTurtles(container);
         }
@@ -139,11 +144,16 @@ namespace Splinter.Phase2_Mutation
 
                         ReportTestRunStarting(progress, testsCount, testsFinishedCount, ref testsInProgressCount);
 
-                        var testPassed = this.RunTestOnMutation(mutation, test);
-                        if (testPassed)
+                        var testRunResult = this.RunTestOnMutation(mutation, test);
+                        if (testRunResult.TimedOut)
+                        {
+                            failingTests.Add(test.Method);
+                            orderingStrategy.NotifyTestTimedOut(mutation, test);
+                        }
+                        else if (testRunResult.ExitCode == 0)
                         {
                             passingTests.Add(test.Method);
-                            orderingStrategy.NotifyTestPased(mutation, test);
+                            orderingStrategy.NotifyTestPassed(mutation, test);
                         }
                         else
                         {
@@ -193,7 +203,7 @@ namespace Splinter.Phase2_Mutation
                 new MethodRef[0]);
         }
 
-        private bool RunTestOnMutation(Mutation mutation, TestMethodRef test)
+        private ProcessRunResult RunTestOnMutation(Mutation mutation, TestMethodRef test)
         {
             var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
             var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
@@ -204,8 +214,11 @@ namespace Splinter.Phase2_Mutation
                 mutation.Description,
                 mutation.Input.Subject.Method.FullName);
 
-            var exitCode = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.Id).ExitCode;
-            return exitCode == 0;
+            var timeout = TimeSpan.FromSeconds(this.configuration.MaxMutationRunningTimeConstantInSeconds) +
+                TimeSpan.FromTicks(this.configuration.MaxMutationRunningTimeFactor * test.LongestRunningTime.Ticks);
+
+            var result = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.Id, timeout);
+            return result;
         }
 
         private static void ReportTestRunFinished(IProgress<Tuple<int, int, int>> progress, int testsCount, ref int testsFinishedCount, ref int testsInProgressCount)

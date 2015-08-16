@@ -25,6 +25,7 @@ namespace Splinter.Contracts.DTOs
             string description,
             IReadOnlyCollection<MethodRef> passingTests,
             IReadOnlyCollection<MethodRef> failingTests,
+            IReadOnlyCollection<MethodRef> timeoutedTests,
             IReadOnlyCollection<MethodRef> testsNotRun)
         {
             this.Subject = subject;
@@ -32,6 +33,7 @@ namespace Splinter.Contracts.DTOs
             this.MutationDescription = description;
             this.PassingTests = ImmutableHashSet.CreateRange(passingTests);
             this.FailingTests = ImmutableHashSet.CreateRange(failingTests);
+            this.TimeoutedTests = ImmutableHashSet.CreateRange(timeoutedTests);
             this.NotRunTests = ImmutableHashSet.CreateRange(testsNotRun);
         }
 
@@ -64,5 +66,10 @@ namespace Splinter.Contracts.DTOs
         /// Gets the tests that were not run against this mutation.
         /// </summary>
         public IImmutableSet<MethodRef> NotRunTests { get; private set; }
+
+        /// <summary>
+        /// Gets the tests that took too long to run so were cancelled.
+        /// </summary>
+        public IImmutableSet<MethodRef> TimeoutedTests { get; private set; }
     }
 }

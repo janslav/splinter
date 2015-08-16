@@ -44,7 +44,7 @@ namespace Splinter.Phase2_Mutation
             MutationTestSessionInput input,
             IProgress<Tuple<int, int, int>> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
-            bool keepTryingNonfailedTests);
+            bool keepTryingNonFailedTests);
     }
 
     /// <summary>
@@ -101,7 +101,7 @@ namespace Splinter.Phase2_Mutation
             MutationTestSessionInput input,
             IProgress<Tuple<int, int, int>> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
-            bool keepTryingNonfailedTests)
+            bool keepTryingNonFailedTests)
         {
             var allMutants = new List<Mutation>();
 
@@ -133,11 +133,12 @@ namespace Splinter.Phase2_Mutation
                 {
                     var failingTests = new List<MethodRef>();
                     var passingTests = new List<MethodRef>();
+                    var timeoutedTests = new List<MethodRef>();
 
                     //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
                     foreach (var test in orderingStrategy.OrderTestsForRunning(mutation))
                     {
-                        if (!keepTryingNonfailedTests && failingTests.Count > 0)
+                        if (!keepTryingNonFailedTests && failingTests.Count > 0)
                         {
                             break;
                         }
@@ -147,7 +148,7 @@ namespace Splinter.Phase2_Mutation
                         var testRunResult = this.RunTestOnMutation(mutation, test);
                         if (testRunResult.TimedOut)
                         {
-                            failingTests.Add(test.Method);
+                            timeoutedTests.Add(test.Method);
                             orderingStrategy.NotifyTestTimedOut(mutation, test);
                         }
                         else if (testRunResult.ExitCode == 0)
@@ -164,7 +165,7 @@ namespace Splinter.Phase2_Mutation
                         ReportTestRunFinished(progress, testsCount, ref testsFinishedCount, ref testsInProgressCount);
                     }
 
-                    return CreateResultObject(mutation, failingTests, passingTests);
+                    return CreateResultObject(mutation, failingTests, passingTests, timeoutedTests);
                 });
 
                 allMutationResults.AddRange(mutationRuns);
@@ -179,17 +180,18 @@ namespace Splinter.Phase2_Mutation
             }
         }
 
-        private static SingleMutationTestResult CreateResultObject(Mutation mutation, List<MethodRef> failingTests, List<MethodRef> passingTests)
+        private static SingleMutationTestResult CreateResultObject(Mutation mutation, List<MethodRef> failingTests, List<MethodRef> passingTests, List<MethodRef> timeoutedTests)
         {
-            var notRun = mutation.Input.Subject.TestMethods.Select(tm => tm.Method).Except(passingTests).Except(failingTests);
+            var notRun = mutation.Input.Subject.TestMethods.Select(tm => tm.Method).Except(passingTests).Except(failingTests).Except(timeoutedTests);
 
             return new SingleMutationTestResult(
                 mutation.Input.Subject.Method,
                 mutation.InstructionIndex,
                 mutation.Description,
-                passingTests,
-                failingTests,
-                notRun.ToArray());
+                passingTests: passingTests,
+                failingTests: failingTests,
+                timeoutedTests: timeoutedTests,
+                testsNotRun: notRun.ToArray());
         }
 
         private static SingleMutationTestResult CreateResultForUnmutableMethod(MutationTestSessionInput input)
@@ -199,6 +201,7 @@ namespace Splinter.Phase2_Mutation
                 0,
                 "",
                 input.Subject.TestMethods.Select(tm => tm.Method).ToArray(),
+                new MethodRef[0],
                 new MethodRef[0],
                 new MethodRef[0]);
         }

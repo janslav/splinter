@@ -110,6 +110,11 @@ namespace Splinter.Phase3_Reporting
                 this.log.WarnFormat("Never failing test: {0}", useless.FullName);
             }
 
+            foreach (var timeouted in results.SelectMany(r => r.TimeoutedTests).Distinct())
+            {
+                this.log.WarnFormat("Timeouted test: {0}", timeouted.FullName);
+            }
+
             this.log.Info("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =");
 
             this.log.InfoFormat(

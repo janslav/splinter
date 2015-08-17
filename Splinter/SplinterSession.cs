@@ -187,7 +187,7 @@ namespace Splinter
         private void LogDiscoveryFindings(IReadOnlyCollection<TestSubjectMethodRef> subjectMethods)
         {
             var subjectAssemblies = subjectMethods.Select(tm => tm.Method.Assembly.Name).Distinct(StringComparer.OrdinalIgnoreCase);
-            var testMethodsCount = subjectMethods.SelectMany(tm => tm.TestMethods).Distinct().Count();
+            var testMethodsCount = subjectMethods.SelectMany(tm => tm.AllTestMethods).Distinct().Count();
             this.log.Info("Covered subject code assemblies: " + Environment.NewLine + string.Join(Environment.NewLine, subjectAssemblies));
             this.log.Info("Number of unique subject methods: " + subjectMethods.Count);
             this.log.Info("Number of unique test methods: " + testMethodsCount);

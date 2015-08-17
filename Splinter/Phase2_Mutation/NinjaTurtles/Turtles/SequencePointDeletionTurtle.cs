@@ -82,7 +82,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
                     var codes = string.Join(", ", sequence.Values.Select(o => o.Code));
                     var description = string.Format("{0:x4}: deleting {1}", originalOffsets[startIndex], codes);
-                    Mutation mutation = this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
+                    Mutation mutation = this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[index], description);
                     yield return mutation;
 
                     method.Body.Instructions[startIndex].OpCode = originalOpCode;

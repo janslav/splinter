@@ -17,7 +17,6 @@ namespace Splinter.Contracts
         /// <summary>
         /// This is supposed to perform the first "dry" run, i.e. with nonmutated subjects.
         /// We check all tests pass, as it makes no sense to mutation-analyse a testsuite that's already broken.
-        /// We also get the "ordinary" coverage number which may then be part of the report.
         /// The most important information we derive here is the per-test method tree - mapping which test is running which method.
         /// </summary>
         IReadOnlyCollection<TestSubjectMethodRef> DiscoverTestSubjectMapping(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun);

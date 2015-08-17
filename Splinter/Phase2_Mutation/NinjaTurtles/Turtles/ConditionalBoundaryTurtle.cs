@@ -74,7 +74,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                     instruction.OpCode = instruction.OpCode == OpCodes.Clt ? OpCodes.Cgt : OpCodes.Clt;
 
                     var description = string.Format("{0:x4}: {1} => not {2}", originalOffsets[index], originalCode, instruction.OpCode.Code);
-                    yield return this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
+                    yield return this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[index], description);
 
                     instruction.OpCode = instruction.OpCode == OpCodes.Clt ? OpCodes.Cgt : OpCodes.Clt;
 

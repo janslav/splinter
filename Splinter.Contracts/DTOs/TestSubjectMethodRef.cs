@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Splinter.Contracts.DTOs
 {
     /// <summary>
-    /// Represents a test-subject method, with a list of tests that cover it.
+    /// Represents a row (SequencePoint) within a test-subject method, with a list of tests that cover it.
     /// </summary>
     [DebuggerDisplay("TestSubjectMethod {Method.FullName} Tests: {TestMethods.Count}")]
     public class TestSubjectMethodRef
@@ -17,10 +17,16 @@ namespace Splinter.Contracts.DTOs
         /// <summary>
         /// Initializes a new instance of the <see cref="TestSubjectMethodRef"/> class.
         /// </summary>
-        public TestSubjectMethodRef(MethodRef method, IReadOnlyCollection<TestMethodRef> testMethods)
+        public TestSubjectMethodRef(
+            MethodRef method,
+            IReadOnlyCollection<Tuple<int, IReadOnlyCollection<TestMethodRef>>> testMethodsBySequencePointInstructionIndex,
+            IReadOnlyCollection<TestMethodRef> allTestMethods)
         {
             this.Method = method;
-            this.TestMethods = ImmutableHashSet.CreateRange(testMethods);
+            this.TestMethodsBySequencePointInstructionIndex = ImmutableDictionary.CreateRange(
+                testMethodsBySequencePointInstructionIndex.Select(kvp =>
+                    new KeyValuePair<int, IImmutableSet<TestMethodRef>>(kvp.Item1, ImmutableHashSet.CreateRange(kvp.Item2))));
+            this.AllTestMethods = ImmutableHashSet.CreateRange(allTestMethods);
         }
 
         /// <summary>
@@ -29,8 +35,14 @@ namespace Splinter.Contracts.DTOs
         public MethodRef Method { get; private set; }
 
         /// <summary>
+        /// Gets the mapping of test methods to sequence points within this subject method.
+        /// The sequence points are represented by the ordinal number of their first instruction.
+        /// </summary>
+        public IImmutableDictionary<int, IImmutableSet<TestMethodRef>> TestMethodsBySequencePointInstructionIndex { get; private set; }
+
+        /// <summary>
         /// Gets a collection of the test methods.
         /// </summary>
-        public IImmutableSet<TestMethodRef> TestMethods { get; private set; }
+        public IImmutableSet<TestMethodRef> AllTestMethods { get; private set; }
     }
 }

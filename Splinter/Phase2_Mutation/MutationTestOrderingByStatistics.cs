@@ -27,7 +27,7 @@ namespace Splinter.Phase2_Mutation
         public IEnumerable<TestMethodRef> OrderTestsForRunning(Mutation mutation)
         {
             //the score can change during the enumeration so we recalculate it for every yield
-            var list = mutation.Input.Subject.TestMethods.ToList();
+            var list = mutation.Input.Subject.AllTestMethods.ToList();
 
             while (list.Count > 0)
             {

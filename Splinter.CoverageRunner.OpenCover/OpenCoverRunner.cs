@@ -134,9 +134,8 @@ namespace Splinter.CoverageRunner.OpenCover
         }
 
         /// <summary>
-        /// This is supposed to perform the first "dry" run, i.e. with nonmutated subjects.
-        /// We check all tests pass, as it makes no sense to mutation-analyse a testsuite that's already broken.
-        /// We also get the "ordinary" coverage number which may then be part of the report.
+        /// This performs the first "dry" run, i.e. with nonmutated subjects.
+        /// We check that all tests pass, as it makes no sense to mutation-analyse a testsuite that's already broken.
         /// The most important information we derive here is the per-test method tree - mapping which test is running which method.
         /// </summary>
         public IReadOnlyCollection<TestSubjectMethodRef> DiscoverTestSubjectMapping(DirectoryInfo modelDirectory, IReadOnlyCollection<TestBinary> testsToRun)
@@ -153,17 +152,27 @@ namespace Splinter.CoverageRunner.OpenCover
                     });
 
             //one subject method can be tested by tests from several assemblies, so here we merge the lists.
-            var dict = new ConcurrentDictionary<MethodRef, IImmutableSet<TestMethodRef>>();
+            var mergedCoverages = partialCoverages
+                .SelectMany(i => i)
+                .GroupBy(s => s.Method)
+                .Select(g => new
+                {
+                    Method = g.Key,
+                    AllTests = g.SelectMany(s => s.AllTestMethods).Distinct(),
+                    MappedTests = g.SelectMany(s => s.TestMethodsBySequencePointInstructionIndex)
+                        .GroupBy(kvp => kvp.Key).Select(gg =>
+                            new
+                            {
+                                Offset = gg.Key,
+                                MergedList = gg.SelectMany(i => i.Value).Distinct()
+                            })
+                });
 
-            partialCoverages.SelectMany(i => i).AsParallel()
-                .ForAll(subject =>
-                    dict.AddOrUpdate(
-                        subject.Method,
-                        subject.TestMethods,
-                        (_, existing) => existing.Union(subject.TestMethods)));
-
-            return dict//.Where(kvp => kvp.Value.Count > 0)
-                .Select(kvp => new TestSubjectMethodRef(kvp.Key, kvp.Value)).ToArray();
+            return mergedCoverages.Select(c =>
+                new TestSubjectMethodRef(
+                    c.Method,
+                    c.MappedTests.Select(t => new Tuple<int, IReadOnlyCollection<TestMethodRef>>(t.Offset, t.MergedList.ToArray())).ToArray(),
+                    c.AllTests.ToArray())).ToArray();
         }
 
         ///// <summary>

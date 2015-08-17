@@ -96,21 +96,40 @@ namespace Splinter.CoverageRunner.OpenCover
                     {
                         foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                         {
-                            var list = new List<TestMethodRef>();
-
-                            foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
+                            //first we read the test methods mapped to particular sequence points.
+                            var testsByOffset = new Dictionary<int,List<uint>>();
+                            foreach (var sequencePointElement in metodEl.Element("SequencePoints").Elements("SequencePoint"))
                             {
-                                TestMethodRef testMethod;
-                                if (testMethodsDictionary.TryGetValue((uint)trackedMethodRefEl.Attribute("uid"), out testMethod))
+                                var offset = (int)sequencePointElement.Attribute("offset");
+
+                                foreach (var trackedMethodRefEl in sequencePointElement.Descendants("TrackedMethodRef"))
                                 {
-                                    list.Add(testMethod);
+                                    List<uint> list;
+                                    if (!testsByOffset.TryGetValue(offset, out list))
+                                    {
+                                        list = new List<uint>();
+                                        testsByOffset.Add(offset, list);
+                                    }
+
+                                    list.Add((uint)trackedMethodRefEl.Attribute("uid"));
                                 }
                             }
 
-                            if (list.Count > 0)
+                            //then we read all the tests, including the above
+                            var allTests = new List<uint>();
+                            foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
+                            {
+                                allTests.Add((uint)trackedMethodRefEl.Attribute("uid"));
+                            }
+
+                            if (allTests.Count > 0)
                             {
                                 var subjectMethod = new MethodRef(originalAssembly, metodEl.Element("Name").Value);
-                                var subject = new TestSubjectMethodRef(subjectMethod, list);
+                                var subject = new TestSubjectMethodRef(
+                                    subjectMethod,
+                                    testsByOffset.Select(kvp => 
+                                        Tuple.Create(kvp.Key, (IReadOnlyCollection<TestMethodRef>) kvp.Value.Select(v => testMethodsDictionary[v]).ToArray())).ToArray(),
+                                    allTests.Select(v => testMethodsDictionary[v]).ToArray());
                                 results.Add(subject);
                             }
                         }

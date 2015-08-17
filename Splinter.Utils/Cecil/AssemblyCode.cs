@@ -66,7 +66,12 @@ namespace Splinter.Utils.Cecil
         /// <summary>
         /// Gets the sequence point (line of code) of the specified instruction.
         /// </summary>
-        SequencePoint GetSequencePoint(string methodFullName, int instructionIndex);
+        SequencePoint GetNearestSequencePoint(string methodFullName, int instructionOffset);
+
+        /// <summary>
+        /// Gets the offset of the first instruction of the nearest sequence point (line of code) of the specified instruction.
+        /// </summary>
+        int GetNearestSequencePointInstructionOffset(string methodFullName, int instructionOffset);
 
         /// <summary>
         /// Gets the source file loaded using the specified Document instance.
@@ -86,8 +91,8 @@ namespace Splinter.Utils.Cecil
 
         private readonly ConcurrentDictionary<string, TypeDefinition> classesByFullName = new ConcurrentDictionary<string, TypeDefinition>();
 
-        private readonly ConcurrentDictionary<Tuple<string, int>, SequencePoint> sequencePointsByInstruction =
-            new ConcurrentDictionary<Tuple<string, int>, SequencePoint>();
+        private readonly ConcurrentDictionary<Tuple<string, int>, Tuple<int, SequencePoint>> sequencePointsByInstruction =
+            new ConcurrentDictionary<Tuple<string, int>, Tuple<int, SequencePoint>>();
 
         private readonly ConcurrentDictionary<byte[], SourceFile> sourceFilesByHash =
             new ConcurrentDictionary<byte[], SourceFile>();
@@ -186,32 +191,45 @@ namespace Splinter.Utils.Cecil
         /// <summary>
         /// Gets the sequence point (line of code) of the specified instruction.
         /// </summary>
-        public SequencePoint GetSequencePoint(string methodFullName, int instructionIndex)
+        public SequencePoint GetNearestSequencePoint(string methodFullName, int instructionOffset)
+        {
+            var indexAndSp = GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
+
+            return indexAndSp.Item2;
+        }
+
+        /// <summary>
+        /// Gets the offset of the first instruction of the nearest sequence point (line of code) of the specified instruction.
+        /// </summary>
+        public int GetNearestSequencePointInstructionOffset(string methodFullName, int instructionOffset)
+        {
+            var indexAndSp = GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
+
+            return indexAndSp.Item1;
+        }
+
+        private Tuple<int, SequencePoint> GetNearestSequencePointWithIndex(string methodFullName, int instructionOffset)
         {
             this.LoadDebugInformation();
 
-            return this.sequencePointsByInstruction.GetOrAdd(
-                Tuple.Create(string.Intern(methodFullName), instructionIndex),
+            var indexAndSp = this.sequencePointsByInstruction.GetOrAdd(
+                Tuple.Create(string.Intern(methodFullName), instructionOffset),
                 t =>
                 {
-                    var methodRef = this.GetMethodByFullName(t.Item1);
-                    var sp = CalculateNearestSequencePoint(methodRef, t.Item2);
-                    return sp;
+                    var method = this.GetMethodByFullName(t.Item1);
+                    var offset = t.Item2;
+                    var index = method.Body.Instructions.IndexOf(method.Body.Instructions.Single(i => i.Offset == offset));
+                    var instruction = method.Body.Instructions[index];
+                    while ((instruction.SequencePoint == null
+                            || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
+                    {
+                        index--;
+                        instruction = method.Body.Instructions[index];
+                    }
+
+                    return Tuple.Create(instruction.Offset, instruction.SequencePoint);
                 });
-        }
-
-        internal static SequencePoint CalculateNearestSequencePoint(MethodDefinition method, int index)
-        {
-            var instruction = method.Body.Instructions[index];
-            while ((instruction.SequencePoint == null
-                    || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
-            {
-                index--;
-                instruction = method.Body.Instructions[index];
-            }
-
-            var sequencePoint = instruction.SequencePoint;
-            return sequencePoint;
+            return indexAndSp;
         }
 
         /// <summary>

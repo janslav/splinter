@@ -21,7 +21,7 @@ namespace Splinter.Contracts.DTOs
         /// </summary>
         public SingleMutationTestResult(
             MethodRef subject,
-            int instructionIndex,
+            int instructionOffset,
             string description,
             IReadOnlyCollection<MethodRef> passingTests,
             IReadOnlyCollection<MethodRef> failingTests,
@@ -29,7 +29,7 @@ namespace Splinter.Contracts.DTOs
             IReadOnlyCollection<MethodRef> testsNotRun)
         {
             this.Subject = subject;
-            this.InstructionIndex = instructionIndex;
+            this.InstructionOffset = instructionOffset;
             this.MutationDescription = description;
             this.PassingTests = ImmutableHashSet.CreateRange(passingTests);
             this.FailingTests = ImmutableHashSet.CreateRange(failingTests);
@@ -43,9 +43,9 @@ namespace Splinter.Contracts.DTOs
         public MethodRef Subject { get; private set; }
 
         /// <summary>
-        /// Gets the index of the instruction.
+        /// Gets the offset of the instruction that has been mutated
         /// </summary>
-        public int InstructionIndex { get; private set; }
+        public int InstructionOffset { get; private set; }
 
         /// <summary>
         /// Gets the mutation description.

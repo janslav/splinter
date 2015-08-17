@@ -85,12 +85,11 @@ namespace Splinter.Phase3_Reporting
             foreach (var result in survivingMutants)
             {
                 this.log.WarnFormat(
-                    "Missed mutation: method '{0}', mutation '{1}', instruction {2}.",
+                    "Missed mutation: method '{0}', mutation '{1}'.",
                     result.Subject.FullName,
-                    result.MutationDescription,
-                    result.InstructionIndex);
+                    result.MutationDescription);
 
-                //this.RenderCodeLine(result);
+                this.RenderCodeLine(result);
             }
 
             //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
@@ -137,7 +136,7 @@ namespace Splinter.Phase3_Reporting
         private void RenderCodeLine(SingleMutationTestResult result)
         {
             var a = this.codeCache.GetAssemblyDefinition(result.Subject.Assembly);
-            var sp = a.GetSequencePoint(result.Subject.FullName, result.InstructionIndex);
+            var sp = a.GetNearestSequencePoint(result.Subject.FullName, result.InstructionOffset);
             var source = a.GetSourceFile(sp.Document);
             string line = source.Lines[sp.StartLine];
 

@@ -182,7 +182,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// The index of the (first) IL instruction at which the mutation was
         /// applied.
         /// </param>
-        protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int index, string description)
+        protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int instructionOffset, string description)
         {
             var i = Interlocked.Increment(ref counter);
             var mutationId = string.Format("Mutation{0:00000}", i);
@@ -200,7 +200,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
             mutant.Write(shadowedPath.FullName);
 
-            return new Mutation(mutationId, input, shadow, shadowedPath, index, description);
+            return new Mutation(mutationId, input, shadow, shadowedPath, instructionOffset, description);
         }
     }
 }

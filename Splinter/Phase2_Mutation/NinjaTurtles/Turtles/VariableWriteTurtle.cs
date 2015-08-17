@@ -113,7 +113,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                                 originalVariable.Name,
                                 variable.Name);
 
-                        yield return this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
+                        yield return this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[index], description);
 
                     }
                     instruction.OpCode = originalOpCode;

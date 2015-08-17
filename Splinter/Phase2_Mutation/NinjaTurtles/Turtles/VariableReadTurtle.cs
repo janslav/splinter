@@ -135,7 +135,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                                 originalVariable.Name,
                                 variable.Name);
 
-                        var mutantMetaData = this.SaveMutantToDisk(input, assemblyBeingMutated, index, description);
+                        var mutantMetaData = this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[index], description);
                         yield return mutantMetaData;
                     }
                     instruction.OpCode = originalOpCode;

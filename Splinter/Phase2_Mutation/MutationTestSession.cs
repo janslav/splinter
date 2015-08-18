@@ -219,7 +219,8 @@ namespace Splinter.Phase2_Mutation
             var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
 
             this.log.DebugFormat(
-                "Running test '{0}' for mutation '{1}' in method '{2}'.",
+                "{0}: Running test '{1}' for mutation '{2}' in method '{3}'.",
+                mutation.Id,
                 test.Method.FullName,
                 mutation.Description,
                 mutation.Input.Subject.Method.FullName);

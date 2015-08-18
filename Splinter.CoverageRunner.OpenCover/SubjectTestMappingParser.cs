@@ -74,13 +74,10 @@ namespace Splinter.CoverageRunner.OpenCover
                 var method = new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value);
 
                 var testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(method));
-                if (testMethod == null)
+                if (testMethod != null)
                 {
-                    throw new Exception(
-                        string.Format("Test method '{0}' from the coverage run result not found in the list recognized by the test runner. This is needed for test timing.", method.FullName));
+                    testMethodsDictionary.Add((uint)trackedMethodEl.Attribute("uid"), testMethod);
                 }
-
-                testMethodsDictionary.Add((uint)trackedMethodEl.Attribute("uid"), testMethod);
             }
 
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))

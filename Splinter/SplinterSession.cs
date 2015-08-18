@@ -17,6 +17,7 @@ using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Phase3_Reporting;
 
 using log4net;
+using Splinter.Utils.Cecil;
 
 namespace Splinter
 {
@@ -51,13 +52,22 @@ namespace Splinter
 
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
-        public SplinterSession(ILog log, IPluginsContainer plugins, ITestsDiscoverer discoverer, IMutationTestSession mutation, IWindowsErrorReporting errorReportingSwitch)
+        private readonly ICodeCache codeCache;
+
+        public SplinterSession(
+            ILog log, 
+            IPluginsContainer plugins, 
+            ITestsDiscoverer discoverer,
+            IMutationTestSession mutation, 
+            IWindowsErrorReporting errorReportingSwitch,
+            ICodeCache codeCache)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
             this.mutation = mutation;
             this.errorReportingSwitch = errorReportingSwitch;
+            this.codeCache = codeCache;
         }
 
         /// <summary>
@@ -202,7 +212,7 @@ namespace Splinter
             this.log.Info("Starting mutation runs.");
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
-                var stats = new MutationTestOrderingByStatistics();
+                var stats = new MutationTestOrderingByStatistics(this.codeCache);
 
                 using (var pb = new ConsoleProgressBar<MethodRef>())
                 {

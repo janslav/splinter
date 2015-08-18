@@ -19,13 +19,13 @@ namespace Splinter.Contracts.DTOs
         /// </summary>
         public TestSubjectMethodRef(
             MethodRef method,
-            IReadOnlyCollection<Tuple<int, IReadOnlyCollection<TestMethodRef>>> testMethodsBySequencePointInstructionIndex,
+            IReadOnlyCollection<Tuple<int, IReadOnlyCollection<TestMethodRef>>> testMethodsBySequencePointInstructionOffset,
             IReadOnlyCollection<TestMethodRef> allTestMethods)
         {
             this.Method = method;
-            this.TestMethodsBySequencePointInstructionIndex = ImmutableDictionary.CreateRange(
-                testMethodsBySequencePointInstructionIndex.Select(kvp =>
-                    new KeyValuePair<int, IImmutableSet<TestMethodRef>>(kvp.Item1, ImmutableHashSet.CreateRange(kvp.Item2))));
+            this.TestMethodsBySequencePointInstructionOffset = ImmutableHashSet.CreateRange(
+                testMethodsBySequencePointInstructionOffset.Select(kvp =>
+                    new Tuple<int, IImmutableSet<TestMethodRef>>(kvp.Item1, ImmutableHashSet.CreateRange(kvp.Item2))));
             this.AllTestMethods = ImmutableHashSet.CreateRange(allTestMethods);
         }
 
@@ -36,9 +36,9 @@ namespace Splinter.Contracts.DTOs
 
         /// <summary>
         /// Gets the mapping of test methods to sequence points within this subject method.
-        /// The sequence points are represented by the ordinal number of their first instruction.
+        /// The sequence points are represented by the offset of their first instruction.
         /// </summary>
-        public IImmutableDictionary<int, IImmutableSet<TestMethodRef>> TestMethodsBySequencePointInstructionIndex { get; private set; }
+        public IImmutableSet<Tuple<int, IImmutableSet<TestMethodRef>>> TestMethodsBySequencePointInstructionOffset { get; private set; }
 
         /// <summary>
         /// Gets a collection of the test methods.

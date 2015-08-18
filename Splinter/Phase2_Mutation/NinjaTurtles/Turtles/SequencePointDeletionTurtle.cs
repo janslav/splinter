@@ -54,7 +54,12 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Performs the actual code mutations, returning each with
         /// <c>yield</c> for the calling code to use.
         /// </summary>
-        protected override IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
+        protected override IEnumerable<Mutation> TryToCreateMutations(
+            MutationTestSessionInput input,
+            AssemblyDefinition assemblyBeingMutated,
+            MethodDefinition method,
+            IReadOnlyList<int> originalOffsets,
+            IReadOnlyCollection<int> instructionOffsetsToMutate)
         {
             var sequence = new SortedDictionary<int, OpCode>();
             int startIndex = -1;
@@ -75,6 +80,11 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                 {
                     if (!ShouldDeleteSequence(method.Body, sequence)) continue;
 
+                    if (!instructionOffsetsToMutate.Contains(originalOffsets[startIndex]))
+                    {
+                        continue;
+                    }
+
                     OpCode originalOpCode = method.Body.Instructions[startIndex].OpCode;
                     object originalOperand = method.Body.Instructions[startIndex].Operand;
                     method.Body.Instructions[startIndex].OpCode = OpCodes.Br;
@@ -82,7 +92,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
                     var codes = string.Join(", ", sequence.Values.Select(o => o.Code));
                     var description = string.Format("{0:x4}: deleting {1}", originalOffsets[startIndex], codes);
-                    Mutation mutation = this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[index], description);
+                    Mutation mutation = this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[startIndex], description);
                     yield return mutation;
 
                     method.Body.Instructions[startIndex].OpCode = originalOpCode;

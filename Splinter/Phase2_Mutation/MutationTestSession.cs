@@ -117,14 +117,16 @@ namespace Splinter.Phase2_Mutation
                 {
                     var mutants = t.TryCreateMutants(input);
 
-                    ReportMutantsCreated(input, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
-
                     if (mutants.Count == 0)
                     {
                         allMutationResults.Add(CreateResultForUnmutableMethod(input));
                     }
+                    else
+                    {
+                        ReportMutantsCreated(input, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
+                        allMutants.AddRange(mutants);
+                    }
 
-                    allMutants.AddRange(mutants);
                     return mutants;
                 });
 

@@ -155,23 +155,19 @@ namespace Splinter.CoverageRunner.OpenCover
             var mergedCoverages = partialCoverages
                 .SelectMany(i => i)
                 .GroupBy(s => s.Method)
-                .Select(g => new
+                .Select(groupedBySubject => new
                 {
-                    Method = g.Key,
-                    AllTests = g.SelectMany(s => s.AllTestMethods).Distinct(),
-                    MappedTests = g.SelectMany(s => s.TestMethodsBySequencePointInstructionIndex)
-                        .GroupBy(kvp => kvp.Key).Select(gg =>
-                            new
-                            {
-                                Offset = gg.Key,
-                                MergedList = gg.SelectMany(i => i.Value).Distinct()
-                            })
+                    Method = groupedBySubject.Key,
+                    AllTests = groupedBySubject.SelectMany(s => s.AllTestMethods).Distinct(),
+                    MappedTests = groupedBySubject.SelectMany(s => s.TestMethodsBySequencePointInstructionOffset)
+                        .GroupBy(t => t.Item1).Select(groupedByOffset =>
+                            new Tuple<int, IReadOnlyCollection<TestMethodRef>>(groupedByOffset.Key, groupedByOffset.SelectMany(i => i.Item2).Distinct().ToArray()))
                 });
 
             return mergedCoverages.Select(c =>
                 new TestSubjectMethodRef(
                     c.Method,
-                    c.MappedTests.Select(t => new Tuple<int, IReadOnlyCollection<TestMethodRef>>(t.Offset, t.MergedList.ToArray())).ToArray(),
+                    c.MappedTests.ToArray(),
                     c.AllTests.ToArray())).ToArray();
         }
 

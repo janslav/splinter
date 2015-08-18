@@ -58,7 +58,12 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Performs the actual code mutations, returning each with
         /// <c>yield</c> for the calling code to use.
         /// </summary>
-        protected override IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
+        protected override IEnumerable<Mutation> TryToCreateMutations(
+            MutationTestSessionInput input,
+            AssemblyDefinition assemblyBeingMutated,
+            MethodDefinition method,
+            IReadOnlyList<int> originalOffsets,
+            IReadOnlyCollection<int> instructionOffsetsToMutate)
         {
             var variablesByType = GroupVariablesByType(method);
             PopulateOperandsInVariables(method, variablesByType);
@@ -120,6 +125,11 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                         }
 
                         if (instruction.IsPartOfCompilerGeneratedDispose())
+                        {
+                            continue;
+                        }
+
+                        if (!instructionOffsetsToMutate.Contains(originalOffsets[index]))
                         {
                             continue;
                         }

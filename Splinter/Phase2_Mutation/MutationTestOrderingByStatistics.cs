@@ -10,6 +10,7 @@ using Splinter.Contracts.DTOs;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase2_Mutation
 {
@@ -21,16 +22,50 @@ namespace Splinter.Phase2_Mutation
     {
         private readonly ConcurrentDictionary<MethodRef, int> testsByScore = new ConcurrentDictionary<MethodRef, int>();
 
+        private readonly ICodeCache codeCache;
+
+        public MutationTestOrderingByStatistics(ICodeCache codeCache)
+        {
+            this.codeCache = codeCache;
+        }
+
         /// <summary>
         /// Returns the tests that belong to the specified mutation in the best orders for running.
         /// </summary>
         public IEnumerable<TestMethodRef> OrderTestsForRunning(Mutation mutation)
         {
             //the score can change during the enumeration so we recalculate it for every yield
-            var list = mutation.Input.Subject.AllTestMethods.ToList();
 
-            while (list.Count > 0)
+            var assembly = this.codeCache.GetAssemblyDefinition(mutation.Input.Subject.Method.Assembly);
+            var spOfMutation = assembly.GetNearestSequencePointInstructionOffset(mutation.Input.Subject.Method.FullName, mutation.InstructionOffset);
+
+            var testsCoveringThisSequencePoint = mutation.Input.Subject.TestMethodsBySequencePointInstructionOffset
+                .Where(t =>
+                {
+                    var spOfTest = assembly.GetNearestSequencePointInstructionOffset(mutation.Input.Subject.Method.FullName, t.Item1);
+                    return spOfMutation == spOfTest;
+                }).SelectMany(t => t.Item2).Distinct().ToList();
+
+            var allOtherTestsCoveringThisMethod = mutation.Input.Subject.AllTestMethods.Except(testsCoveringThisSequencePoint).ToList();
+
+            var list = testsCoveringThisSequencePoint;
+
+            // first we try the tests covering the mutated sequence point, 
+            // and only if none of them kills the mutant do we try the other tests covering the method
+            bool switchedLists = false;
+
+            while (true)
             {
+                if (list.Count == 0 && !switchedLists)
+                {
+                    list = allOtherTestsCoveringThisMethod;
+                }
+
+                if (list.Count == 0)
+                {
+                    break;
+                }
+
                 var top = list.Max(i =>
                 {
                     int score;

@@ -217,14 +217,16 @@ namespace Splinter.Utils.Cecil
                 t =>
                 {
                     var method = this.GetMethodByFullName(t.Item1);
+                    var instructions = method.Body.Instructions.ToList();
+                    
                     var offset = t.Item2;
-                    var index = method.Body.Instructions.IndexOf(method.Body.Instructions.Single(i => i.Offset == offset));
-                    var instruction = method.Body.Instructions[index];
+                    var index = instructions.IndexOf(instructions.Single(i => i.Offset == offset));
+                    var instruction = instructions[index];
                     while ((instruction.SequencePoint == null
                             || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
                     {
                         index--;
-                        instruction = method.Body.Instructions[index];
+                        instruction = instructions[index];
                     }
 
                     return Tuple.Create(instruction.Offset, instruction.SequencePoint);

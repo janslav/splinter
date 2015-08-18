@@ -145,13 +145,15 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             var assemblyToMutate = new AssemblyCode(input.Subject.Method.Assembly);
             assemblyToMutate.LoadDebugInformation();
 
+            var instructionOffsetsToMutate = input.Subject.TestMethodsBySequencePointInstructionOffset.Select(t => t.Item1).ToArray();
+
             var methodToMutate = assemblyToMutate.GetMethodByFullName(methodName);
 
             int[] originalOffsets = methodToMutate.Body.Instructions.Select(i => i.Offset).ToArray();
 
             //leave as a yield-return, so that we don't optimize macros again until we stop enumerating.
             methodToMutate.Body.SimplifyMacros();
-            foreach (var mutation in this.TryToCreateMutations(input, assemblyToMutate.AssemblyDefinition, methodToMutate, originalOffsets))
+            foreach (var mutation in this.TryToCreateMutations(input, assemblyToMutate.AssemblyDefinition, methodToMutate, originalOffsets, instructionOffsetsToMutate))
             {
                 yield return mutation;
             }
@@ -171,7 +173,12 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Implementing classes should yield the result obtained by calling
         /// the <see mref="SaveMutantToDisk" /> method.
         /// </remarks>
-        protected abstract IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyToMutate, MethodDefinition method, int[] originalOffsets);
+        protected abstract IEnumerable<Mutation> TryToCreateMutations(
+            MutationTestSessionInput input,
+            AssemblyDefinition assemblyBeingMutated,
+            MethodDefinition method,
+            IReadOnlyList<int> originalOffsets,
+            IReadOnlyCollection<int> instructionOffsetsToMutate);
 
         /// <summary>
         /// A helper method that copies the test folder, and saves the mutated

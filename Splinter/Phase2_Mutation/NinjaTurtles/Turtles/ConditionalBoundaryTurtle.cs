@@ -21,6 +21,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -55,10 +56,20 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// Performs the actual code mutations, returning each with
         /// <c>yield</c> for the calling code to use.
         /// </summary>
-        protected override IEnumerable<Mutation> TryToCreateMutations(MutationTestSessionInput input, AssemblyDefinition assemblyBeingMutated, MethodDefinition method, int[] originalOffsets)
+        protected override IEnumerable<Mutation> TryToCreateMutations(
+            MutationTestSessionInput input,
+            AssemblyDefinition assemblyBeingMutated,
+            MethodDefinition method,
+            IReadOnlyList<int> originalOffsets,
+            IReadOnlyCollection<int> instructionOffsetsToMutate)
         {
             for (int index = 0; index < method.Body.Instructions.Count; index++)
             {
+                if (!instructionOffsetsToMutate.Contains(originalOffsets[index]))
+                {
+                    continue;
+                }
+
                 var instruction = method.Body.Instructions[index];
                 if (instruction.OpCode == OpCodes.Clt
                     || instruction.OpCode == OpCodes.Cgt)

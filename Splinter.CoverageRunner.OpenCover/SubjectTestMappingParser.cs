@@ -97,20 +97,21 @@ namespace Splinter.CoverageRunner.OpenCover
                         foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                         {
                             //first we read the test methods mapped to particular sequence points.
-                            var testsByOffset = new Dictionary<int,List<uint>>();
+                            var testsByOffset = new Dictionary<int, List<uint>>();
                             foreach (var sequencePointElement in metodEl.Element("SequencePoints").Elements("SequencePoint"))
                             {
                                 var offset = (int)sequencePointElement.Attribute("offset");
 
+                                //TODO: convert this (and everything around?) to LINQ. Might get less ugly.
+                                List<uint> list;
+                                if (!testsByOffset.TryGetValue(offset, out list))
+                                {
+                                    list = new List<uint>();
+                                    testsByOffset.Add(offset, list);
+                                }
+
                                 foreach (var trackedMethodRefEl in sequencePointElement.Descendants("TrackedMethodRef"))
                                 {
-                                    List<uint> list;
-                                    if (!testsByOffset.TryGetValue(offset, out list))
-                                    {
-                                        list = new List<uint>();
-                                        testsByOffset.Add(offset, list);
-                                    }
-
                                     list.Add((uint)trackedMethodRefEl.Attribute("uid"));
                                 }
                             }
@@ -127,8 +128,8 @@ namespace Splinter.CoverageRunner.OpenCover
                                 var subjectMethod = new MethodRef(originalAssembly, metodEl.Element("Name").Value);
                                 var subject = new TestSubjectMethodRef(
                                     subjectMethod,
-                                    testsByOffset.Select(kvp => 
-                                        Tuple.Create(kvp.Key, (IReadOnlyCollection<TestMethodRef>) kvp.Value.Select(v => testMethodsDictionary[v]).ToArray())).ToArray(),
+                                    testsByOffset.Select(kvp =>
+                                        Tuple.Create(kvp.Key, (IReadOnlyCollection<TestMethodRef>)kvp.Value.Select(v => testMethodsDictionary[v]).ToArray())).ToArray(),
                                     allTests.Select(v => testMethodsDictionary[v]).ToArray());
                                 results.Add(subject);
                             }

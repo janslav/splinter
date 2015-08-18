@@ -142,6 +142,11 @@ namespace Splinter.Phase2_Mutation
                     {
                         if (!keepTryingNonFailedTests && failingTests.Count > 0)
                         {
+                            var testsNotUsedAgainstThisMutant = mutation.Input.Subject.AllTestMethods.Count()
+                                - (failingTests.Count + passingTests.Count + timeoutedTests.Count);
+
+                            Interlocked.Add(ref testsCount, -testsNotUsedAgainstThisMutant);
+
                             break;
                         }
 

@@ -160,8 +160,10 @@ namespace Splinter.CoverageRunner.OpenCover
                     Method = groupedBySubject.Key,
                     AllTests = groupedBySubject.SelectMany(s => s.AllTestMethods).Distinct(),
                     MappedTests = groupedBySubject.SelectMany(s => s.TestMethodsBySequencePointInstructionOffset)
-                        .GroupBy(t => t.Item1).Select(groupedByOffset =>
+                        .GroupBy(t => t.Item1)
+                        .Select(groupedByOffset =>
                             new Tuple<int, IReadOnlyCollection<TestMethodRef>>(groupedByOffset.Key, groupedByOffset.SelectMany(i => i.Item2).Distinct().ToArray()))
+                        .Where(t => t.Item2.Any())
                 });
 
             return mergedCoverages.Select(c =>

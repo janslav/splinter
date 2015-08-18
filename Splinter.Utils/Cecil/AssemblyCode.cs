@@ -210,27 +210,31 @@ namespace Splinter.Utils.Cecil
 
         private Tuple<int, SequencePoint> GetNearestSequencePointWithIndex(string methodFullName, int instructionOffset)
         {
-            this.LoadDebugInformation();
-
             var indexAndSp = this.sequencePointsByInstruction.GetOrAdd(
                 Tuple.Create(string.Intern(methodFullName), instructionOffset),
                 t =>
                 {
-                    var method = this.GetMethodByFullName(t.Item1);
-                    var instructions = method.Body.Instructions.ToList();
-                    
-                    var offset = t.Item2;
-                    var index = instructions.IndexOf(instructions.Single(i => i.Offset == offset));
-                    var instruction = instructions[index];
-                    while ((instruction.SequencePoint == null
-                            || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
+                    lock (locker)
                     {
-                        index--;
-                        instruction = instructions[index];
-                    }
+                        this.LoadDebugInformation();
 
-                    return Tuple.Create(instruction.Offset, instruction.SequencePoint);
+                        var method = this.GetMethodByFullName(t.Item1);
+                        var instructions = method.Body.Instructions.ToList();
+
+                        var offset = t.Item2;
+                        var index = instructions.IndexOf(instructions.Single(i => i.Offset == offset));
+                        var instruction = instructions[index];
+                        while ((instruction.SequencePoint == null
+                                || instruction.SequencePoint.StartLine == 0xfeefee) && index > 0)
+                        {
+                            index--;
+                            instruction = instructions[index];
+                        }
+
+                        return Tuple.Create(instruction.Offset, instruction.SequencePoint);
+                    }
                 });
+
             return indexAndSp;
         }
 

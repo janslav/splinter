@@ -219,7 +219,7 @@ namespace Splinter
                     mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
                     {
                         var progress = pb.CreateProgressReportingObject(subject.Method);
-                        return this.mutationSession.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress, stats, runAllTests);
+                        return this.mutationSession.CreateMutantsAndRunTestsOnThem(modelDirectory, subject, progress, stats, runAllTests);
                     }).ToArray();
                 }
                 this.log.Info("Mutation runs finished.");

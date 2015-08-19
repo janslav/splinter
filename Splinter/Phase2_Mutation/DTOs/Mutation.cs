@@ -29,6 +29,7 @@ using Mono.Cecil.Rocks;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 
 using Splinter.Utils;
+using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.DTOs
 {
@@ -39,9 +40,10 @@ namespace Splinter.Phase2_Mutation.DTOs
     [DebuggerDisplay("Mutation {Input.Subject.Method.FullName} {Description}")]
     public class Mutation : IDisposable
     {
-        public Mutation(string id, MutationTestSessionInput input, ShadowDirectory testDirectory, FileInfo mutant, int instructionOffset, string description)
+        public Mutation(string id, DirectoryInfo modelDirectory, TestSubjectMethodRef subject, ShadowDirectory testDirectory, FileInfo mutant, int instructionOffset, string description)
         {
-            this.Input = input;
+            this.ModelDirectory = modelDirectory;
+            this.Subject = subject;
             this.Mutant = mutant;
             this.Description = description;
             this.InstructionOffset = instructionOffset;
@@ -60,9 +62,14 @@ namespace Splinter.Phase2_Mutation.DTOs
         public string Id { get; private set; }
 
         /// <summary>
-        /// Gets the location of the assembly containing the model method.
+        /// Gets the directory that is being shadowed.
         /// </summary>
-        public MutationTestSessionInput Input { get; private set; }
+        public DirectoryInfo ModelDirectory  { get; private set; }
+
+        /// <summary>
+        /// Gets the subject method.
+        /// </summary>
+        public TestSubjectMethodRef Subject { get; private set; }
 
         /// <summary>
         /// Gets the location of the assembly containing the mutated method.

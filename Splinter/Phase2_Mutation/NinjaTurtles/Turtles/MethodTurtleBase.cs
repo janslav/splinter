@@ -38,6 +38,7 @@ using Splinter.Utils.Cecil;
 using Splinter.Phase2_Mutation.DTOs;
 
 using log4net;
+using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
@@ -53,7 +54,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// of mutations, having first carried out the mutation in question and
         /// saved the modified assembly under test to disk.
         /// </summary>
-        IReadOnlyCollection<Mutation> TryCreateMutants(MutationTestSessionInput input);
+        IReadOnlyCollection<Mutation> TryCreateMutants(DirectoryInfo modelDirectory, TestSubjectMethodRef subject);
 
         /// <summary>
         /// Gets a description of this turtle.
@@ -76,10 +77,10 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             this.log = log;
         }
 
-        public IReadOnlyCollection<Mutation> TryCreateMutants(MutationTestSessionInput input)
+        public IReadOnlyCollection<Mutation> TryCreateMutants(DirectoryInfo modelDirectory, TestSubjectMethodRef subject)
         {
 
-            var ret = MutateMethod(input);
+            var ret = MutateMethod(modelDirectory, subject);
 
             //ret = ret.Concat(MutateEnumerableGenerators(method, module));
 
@@ -139,13 +140,13 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         //    return ret;
         //}
 
-        private IEnumerable<Mutation> MutateMethod(MutationTestSessionInput input)
+        private IEnumerable<Mutation> MutateMethod(DirectoryInfo modelDirectory, TestSubjectMethodRef subject)
         {
-            var methodName = input.Subject.Method.FullName;
-            var assemblyToMutate = new AssemblyCode(input.Subject.Method.Assembly);
+            var methodName = subject.Method.FullName;
+            var assemblyToMutate = new AssemblyCode(subject.Method.Assembly);
             assemblyToMutate.LoadDebugInformation();
 
-            var instructionOffsetsToMutate = input.Subject.TestMethodsBySequencePointInstructionOffset.Select(t => t.Item1).ToArray();
+            var instructionOffsetsToMutate = subject.TestMethodsBySequencePointInstructionOffset.Select(t => t.Item1).ToArray();
 
             var methodToMutate = assemblyToMutate.GetMethodByFullName(methodName);
 
@@ -153,7 +154,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
             //leave as a yield-return, so that we don't optimize macros again until we stop enumerating.
             methodToMutate.Body.SimplifyMacros();
-            foreach (var mutation in this.TryToCreateMutations(input, assemblyToMutate.AssemblyDefinition, methodToMutate, originalOffsets, instructionOffsetsToMutate))
+            foreach (var mutation in this.TryToCreateMutations(modelDirectory, subject, assemblyToMutate.AssemblyDefinition, methodToMutate, originalOffsets, instructionOffsetsToMutate))
             {
                 yield return mutation;
             }
@@ -174,7 +175,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// the <see mref="SaveMutantToDisk" /> method.
         /// </remarks>
         protected abstract IEnumerable<Mutation> TryToCreateMutations(
-            MutationTestSessionInput input,
+            DirectoryInfo modelDirectory, 
+            TestSubjectMethodRef subject,
             AssemblyDefinition assemblyBeingMutated,
             MethodDefinition method,
             IReadOnlyList<int> originalOffsets,
@@ -189,7 +191,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// The index of the (first) IL instruction at which the mutation was
         /// applied.
         /// </param>
-        protected Mutation SaveMutantToDisk(MutationTestSessionInput input, AssemblyDefinition mutant, int instructionOffset, string description)
+        protected Mutation SaveMutantToDisk(DirectoryInfo modelDirectory, TestSubjectMethodRef subject, AssemblyDefinition mutant, int instructionOffset, string description)
         {
             var i = Interlocked.Increment(ref counter);
             var mutationId = string.Format("Mutation{0:00000}", i);
@@ -197,17 +199,17 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             this.log.DebugFormat(
                 "{0}: Creating mutation of method '{1}' from assembly '{2}: {3}.'",
                 mutationId,
-                input.Subject.Method.FullName,
-                input.Subject.Method.Assembly.Name,
+                subject.Method.FullName,
+                subject.Method.Assembly.Name,
                 description);
 
-            var shadow = new ShadowDirectory(this.log, input.ModelDirectory, mutationId);
+            var shadow = new ShadowDirectory(this.log, modelDirectory, mutationId);
 
-            var shadowedPath = shadow.GetEquivalentShadowPath(input.Subject.Method.Assembly);
+            var shadowedPath = shadow.GetEquivalentShadowPath(subject.Method.Assembly);
 
             mutant.Write(shadowedPath.FullName);
 
-            return new Mutation(mutationId, input, shadow, shadowedPath, instructionOffset, description);
+            return new Mutation(mutationId, modelDirectory, subject, shadow, shadowedPath, instructionOffset, description);
         }
     }
 }

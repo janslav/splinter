@@ -41,7 +41,8 @@ namespace Splinter.Phase2_Mutation
         /// Creates the mutants and runs tests on them.
         /// </summary>
         IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
-            MutationTestSessionInput input,
+            DirectoryInfo modelDirectory, 
+            TestSubjectMethodRef subject,
             IProgress<Tuple<int, int, int>> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonFailedTests);
@@ -98,7 +99,8 @@ namespace Splinter.Phase2_Mutation
         /// Creates the mutants and runs tests on them.
         /// </summary>
         public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
-            MutationTestSessionInput input,
+            DirectoryInfo modelDirectory, 
+            TestSubjectMethodRef subject,
             IProgress<Tuple<int, int, int>> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonFailedTests)
@@ -115,15 +117,15 @@ namespace Splinter.Phase2_Mutation
 
                 var mutations = this.allTurtles.SelectMany(t =>
                 {
-                    var mutants = t.TryCreateMutants(input);
+                    var mutants = t.TryCreateMutants(modelDirectory, subject);
 
                     if (mutants.Count == 0)
                     {
-                        allMutationResults.Add(CreateResultForUnmutableMethod(input));
+                        allMutationResults.Add(CreateResultForUnmutableMethod(subject));
                     }
                     else
                     {
-                        ReportMutantsCreated(input, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
+                        ReportMutantsCreated(subject, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
                         allMutants.AddRange(mutants);
                     }
 
@@ -144,7 +146,7 @@ namespace Splinter.Phase2_Mutation
                     {
                         if (!keepTryingNonFailedTests && failingTests.Count > 0)
                         {
-                            var testsNotUsedAgainstThisMutant = mutation.Input.Subject.AllTestMethods.Count()
+                            var testsNotUsedAgainstThisMutant = mutation.Subject.AllTestMethods.Count()
                                 - (failingTests.Count + passingTests.Count + timeoutedTests.Count);
 
                             Interlocked.Add(ref testsCount, -testsNotUsedAgainstThisMutant);
@@ -191,12 +193,12 @@ namespace Splinter.Phase2_Mutation
 
         private List<TestMethodRef> GetTestsCoveringThisMutation(Mutation mutation)
         {
-            var assembly = this.codeCache.GetAssemblyDefinition(mutation.Input.Subject.Method.Assembly);
-            var spOfMutation = assembly.GetNearestSequencePointInstructionOffset(mutation.Input.Subject.Method.FullName, mutation.InstructionOffset);
-            var testsCoveringThisSequencePoint = mutation.Input.Subject.TestMethodsBySequencePointInstructionOffset
+            var assembly = this.codeCache.GetAssemblyDefinition(mutation.Subject.Method.Assembly);
+            var spOfMutation = assembly.GetNearestSequencePointInstructionOffset(mutation.Subject.Method.FullName, mutation.InstructionOffset);
+            var testsCoveringThisSequencePoint = mutation.Subject.TestMethodsBySequencePointInstructionOffset
                 .Where(t =>
                 {
-                    var spOfTest = assembly.GetNearestSequencePointInstructionOffset(mutation.Input.Subject.Method.FullName, t.Item1);
+                    var spOfTest = assembly.GetNearestSequencePointInstructionOffset(mutation.Subject.Method.FullName, t.Item1);
                     return spOfMutation == spOfTest;
                 }).SelectMany(t => t.Item2).Distinct().ToList();
             return testsCoveringThisSequencePoint;
@@ -204,10 +206,10 @@ namespace Splinter.Phase2_Mutation
 
         private static SingleMutationTestResult CreateResultObject(Mutation mutation, List<MethodRef> failingTests, List<MethodRef> passingTests, List<MethodRef> timeoutedTests)
         {
-            var notRun = mutation.Input.Subject.AllTestMethods.Select(tm => tm.Method).Except(passingTests).Except(failingTests).Except(timeoutedTests);
+            var notRun = mutation.Subject.AllTestMethods.Select(tm => tm.Method).Except(passingTests).Except(failingTests).Except(timeoutedTests);
 
             return new SingleMutationTestResult(
-                mutation.Input.Subject.Method,
+                mutation.Subject.Method,
                 mutation.InstructionOffset,
                 mutation.Description,
                 passingTests: passingTests,
@@ -216,13 +218,13 @@ namespace Splinter.Phase2_Mutation
                 testsNotRun: notRun.ToArray());
         }
 
-        private static SingleMutationTestResult CreateResultForUnmutableMethod(MutationTestSessionInput input)
+        private static SingleMutationTestResult CreateResultForUnmutableMethod(TestSubjectMethodRef subject)
         {
             return new SingleMutationTestResult(
-                input.Subject.Method,
+                subject.Method,
                 0,
                 "",
-                passingTests: input.Subject.AllTestMethods.Select(tm => tm.Method).ToArray(),
+                passingTests: subject.AllTestMethods.Select(tm => tm.Method).ToArray(),
                 failingTests: new MethodRef[0],
                 timeoutedTests: new MethodRef[0],
                 testsNotRun: new MethodRef[0]);
@@ -238,7 +240,7 @@ namespace Splinter.Phase2_Mutation
                 mutation.Id,
                 test.Method.FullName,
                 mutation.Description,
-                mutation.Input.Subject.Method.FullName);
+                mutation.Subject.Method.FullName);
 
             var timeout = TimeSpan.FromSeconds(this.configuration.MaxMutationRunningTimeConstantInSeconds) +
                 TimeSpan.FromTicks(this.configuration.MaxMutationRunningTimeFactor * test.LongestRunningTime.Ticks);
@@ -266,11 +268,11 @@ namespace Splinter.Phase2_Mutation
             }
         }
 
-        private static void ReportMutantsCreated(MutationTestSessionInput input, IProgress<Tuple<int, int, int>> progress, IReadOnlyCollection<Mutation> mutants, ref int testsCount, int testsFinishedCount, int testsInProgressCount)
+        private static void ReportMutantsCreated(TestSubjectMethodRef subject, IProgress<Tuple<int, int, int>> progress, IReadOnlyCollection<Mutation> mutants, ref int testsCount, int testsFinishedCount, int testsInProgressCount)
         {
             if (progress != null)
             {
-                Interlocked.Add(ref testsCount, mutants.Count * input.Subject.AllTestMethods.Count);
+                Interlocked.Add(ref testsCount, mutants.Count * subject.AllTestMethods.Count);
                 progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
             }
         }

@@ -28,6 +28,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 using Splinter.Phase2_Mutation.DTOs;
+using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
@@ -59,7 +60,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// <c>yield</c> for the calling code to use.
         /// </summary>
         protected override IEnumerable<Mutation> TryToCreateMutations(
-            MutationTestSessionInput input,
+            DirectoryInfo modelDirectory,
+            TestSubjectMethodRef subject,
             AssemblyDefinition assemblyBeingMutated,
             MethodDefinition method,
             IReadOnlyList<int> originalOffsets,
@@ -145,7 +147,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
                                 originalVariable.Name,
                                 variable.Name);
 
-                        var mutantMetaData = this.SaveMutantToDisk(input, assemblyBeingMutated, originalOffsets[index], description);
+                        var mutantMetaData = this.SaveMutantToDisk(modelDirectory, subject, assemblyBeingMutated, originalOffsets[index], description);
                         yield return mutantMetaData;
                     }
                     instruction.OpCode = originalOpCode;

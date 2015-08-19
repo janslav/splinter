@@ -25,7 +25,6 @@ using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
-using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Utils;
 using Splinter.Utils.Cecil;
 using Splinter.Phase0_Boot;

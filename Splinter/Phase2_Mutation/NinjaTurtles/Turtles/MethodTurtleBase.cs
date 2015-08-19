@@ -35,7 +35,6 @@ using Mono.Cecil.Rocks;
 
 using Splinter.Utils;
 using Splinter.Utils.Cecil;
-using Splinter.Phase2_Mutation.DTOs;
 
 using log4net;
 using Splinter.Contracts.DTOs;

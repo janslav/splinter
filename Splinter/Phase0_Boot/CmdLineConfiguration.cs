@@ -42,6 +42,11 @@ namespace Splinter.Phase0_Boot
         public bool DetectUnusedTest { get; private set; }
 
         /// <summary>
+        /// Gets the name of the selected test ordering strategy
+        /// </summary>
+        public string TestOrderingStrategy { get; set; }
+
+        /// <summary>
         /// Gets the test binaries.
         /// </summary>
         public IReadOnlyCollection<string> TestBinaries { get { return this.testBinaries; } }
@@ -69,9 +74,11 @@ namespace Splinter.Phase0_Boot
 
             var testRunnerPlugins = string.Join(", ", plugins.DiscoveredTestRunners.Select(tr => tr.Name));
             var coveragePlugins = string.Join(", ", plugins.DiscoveredCoverageRunners.Select(tr => tr.Name));
+            var testOrderingStrategies = string.Join(", ", plugins.DiscoveredTestOrderingStrategyFactories.Select(tr => tr.Name));
 
             options.Add("testRunner=", "The test runner engine name. Available: " + testRunnerPlugins, v => config.TestRunner = v);
             options.Add("coverageRunner=", "The test coverage engine name. Available: " + coveragePlugins, v => config.CoverageRunner = v);
+            options.Add("testOrderingStrategy=", "Strategies for ordering of tests that are run against mutants. Available: " + testOrderingStrategies, v => config.TestOrderingStrategy = v);
             options.Add("workingDirectory=", "The directory containing the testing and tested code. Default: current dir.", v => config.WorkingDirectory = v);
             options.Add("detectUnusedTests", "Detect tests that don't contribute to killing mutants. Default: false", v => config.DetectUnusedTest = !string.IsNullOrWhiteSpace(v));
 

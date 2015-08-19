@@ -13,11 +13,11 @@ using Splinter.Contracts.DTOs;
 using Splinter.Phase0_Boot;
 using Splinter.Phase1_Discovery;
 using Splinter.Phase2_Mutation;
-using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Phase3_Reporting;
 
 using log4net;
 using Splinter.Utils.Cecil;
+using Splinter.Phase2_Mutation.TestsOrderingStrategies;
 
 namespace Splinter
 {
@@ -52,22 +52,18 @@ namespace Splinter
 
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
-        private readonly ICodeCache codeCache;
-
         public SplinterSession(
             ILog log,
             IPluginsContainer plugins,
             ITestsDiscoverer discoverer,
             IMutationTestSession mutationSession,
-            IWindowsErrorReporting errorReportingSwitch,
-            ICodeCache codeCache)
+            IWindowsErrorReporting errorReportingSwitch)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
             this.mutationSession = mutationSession;
             this.errorReportingSwitch = errorReportingSwitch;
-            this.codeCache = codeCache;
         }
 
         /// <summary>
@@ -104,6 +100,7 @@ namespace Splinter
             var modelDirectory = this.CheckWorkingDirectory(cmdLine);
             var testRunners = this.plugins.FilterByAvailability(this.plugins.DiscoveredTestRunners);
             var coverageRunner = this.PickCoverageRunner(cmdLine);
+            var testOrderingStrategyFactory = this.PickTestOrderingStrategy(cmdLine);
 
             //Phase 1: find tests and run them to see who tests what
             var testBinaries = this.discoverer.DiscoverTestBinaries(cmdLine, modelDirectory, testRunners);
@@ -119,10 +116,30 @@ namespace Splinter
             this.LogDiscoveryFindings(subjectMethods);
 
             //Phase 2 - mutate away!
-            var mutationResults = this.CreateAndRunMutations(modelDirectory, subjectMethods, cmdLine.DetectUnusedTest);
+            var mutationResults = this.CreateAndRunMutations(modelDirectory, subjectMethods, testOrderingStrategyFactory, cmdLine.DetectUnusedTest);
 
             //Phase 3 - output results
             this.ExportResults(mutationResults);
+        }
+
+        private IPluginFactory<IMutationTestsOrderingStrategy> PickTestOrderingStrategy(CmdLineConfiguration cmdLine)
+        {
+            IPluginFactory<IMutationTestsOrderingStrategy> testOrderingStrategyFactory;
+            if (!string.IsNullOrWhiteSpace(cmdLine.TestOrderingStrategy))
+            {
+                testOrderingStrategyFactory = this.plugins.DiscoveredTestOrderingStrategyFactories.SingleOrDefault(cr => string.Equals(cmdLine.TestOrderingStrategy, cr.Name, StringComparison.OrdinalIgnoreCase));
+                if (testOrderingStrategyFactory == null)
+                {
+                    throw new Exception(string.Format("Test ordering strategy '{0}' not known.", cmdLine.CoverageRunner));
+                }
+            }
+            else
+            {
+                // this is the default
+                testOrderingStrategyFactory = new TestOrderingByStatisticsPluginFactory();
+            }
+
+            return testOrderingStrategyFactory;
         }
 
         private void CheckPluginsArePresent()
@@ -206,6 +223,7 @@ namespace Splinter
         private IReadOnlyCollection<SingleMutationTestResult> CreateAndRunMutations(
             DirectoryInfo modelDirectory,
             IReadOnlyCollection<TestSubjectMethodRef> subjectMethods,
+            IPluginFactory<IMutationTestsOrderingStrategy> testOrderingStrategyFactory,
             bool runAllTests)
         {
             IReadOnlyCollection<SingleMutationTestResult> mutationResults;
@@ -213,7 +231,7 @@ namespace Splinter
             this.log.Info("Starting mutation runs.");
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
-                var orderingStrategy = new MutationTestOrderingByStatistics(this.codeCache);
+                var orderingStrategy = testOrderingStrategyFactory.GetPlugin(this.log);
 
                 using (var pb = new ConsoleProgressBar())
                 {

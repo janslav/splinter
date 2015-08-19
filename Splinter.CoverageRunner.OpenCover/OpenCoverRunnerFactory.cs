@@ -33,5 +33,10 @@ namespace Splinter.CoverageRunner.OpenCover
 
             return runner;
         }
+
+        public string Name
+        {
+            get { return "OpenCoverRunnerFactory"; }
+        }
     }
 }

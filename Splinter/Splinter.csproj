@@ -90,8 +90,7 @@
   <ItemGroup>
     <Compile Include="ConsoleProgressBar.cs" />
     <Compile Include="Phase0_Boot\SplinterConfigurationSection.cs" />
-    <Compile Include="Phase2_Mutation\IMutationTestsOrderingStrategy.cs" />
-    <Compile Include="Phase2_Mutation\MutationTestOrderingByStatistics.cs" />
+    <Compile Include="Phase2_Mutation\TestsOrderingStrategies\TestOrderingByStatistics.cs" />
     <Compile Include="Phase2_Mutation\WindowsErrorReporting.cs" />
     <Compile Include="Phase2_Mutation\MutationTestSession.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />
@@ -100,7 +99,6 @@
     <Compile Include="Phase1_Discovery\PluginsContainer.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\InstructionExtensions.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Methods.cs" />
-    <Compile Include="Phase2_Mutation\DTOs\Mutation.cs" />
     <Compile Include="Phase3_Reporting\ResultsLogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

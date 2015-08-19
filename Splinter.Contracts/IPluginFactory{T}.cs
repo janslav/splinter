@@ -15,6 +15,11 @@ namespace Splinter.Contracts
     public interface IPluginFactory<T> where T : IPlugin
     {
         /// <summary>
+        /// Gets the name of the plugin.
+        /// </summary>
+        string Name { get; }
+
+        /// <summary>
         /// Creates and returns the plugin.
         /// </summary>
         T GetPlugin(log4net.ILog log);

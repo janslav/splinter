@@ -35,5 +35,10 @@ namespace Splinter.TestRunner.MsTest
 
             return runner;
         }
+
+        public string Name
+        {
+            get { return "MSTestRunnerFactory"; }
+        }
     }
 }

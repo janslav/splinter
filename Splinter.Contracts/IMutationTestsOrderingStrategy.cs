@@ -7,16 +7,13 @@ using System.Text;
 using Splinter;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
-using Splinter.Phase2_Mutation.NinjaTurtles;
-using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
-using Splinter.Phase2_Mutation.DTOs;
 
-namespace Splinter.Phase2_Mutation
+namespace Splinter.Contracts
 {
     /// <summary>
     /// Optimizes the order in which to run tests
     /// </summary>
-    public interface IMutationTestsOrderingStrategy
+    public interface IMutationTestsOrderingStrategy : IPlugin
     {
         /// <summary>
         /// Returns the tests that belong to the specified mutation in the best orders for running.

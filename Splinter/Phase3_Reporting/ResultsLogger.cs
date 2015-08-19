@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 
 using log4net;
 
-using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Utils;
@@ -25,6 +24,11 @@ namespace Splinter.Phase3_Reporting
         public IResultsExporter GetPlugin(ILog log)
         {
             return new ResultsLogger(log, CodeCache.Instance);
+        }
+
+        public string Name
+        {
+            get { return "ResultsLoggerFactory"; }
         }
     }
 

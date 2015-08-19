@@ -9,22 +9,37 @@ using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Phase2_Mutation.NinjaTurtles;
 using Splinter.Phase2_Mutation.NinjaTurtles.Turtles;
-using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Utils.Cecil;
 
-namespace Splinter.Phase2_Mutation
+namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
 {
+    /// <summary>
+    /// Creates an instance of the "ByStatistics" IMutationTestsOrderingStrategy
+    /// </summary>
+    public class TestOrderingByStatisticsPluginFactory : IPluginFactory<IMutationTestsOrderingStrategy>
+    {
+        public IMutationTestsOrderingStrategy GetPlugin(log4net.ILog log)
+        {
+            return new TestOrderingByStatistics(CodeCache.Instance);
+        }
+
+        public string Name
+        {
+            get { return "ByStatistics"; }
+        }
+    }
+
     /// <summary>
     /// Keeps statistics about already run test to optimize the order in which to run the future ones.
     /// The idea of this strategy is such that tests that have killed the most mutants so far should be the first to try out.
     /// </summary>
-    public class MutationTestOrderingByStatistics : IMutationTestsOrderingStrategy
+    public class TestOrderingByStatistics : IMutationTestsOrderingStrategy
     {
         private readonly ConcurrentDictionary<MethodRef, int> testsByScore = new ConcurrentDictionary<MethodRef, int>();
 
         private readonly ICodeCache codeCache;
 
-        public MutationTestOrderingByStatistics(ICodeCache codeCache)
+        public TestOrderingByStatistics(ICodeCache codeCache)
         {
             this.codeCache = codeCache;
         }
@@ -94,5 +109,34 @@ namespace Splinter.Phase2_Mutation
             //for that the test gets a -10 score.
             this.testsByScore.AddOrUpdate(test.Method, -10, (_, score) => score - 10);
         }
+
+        #region IPlugin implementation
+        /// <summary>
+        /// Gets the name.
+        /// </summary>
+        public string Name
+        {
+            get { return "TestOrderingByStatistics"; }
+        }
+
+        /// <summary>
+        /// Sets up the command line options.
+        /// </summary>
+        /// <param name="options"></param>
+        public void SetupCommandLineOptions(Mono.Options.OptionSet options)
+        {
+        }
+
+        /// <summary>
+        /// Returns true if the plugin is available, i.e. has its binaries installed, registered, etc.
+        /// </summary>
+        /// <param name="unavailableMessage"></param>
+        /// <returns></returns>
+        public bool IsReady(out string unavailableMessage)
+        {
+            unavailableMessage = null;
+            return true;
+        }
+        #endregion
     }
 }

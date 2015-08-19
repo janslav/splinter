@@ -27,7 +27,6 @@ using System.IO;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-using Splinter.Phase2_Mutation.DTOs;
 using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles

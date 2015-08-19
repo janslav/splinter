@@ -24,6 +24,11 @@ namespace Splinter.Phase1_Discovery
         IImmutableSet<ICoverageRunner> DiscoveredCoverageRunners { get; }
 
         /// <summary>
+        /// Gets the discovered coverage test ordering strategies.
+        /// </summary>
+        IImmutableSet<IPluginFactory<IMutationTestsOrderingStrategy>> DiscoveredTestOrderingStrategyFactories { get; }
+
+        /// <summary>
         /// Gets the discovered test runners.
         /// </summary>
         IImmutableSet<ITestRunner> DiscoveredTestRunners { get; }
@@ -54,6 +59,9 @@ namespace Splinter.Phase1_Discovery
         [ImportMany]
         private IEnumerable<Lazy<IPluginFactory<IResultsExporter>>> lazyResultExporters = null; //assigning null to avoid compiler warning
 
+        [ImportMany]
+        private IEnumerable<Lazy<IPluginFactory<IMutationTestsOrderingStrategy>>> lazyTestOrderingStrategies = null; //assigning null to avoid compiler warning
+
         private readonly ILog log;
 
         /// <summary>
@@ -71,6 +79,7 @@ namespace Splinter.Phase1_Discovery
             this.DiscoveredCoverageRunners = ImmutableHashSet.CreateRange(this.lazyCoverageRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
             this.DiscoveredTestRunners = ImmutableHashSet.CreateRange(this.lazyTestRunners.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
             this.DiscoveredResultExporters = ImmutableHashSet.CreateRange(this.lazyResultExporters.EmptyIfNull().Select(l => l.Value.GetPlugin(log)));
+            this.DiscoveredTestOrderingStrategyFactories = ImmutableHashSet.CreateRange(this.lazyTestOrderingStrategies.EmptyIfNull().Select(l => l.Value));
         }
 
         /// <summary>
@@ -87,6 +96,11 @@ namespace Splinter.Phase1_Discovery
         /// Gets the discovered result exporters.
         /// </summary>
         public IImmutableSet<IResultsExporter> DiscoveredResultExporters { get; private set; }
+
+        /// <summary>
+        /// Gets the discovered coverage test ordering strategies.
+        /// </summary>
+        public IImmutableSet<IPluginFactory<IMutationTestsOrderingStrategy>> DiscoveredTestOrderingStrategyFactories { get; private set; }
 
         /// <summary>
         /// Filters the specified plugins by availability.

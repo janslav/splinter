@@ -41,8 +41,8 @@ namespace Splinter.Phase2_Mutation
         /// Creates the mutants and runs tests on them.
         /// </summary>
         IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
-            DirectoryInfo modelDirectory, 
-            TestSubjectMethodRef subject,
+            DirectoryInfo modelDirectory,
+            IEnumerable<TestSubjectMethodRef> subjects,
             IProgress<Tuple<int, int, int>> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonFailedTests);
@@ -99,8 +99,8 @@ namespace Splinter.Phase2_Mutation
         /// Creates the mutants and runs tests on them.
         /// </summary>
         public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
-            DirectoryInfo modelDirectory, 
-            TestSubjectMethodRef subject,
+            DirectoryInfo modelDirectory,
+            IEnumerable<TestSubjectMethodRef> subjects,
             IProgress<Tuple<int, int, int>> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonFailedTests)
@@ -115,22 +115,23 @@ namespace Splinter.Phase2_Mutation
                 int testsFinishedCount = 0;
                 int testsInProgressCount = 0;
 
-                var mutations = this.allTurtles.SelectMany(t =>
-                {
-                    var mutants = t.TryCreateMutants(modelDirectory, subject);
-
-                    if (mutants.Count == 0)
+                var mutations = subjects.SelectMany(subject =>
+                    this.allTurtles.SelectMany(t =>
                     {
-                        allMutationResults.Add(CreateResultForUnmutableMethod(subject));
-                    }
-                    else
-                    {
-                        ReportMutantsCreated(subject, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
-                        allMutants.AddRange(mutants);
-                    }
+                        var mutants = t.TryCreateMutants(modelDirectory, subject);
 
-                    return mutants;
-                });
+                        if (mutants.Count == 0)
+                        {
+                            allMutationResults.Add(CreateResultForUnmutableMethod(subject));
+                        }
+                        else
+                        {
+                            ReportMutantsCreated(subject, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
+                            allMutants.AddRange(mutants);
+                        }
+
+                        return mutants;
+                    }));
 
                 var mutationRuns = mutations.AsParallel()// .WithDegreeOfParallelism(Environment.ProcessorCount * 4)
                     .Select(mutation =>

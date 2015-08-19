@@ -55,10 +55,10 @@ namespace Splinter
         private readonly ICodeCache codeCache;
 
         public SplinterSession(
-            ILog log, 
-            IPluginsContainer plugins, 
+            ILog log,
+            IPluginsContainer plugins,
             ITestsDiscoverer discoverer,
-            IMutationTestSession mutationSession, 
+            IMutationTestSession mutationSession,
             IWindowsErrorReporting errorReportingSwitch,
             ICodeCache codeCache)
         {
@@ -203,24 +203,22 @@ namespace Splinter
             this.log.Info("Number of unique test methods: " + testMethodsCount);
         }
 
-        private SingleMutationTestResult[] CreateAndRunMutations(
-            DirectoryInfo modelDirectory, 
+        private IReadOnlyCollection<SingleMutationTestResult> CreateAndRunMutations(
+            DirectoryInfo modelDirectory,
             IReadOnlyCollection<TestSubjectMethodRef> subjectMethods,
             bool runAllTests)
         {
-            SingleMutationTestResult[] mutationResults;
+            IReadOnlyCollection<SingleMutationTestResult> mutationResults;
+
             this.log.Info("Starting mutation runs.");
             using (this.errorReportingSwitch.TurnOffErrorReporting())
             {
-                var stats = new MutationTestOrderingByStatistics(this.codeCache);
+                var orderingStrategy = new MutationTestOrderingByStatistics(this.codeCache);
 
-                using (var pb = new ConsoleProgressBar<MethodRef>())
+                using (var pb = new ConsoleProgressBar())
                 {
-                    mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
-                    {
-                        var progress = pb.CreateProgressReportingObject(subject.Method);
-                        return this.mutationSession.CreateMutantsAndRunTestsOnThem(modelDirectory, subject, progress, stats, runAllTests);
-                    }).ToArray();
+                    var progress = pb.CreateProgressReportingObject();
+                    mutationResults = this.mutationSession.CreateMutantsAndRunTestsOnThem(modelDirectory, subjectMethods, progress, orderingStrategy, runAllTests);
                 }
                 this.log.Info("Mutation runs finished.");
             }
@@ -228,7 +226,7 @@ namespace Splinter
             return mutationResults;
         }
 
-        private void ExportResults(SingleMutationTestResult[] mutationResults)
+        private void ExportResults(IReadOnlyCollection<SingleMutationTestResult> mutationResults)
         {
             this.log.Debug("Exporting results.");
             var resultExporters = this.plugins.FilterByAvailability(this.plugins.DiscoveredResultExporters);

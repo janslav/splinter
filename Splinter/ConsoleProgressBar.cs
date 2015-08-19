@@ -12,12 +12,11 @@ namespace Splinter
     /// Displays a progress bar on the console.
     /// Stps redrawing when disposed.
     /// </summary>
-    /// <typeparam name="T">The correlation object type.</typeparam>
-    public class ConsoleProgressBar<T> : IDisposable
+    public class ConsoleProgressBar : IDisposable
     {
         private readonly Timer timer = new Timer(500);
 
-        private readonly ConcurrentDictionary<T, Tuple<int, int, int>> progressDict = new ConcurrentDictionary<T, Tuple<int, int, int>>();
+        private Tuple<int, int, int> progress = new Tuple<int,int,int>(0, 0, 0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConsoleProgressBar{T}"/> class.
@@ -33,20 +32,19 @@ namespace Splinter
 
         void OnTimerTick(object sender, ElapsedEventArgs e)
         {
-            var values = this.progressDict.Values.ToArray();
-            DrawTextProgressBar(values.Sum(v => v.Item1), values.Sum(v => v.Item2), values.Sum(v => v.Item3));
+            var values = this.progress;
+            DrawTextProgressBar(values.Item1, values.Item2, values.Item3);
         }
 
         /// <summary>
         /// Creates the progress reporting object.
         /// The numbers to report are "done", "in progress" and "total"
-        /// Multiple partial progressing operations can be run, those are identified by the correlation object.
         /// </summary>
-        public Progress<Tuple<int, int, int>> CreateProgressReportingObject(T correlationObj)
+        public Progress<Tuple<int, int, int>> CreateProgressReportingObject()
         {
             if (Environment.UserInteractive)
             {
-                return new Progress<Tuple<int, int, int>>(t => progressDict[correlationObj] = t);
+                return new Progress<Tuple<int, int, int>>(t => progress = t);
             }
             else
             {

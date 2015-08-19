@@ -129,11 +129,11 @@ namespace Splinter.Utils.Cecil
                 {
                     lock (locker)
                     {
-                        return this.AssemblyDefinition.Modules
+                        var allMethods = this.AssemblyDefinition.Modules
                             .SelectMany(m => m.Types)
                             .SelectMany(t => ListNestedTypesRecursively(t))
-                            .SelectMany(t => t.Methods)
-                            .Single(m => m.FullName.Equals(n));
+                            .SelectMany(t => t.Methods);
+                        return allMethods.Single(m => m.FullName.Equals(n));
                     }
                 });
         }
@@ -162,16 +162,15 @@ namespace Splinter.Utils.Cecil
 
         private IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)
         {
-            if (t.NestedTypes.Count > 0)
+            foreach (var nested in t.NestedTypes)
             {
-                var c = t.NestedTypes.ToList();
-                c.Add(t);
-                return c;
+                foreach (var nestedNested in ListNestedTypesRecursively(nested))
+                {
+                    yield return nestedNested;
+                }
             }
-            else
-            {
-                return new[] { t };
-            }
+
+            yield return t;
         }
 
         /// <summary>

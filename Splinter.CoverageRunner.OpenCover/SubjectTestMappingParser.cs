@@ -15,6 +15,7 @@ using log4net;
 using Splinter.Contracts;
 using Splinter.Contracts.DTOs;
 using Splinter.Utils;
+using Splinter.Utils.Cecil;
 
 namespace Splinter.CoverageRunner.OpenCover
 {
@@ -42,9 +43,12 @@ namespace Splinter.CoverageRunner.OpenCover
     {
         private readonly ILog log;
 
-        public SubjectTestMappingParser(ILog log)
+        private readonly ICodeCache codeCache;
+
+        public SubjectTestMappingParser(ILog log, ICodeCache codeCache)
         {
             this.log = log;
+            this.codeCache = codeCache;
         }
 
         /// <summary>
@@ -122,7 +126,12 @@ namespace Splinter.CoverageRunner.OpenCover
 
                             if (allTests.Count > 0)
                             {
-                                var subjectMethod = new MethodRef(originalAssembly, metodEl.Element("Name").Value);
+                                // we're getting fullname by fullname, or in other words, we're checking that we're able to find the method
+                                var fullMethodName = this.codeCache.GetAssemblyDefinition(originalAssembly)
+                                    .GetMethodByFullName(metodEl.Element("Name").Value).FullName;
+
+                                var subjectMethod = new MethodRef(originalAssembly, fullMethodName);
+
                                 var subject = new TestSubjectMethodRef(
                                     subjectMethod,
                                     testsByOffset.Select(kvp =>

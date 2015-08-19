@@ -93,7 +93,7 @@ namespace Splinter.Phase3_Reporting
                     result.Subject.FullName,
                     result.MutationDescription);
 
-                this.RenderCodeLine(result);
+                //this.RenderCodeLine(result);
             }
 
             //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.

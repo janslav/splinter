@@ -21,7 +21,7 @@ namespace Splinter.Phase2_Mutation
         /// <summary>
         /// Returns the tests that belong to the specified mutation in the best orders for running.
         /// </summary>
-        IEnumerable<TestMethodRef> OrderTestsForRunning(Mutation mutation);
+        IEnumerable<TestMethodRef> OrderTestsForRunning(IEnumerable<TestMethodRef> testMethods);
 
         /// <summary>
         /// Notifies this object that a test failed, when run against the specified mutation. I.e. the mutant was killed.

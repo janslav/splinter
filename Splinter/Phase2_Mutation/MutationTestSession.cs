@@ -137,8 +137,10 @@ namespace Splinter.Phase2_Mutation
                     var passingTests = new List<MethodRef>();
                     var timeoutedTests = new List<MethodRef>();
 
+                    var testsCoveringThisMutation = this.GetTestsCoveringThisMutation(mutation);
+
                     //on one directory (one mutant), we run the tests one after the other, not in parallel. This is by design.
-                    foreach (var test in orderingStrategy.OrderTestsForRunning(mutation))
+                    foreach (var test in orderingStrategy.OrderTestsForRunning(testsCoveringThisMutation))
                     {
                         if (!keepTryingNonFailedTests && failingTests.Count > 0)
                         {
@@ -185,6 +187,19 @@ namespace Splinter.Phase2_Mutation
                     m.Dispose();
                 }
             }
+        }
+
+        private List<TestMethodRef> GetTestsCoveringThisMutation(Mutation mutation)
+        {
+            var assembly = this.codeCache.GetAssemblyDefinition(mutation.Input.Subject.Method.Assembly);
+            var spOfMutation = assembly.GetNearestSequencePointInstructionOffset(mutation.Input.Subject.Method.FullName, mutation.InstructionOffset);
+            var testsCoveringThisSequencePoint = mutation.Input.Subject.TestMethodsBySequencePointInstructionOffset
+                .Where(t =>
+                {
+                    var spOfTest = assembly.GetNearestSequencePointInstructionOffset(mutation.Input.Subject.Method.FullName, t.Item1);
+                    return spOfMutation == spOfTest;
+                }).SelectMany(t => t.Item2).Distinct().ToList();
+            return testsCoveringThisSequencePoint;
         }
 
         private static SingleMutationTestResult CreateResultObject(Mutation mutation, List<MethodRef> failingTests, List<MethodRef> passingTests, List<MethodRef> timeoutedTests)

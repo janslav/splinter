@@ -48,7 +48,7 @@ namespace Splinter
 
         private readonly ITestsDiscoverer discoverer;
 
-        private readonly IMutationTestSession mutation;
+        private readonly IMutationTestSession mutationSession;
 
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
@@ -58,14 +58,14 @@ namespace Splinter
             ILog log, 
             IPluginsContainer plugins, 
             ITestsDiscoverer discoverer,
-            IMutationTestSession mutation, 
+            IMutationTestSession mutationSession, 
             IWindowsErrorReporting errorReportingSwitch,
             ICodeCache codeCache)
         {
             this.plugins = plugins;
             this.discoverer = discoverer;
             this.log = log;
-            this.mutation = mutation;
+            this.mutationSession = mutationSession;
             this.errorReportingSwitch = errorReportingSwitch;
             this.codeCache = codeCache;
         }
@@ -219,7 +219,7 @@ namespace Splinter
                     mutationResults = subjectMethods.AsParallel().SelectMany(subject =>
                     {
                         var progress = pb.CreateProgressReportingObject(subject.Method);
-                        return this.mutation.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress, stats, runAllTests);
+                        return this.mutationSession.CreateMutantsAndRunTestsOnThem(new MutationTestSessionInput(modelDirectory, subject), progress, stats, runAllTests);
                     }).ToArray();
                 }
                 this.log.Info("Mutation runs finished.");

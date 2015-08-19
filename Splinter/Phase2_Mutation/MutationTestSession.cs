@@ -156,21 +156,24 @@ namespace Splinter.Phase2_Mutation
 
                         ReportTestRunStarting(progress, testsCount, testsFinishedCount, ref testsInProgressCount);
 
+                        var timer = Stopwatch.StartNew();
                         var testRunResult = this.RunTestOnMutation(mutation, test);
+                        timer.Stop();
+
                         if (testRunResult.TimedOut)
                         {
                             timeoutedTests.Add(test.Method);
-                            orderingStrategy.NotifyTestTimedOut(mutation, test);
+                            orderingStrategy.NotifyTestTimedOut(mutation, test, timer.Elapsed);
                         }
                         else if (testRunResult.ExitCode == 0)
                         {
                             passingTests.Add(test.Method);
-                            orderingStrategy.NotifyTestPassed(mutation, test);
+                            orderingStrategy.NotifyTestPassed(mutation, test, timer.Elapsed);
                         }
                         else
                         {
                             failingTests.Add(test.Method);
-                            orderingStrategy.NotifyTestFailed(mutation, test);
+                            orderingStrategy.NotifyTestFailed(mutation, test, timer.Elapsed);
                         }
 
                         ReportTestRunFinished(progress, testsCount, ref testsFinishedCount, ref testsInProgressCount);

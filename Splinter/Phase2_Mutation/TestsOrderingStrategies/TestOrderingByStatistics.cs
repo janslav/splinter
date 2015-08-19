@@ -82,7 +82,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// <summary>
         /// Notifies the statistics object that a test failed, when run against the specified mutation
         /// </summary>
-        public void NotifyTestFailed(Mutation mutation, TestMethodRef test)
+        public void NotifyTestFailed(Mutation mutation, TestMethodRef test, TimeSpan testRunTime)
         {
             //failed test is a good thing. Means the mutant got killed.
             //for that the test gets a +2 score.
@@ -92,7 +92,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// <summary>
         /// Notifies the statistics object that a test pased, when run against the specified mutation
         /// </summary>
-        public void NotifyTestPassed(Mutation mutation, TestMethodRef test)
+        public void NotifyTestPassed(Mutation mutation, TestMethodRef test, TimeSpan testRunTime)
         {
             //passed test is not good news but it's not that bad either.
             //for that the test gets a -1 score.
@@ -103,7 +103,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// Notifies this object that a test timed out, when run against the specified mutation. 
         /// This probably means the test caused an infinite loop or somethin similarly juicy.
         /// </summary>
-        public void NotifyTestTimedOut(Mutation mutation, TestMethodRef test)
+        public void NotifyTestTimedOut(Mutation mutation, TestMethodRef test, TimeSpan testRunTime)
         {
             //a timed out test can be considered "failed", more or less, for mutation killing purposes, but it's bad for performance.
             //for that the test gets a -10 score.

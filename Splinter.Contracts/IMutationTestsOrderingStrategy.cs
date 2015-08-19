@@ -23,17 +23,17 @@ namespace Splinter.Contracts
         /// <summary>
         /// Notifies this object that a test failed, when run against the specified mutation. I.e. the mutant was killed.
         /// </summary>
-        void NotifyTestFailed(Mutation mutation, TestMethodRef test);
+        void NotifyTestFailed(Mutation mutation, TestMethodRef test, TimeSpan testRunTime);
 
         /// <summary>
         /// Notifies this object that a test passed, when run against the specified mutation. I.e. the mutant was not killed.
         /// </summary>
-        void NotifyTestPassed(Mutation mutation, TestMethodRef test);
+        void NotifyTestPassed(Mutation mutation, TestMethodRef test, TimeSpan testRunTime);
 
         /// <summary>
         /// Notifies this object that a test timed out, when run against the specified mutation. 
         /// This probably means the test caused an infinite loop or somethin similarly juicy.
         /// </summary>
-        void NotifyTestTimedOut(Mutation mutation, TestMethodRef test);
+        void NotifyTestTimedOut(Mutation mutation, TestMethodRef test, TimeSpan testRunTime);
     }
 }

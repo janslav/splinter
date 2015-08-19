@@ -72,6 +72,7 @@
   <ItemGroup>
     <Compile Include="ManualConfigurationTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestOrderingTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

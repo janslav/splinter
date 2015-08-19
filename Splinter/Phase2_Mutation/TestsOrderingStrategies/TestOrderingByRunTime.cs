@@ -14,35 +14,27 @@ using Splinter.Utils.Cecil;
 namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
 {
     /// <summary>
-    /// Creates an instance of the "ByStatistics" IMutationTestsOrderingStrategy
+    /// Creates an instance of the "ByRunTime" IMutationTestsOrderingStrategy
     /// </summary>
-    public class TestOrderingByStatisticsPluginFactory : IPluginFactory<IMutationTestsOrderingStrategy>
+    public class TestOrderingByRunTimePluginFactory : IPluginFactory<IMutationTestsOrderingStrategy>
     {
         public IMutationTestsOrderingStrategy GetPlugin(log4net.ILog log)
         {
-            return new TestOrderingByStatistics(CodeCache.Instance);
+            return new TestOrderingByRunTime();
         }
 
         public string Name
         {
-            get { return "ByStatistics"; }
+            get { return "ByRunTime"; }
         }
     }
 
     /// <summary>
-    /// Keeps statistics about already run test to optimize the order in which to run the future ones.
-    /// The idea of this strategy is such that tests that have killed the most mutants so far should be the first to try out.
+    /// Orders tests by the average time they ran so far, favoring the fastest ones.
     /// </summary>
-    public class TestOrderingByStatistics : IMutationTestsOrderingStrategy
+    public class TestOrderingByRunTime : IMutationTestsOrderingStrategy
     {
-        private readonly ConcurrentDictionary<MethodRef, int> testsByScore = new ConcurrentDictionary<MethodRef, int>();
-
-        private readonly ICodeCache codeCache;
-
-        public TestOrderingByStatistics(ICodeCache codeCache)
-        {
-            this.codeCache = codeCache;
-        }
+        private readonly ConcurrentDictionary<MethodRef, Tuple<int, long>> testsByScore = new ConcurrentDictionary<MethodRef, Tuple<int, long>>();
 
         /// <summary>
         /// Returns the tests that belong to the specified mutation in the best orders for running.
@@ -54,11 +46,17 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
 
             while (list.Count > 0)
             {
-                var top = list.Max(i =>
+                var top = list.Min(i =>
                 {
-                    int score;
-                    testsByScore.TryGetValue(i.Method, out score);
-                    return new TestScoreComparable { score = score, method = i };
+                    Tuple<int, long> tuple;
+                    if (testsByScore.TryGetValue(i.Method, out tuple))
+                    {
+                        return new TestScoreComparable { averageTicks = tuple.Item2 / tuple.Item1, method = i };
+                    }
+                    else
+                    {
+                        return new TestScoreComparable { averageTicks = long.MaxValue, method = i };
+                    }
                 });
 
                 yield return top.method;
@@ -69,13 +67,13 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
 
         private struct TestScoreComparable : IComparable<TestScoreComparable>
         {
-            internal int score;
+            internal long averageTicks;
 
             internal TestMethodRef method;
 
             public int CompareTo(TestScoreComparable other)
             {
-                return this.score.CompareTo(other.score);
+                return this.averageTicks.CompareTo(other.averageTicks);
             }
         }
 
@@ -84,9 +82,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// </summary>
         public void NotifyTestFailed(Mutation mutation, TestMethodRef test, TimeSpan testRunTime)
         {
-            //failed test is a good thing. Means the mutant got killed.
-            //for that the test gets a +2 score.
-            this.testsByScore.AddOrUpdate(test.Method, 2, (_, score) => score + 2);
+            AppendTestRunTime(test, testRunTime);
         }
 
         /// <summary>
@@ -94,9 +90,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// </summary>
         public void NotifyTestPassed(Mutation mutation, TestMethodRef test, TimeSpan testRunTime)
         {
-            //passed test is not good news but it's not that bad either.
-            //for that the test gets a -1 score.
-            this.testsByScore.AddOrUpdate(test.Method, -1, (_, score) => score - 1);
+            AppendTestRunTime(test, testRunTime);
         }
 
         /// <summary>
@@ -105,9 +99,15 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// </summary>
         public void NotifyTestTimedOut(Mutation mutation, TestMethodRef test, TimeSpan testRunTime)
         {
-            //a timed out test can be considered "failed", more or less, for mutation killing purposes, but it's bad for performance.
-            //for that the test gets a -10 score.
-            this.testsByScore.AddOrUpdate(test.Method, -10, (_, score) => score - 10);
+            AppendTestRunTime(test, testRunTime);
+        }
+
+        private void AppendTestRunTime(TestMethodRef test, TimeSpan testRunTime)
+        {
+            this.testsByScore.AddOrUpdate(
+                test.Method,
+                Tuple.Create(1, testRunTime.Ticks),
+                (_, tuple) => Tuple.Create(tuple.Item1 + 1, tuple.Item2 + testRunTime.Ticks));
         }
 
         #region IPlugin implementation
@@ -116,7 +116,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
         /// </summary>
         public string Name
         {
-            get { return "TestOrderingByStatistics"; }
+            get { return "TestOrderingByRunTime"; }
         }
 
         /// <summary>

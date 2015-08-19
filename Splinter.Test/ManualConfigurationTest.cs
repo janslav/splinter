@@ -21,6 +21,7 @@ namespace Splinter.Test
             var pluginContainerMock = new Mock<IPluginsContainer>();
             pluginContainerMock.SetupGet(c => c.DiscoveredCoverageRunners).Returns(ImmutableHashSet<ICoverageRunner>.Empty);
             pluginContainerMock.SetupGet(c => c.DiscoveredTestRunners).Returns(ImmutableHashSet<ITestRunner>.Empty);
+            pluginContainerMock.SetupGet(c => c.DiscoveredTestOrderingStrategyFactories).Returns(ImmutableHashSet<IPluginFactory<IMutationTestsOrderingStrategy>>.Empty);
 
             var cmdLine = CmdLineConfiguration.SetupCommandLineOptions(os, pluginContainerMock.Object);
 
@@ -37,6 +38,7 @@ namespace Splinter.Test
             var pluginContainerMock = new Mock<IPluginsContainer>();
             pluginContainerMock.SetupGet(c => c.DiscoveredCoverageRunners).Returns(ImmutableHashSet<ICoverageRunner>.Empty);
             pluginContainerMock.SetupGet(c => c.DiscoveredTestRunners).Returns(ImmutableHashSet<ITestRunner>.Empty);
+            pluginContainerMock.SetupGet(c => c.DiscoveredTestOrderingStrategyFactories).Returns(ImmutableHashSet<IPluginFactory<IMutationTestsOrderingStrategy>>.Empty);
 
             var cmdLine = CmdLineConfiguration.SetupCommandLineOptions(os, pluginContainerMock.Object);
 
@@ -53,6 +55,7 @@ namespace Splinter.Test
             var pluginContainerMock = new Mock<IPluginsContainer>();
             pluginContainerMock.SetupGet(c => c.DiscoveredCoverageRunners).Returns(ImmutableHashSet<ICoverageRunner>.Empty);
             pluginContainerMock.SetupGet(c => c.DiscoveredTestRunners).Returns(ImmutableHashSet<ITestRunner>.Empty);
+            pluginContainerMock.SetupGet(c => c.DiscoveredTestOrderingStrategyFactories).Returns(ImmutableHashSet<IPluginFactory<IMutationTestsOrderingStrategy>>.Empty);
 
             var cmdLine = CmdLineConfiguration.SetupCommandLineOptions(os, pluginContainerMock.Object);
 

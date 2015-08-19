@@ -90,7 +90,8 @@
   <ItemGroup>
     <Compile Include="ConsoleProgressBar.cs" />
     <Compile Include="Phase0_Boot\SplinterConfigurationSection.cs" />
-    <Compile Include="Phase2_Mutation\TestsOrderingStrategies\TestOrderingByStatistics.cs" />
+    <Compile Include="Phase2_Mutation\TestsOrderingStrategies\TestOrderingByRunTime.cs" />
+    <Compile Include="Phase2_Mutation\TestsOrderingStrategies\TestOrderingByFrags.cs" />
     <Compile Include="Phase2_Mutation\WindowsErrorReporting.cs" />
     <Compile Include="Phase2_Mutation\MutationTestSession.cs" />
     <Compile Include="netfx\System\Collections\Generic\IEnumerable\EmptyIfNull.cs" />

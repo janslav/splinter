@@ -136,7 +136,7 @@ namespace Splinter
             else
             {
                 // this is the default
-                testOrderingStrategyFactory = new TestOrderingByStatisticsPluginFactory();
+                testOrderingStrategyFactory = new TestOrderingByRunTimePluginFactory();
             }
 
             return testOrderingStrategyFactory;

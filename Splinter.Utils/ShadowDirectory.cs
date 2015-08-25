@@ -13,22 +13,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Threading;
-
-using log4net;
-
 namespace Splinter.Utils
 {
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+
+    using log4net;
+
     /// <summary>
     /// The point of ShadowDirectory is to create a temporary ("shadow") directory by copying the contents of a specified source.
     /// It then cleans up this directory on calling Dispose()
     /// </summary>
-    /// </remarks>
     [DebuggerDisplay("ShadowDirectory {Source} -> {Shadow}")]
     public class ShadowDirectory : IDisposable
     {
@@ -132,16 +128,16 @@ namespace Splinter.Utils
             }
 
             // Get the files in the directory and copy them to the new location.
-            foreach (FileInfo file in source.GetFiles())
+            foreach (var file in source.GetFiles())
             {
-                string newFilePath = Path.Combine(destination.FullName, file.Name);
+                var newFilePath = Path.Combine(destination.FullName, file.Name);
                 file.CopyTo(newFilePath, false);
             }
 
             // recursively copy subdirectories and their contents to new location. 
-            foreach (DirectoryInfo subdir in source.GetDirectories())
+            foreach (var subdir in source.GetDirectories())
             {
-                string temppath = Path.Combine(destination.FullName, subdir.Name);
+                var temppath = Path.Combine(destination.FullName, subdir.Name);
                 DirectoryCopy(subdir, new DirectoryInfo(temppath));
             }
         }

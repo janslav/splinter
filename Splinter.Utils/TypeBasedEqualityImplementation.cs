@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Splinter.Utils
+﻿namespace Splinter.Utils
 {
     /// <summary>
     /// Used for singleton or singleton-like classes for type-based Equals and GetHashCode implementations.

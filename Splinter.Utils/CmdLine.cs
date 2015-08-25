@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-namespace Splinter.Utils
+﻿namespace Splinter.Utils
 {
+    using System.Text.RegularExpressions;
+
     /// <summary>
     /// Taken from https://github.com/ericpopivker/Command-Line-Encoder
     /// It looks well tested except for the case when shell (cmd.exe) is used, then I think it requires escaping stuff with ^ 
@@ -31,13 +26,13 @@ namespace Splinter.Utils
 
         private static string TryEncodeSlashesFollowedByQuotes(string original)
         {
-            var regexPattern = @"\\+""";
+            const string RegexPattern = @"\\+""";
 
-            string result = Regex.Replace(original, regexPattern,
+            var result = Regex.Replace(original, RegexPattern,
                 delegate(Match match)
                 {
-                    string matchText = match.ToString();
-                    string justSlashes = matchText.Remove(matchText.Length - 1);
+                    var matchText = match.ToString();
+                    var justSlashes = matchText.Remove(matchText.Length - 1);
                     return justSlashes + justSlashes + "\"";  //double up the slashes
                 });
 
@@ -52,12 +47,12 @@ namespace Splinter.Utils
 
         private static string TryEncodeLastSlash(string original)
         {
-            var regexPattern = @"\\+$";
+            const string RegexPattern = @"\\+$";
 
-            string result = Regex.Replace(original, regexPattern,
+            var result = Regex.Replace(original, RegexPattern,
                 delegate(Match match)
                 {
-                    string matchText = match.ToString();
+                    var matchText = match.ToString();
                     return matchText + matchText;  //double up the slashes
                 });
 

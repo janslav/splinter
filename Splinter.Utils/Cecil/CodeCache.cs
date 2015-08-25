@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Linq;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
-
-using Splinter.Utils;
-
-namespace Splinter.Utils.Cecil
+﻿namespace Splinter.Utils.Cecil
 {
+    using System.Collections.Concurrent;
+    using System.IO;
+
     /// <summary>
     /// Caches loaded IAssemblyCode instances
     /// </summary>

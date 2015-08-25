@@ -19,20 +19,17 @@
 
 #endregion
 
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Linq;
-using System;
-
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Mono.Cecil.Mdb;
-using Mono.Cecil.Pdb;
-using System.Reflection;
-
 namespace Splinter.Utils.Cecil
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+
+    using Mono.Cecil;
+    using Mono.Cecil.Cil;
+
     /// <summary>
     /// Class representinga .NET assembly.
     /// </summary>
@@ -85,7 +82,7 @@ namespace Splinter.Utils.Cecil
     /// </summary>
     public class AssemblyCode : IAssemblyCode
     {
-        private static readonly object locker = new object();
+        private static readonly object Locker = new object();
 
         private readonly ConcurrentDictionary<string, MethodDefinition> methodsByFullName = new ConcurrentDictionary<string, MethodDefinition>();
 
@@ -127,11 +124,11 @@ namespace Splinter.Utils.Cecil
                 string.Intern(fullName),
                 n =>
                 {
-                    lock (locker)
+                    lock (Locker)
                     {
                         var allMethods = this.AssemblyDefinition.Modules
                             .SelectMany(m => m.Types)
-                            .SelectMany(t => ListNestedTypesRecursively(t))
+                            .SelectMany(ListNestedTypesRecursively)
                             .SelectMany(t => t.Methods);
                         return allMethods.Single(m => m.FullName.Equals(n));
                     }
@@ -148,11 +145,11 @@ namespace Splinter.Utils.Cecil
                 n =>
                 {
                     var nameWithNameSpaceOnly = n.Split(',')[0];
-                    lock (locker)
+                    lock (Locker)
                     {
                         return this.AssemblyDefinition.Modules
                             .SelectMany(m => m.Types)
-                            .SelectMany(t => ListNestedTypesRecursively(t))
+                            .SelectMany(ListNestedTypesRecursively)
                             .Single(t => t.FullName.Equals(nameWithNameSpaceOnly));
                     }
                 });
@@ -160,7 +157,7 @@ namespace Splinter.Utils.Cecil
             return type.Methods.Single(m => m.Name.Equals(methodName));
         }
 
-        private IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)
+        private static IEnumerable<TypeDefinition> ListNestedTypesRecursively(TypeDefinition t)
         {
             foreach (var nested in t.NestedTypes)
             {
@@ -192,7 +189,7 @@ namespace Splinter.Utils.Cecil
         /// </summary>
         public SequencePoint GetNearestSequencePoint(string methodFullName, int instructionOffset)
         {
-            var indexAndSp = GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
+            var indexAndSp = this.GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
 
             return indexAndSp.Item2;
         }
@@ -202,7 +199,7 @@ namespace Splinter.Utils.Cecil
         /// </summary>
         public int GetNearestSequencePointInstructionOffset(string methodFullName, int instructionOffset)
         {
-            var indexAndSp = GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
+            var indexAndSp = this.GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
 
             return indexAndSp.Item1;
         }
@@ -213,7 +210,7 @@ namespace Splinter.Utils.Cecil
                 Tuple.Create(string.Intern(methodFullName), instructionOffset),
                 t =>
                 {
-                    lock (locker)
+                    lock (Locker)
                     {
                         this.LoadDebugInformation();
 

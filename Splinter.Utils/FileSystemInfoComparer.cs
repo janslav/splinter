@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Threading.Tasks;
-
-namespace Splinter.Utils
+﻿namespace Splinter.Utils
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+
     /// <summary>
     /// IEqualityComparer implementation for FileSystemInfo
     /// </summary>
@@ -27,7 +24,7 @@ namespace Splinter.Utils
                 return true;
             }
 
-            if ((x == null) ||  (y == null))
+            if ((x == null) || (y == null))
             {
                 return false;
             }

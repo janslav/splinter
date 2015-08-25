@@ -1,22 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Configuration;
-
-using Microsoft.Practices.Unity;
-
-namespace Splinter.CoverageRunner.OpenCover
+﻿namespace Splinter.CoverageRunner.OpenCover
 {
+    using System.Linq;
+
+    using log4net;
+
+    using Microsoft.Practices.Unity;
+
     /// <summary>
     /// Bootstraps Unity
     /// </summary>
     public class UnityBootstrapper
     {
-        private log4net.ILog log;
+        private readonly ILog log;
 
-        public UnityBootstrapper(log4net.ILog log)
+        public UnityBootstrapper(ILog log)
         {
             this.log = log;
         }
@@ -35,8 +32,6 @@ namespace Splinter.CoverageRunner.OpenCover
                 WithMappings.FromMatchingInterface,
                 WithName.Default,
                 WithLifetime.ContainerControlled);
-
-            var registrations = container.Registrations.Select(r => new { r.RegisteredType, r.MappedToType });
 
             this.BootstrapLogging(container);
 

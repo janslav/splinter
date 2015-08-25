@@ -1,22 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.ComponentModel.Composition;
-using Microsoft.Win32;
-using Microsoft.Practices.Unity;
-
-using log4net;
-
-using Splinter.Contracts;
-using Splinter.Contracts.DTOs;
-using Splinter.Utils;
-
-namespace Splinter.CoverageRunner.OpenCover
+﻿namespace Splinter.CoverageRunner.OpenCover
 {
+    using log4net;
+
+    using Microsoft.Practices.Unity;
+
+    using Splinter.Contracts;
+    using Splinter.Utils;
+
     /// <summary>
     /// Creates the OpenCoverRunner objects
     /// </summary>

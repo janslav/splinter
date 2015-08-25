@@ -1,24 +1,19 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
-using System.Xml.Linq;
-using System.Diagnostics;
-using System.Security.Cryptography;
-
-using log4net;
-
-using Splinter.Contracts;
-using Splinter.Contracts.DTOs;
-using Splinter.Utils;
-using Splinter.Utils.Cecil;
-
-namespace Splinter.CoverageRunner.OpenCover
+﻿namespace Splinter.CoverageRunner.OpenCover
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.IO;
+    using System.Linq;
+    using System.Security.Cryptography;
+    using System.Xml.Linq;
+
+    using log4net;
+
+    using Splinter.Contracts;
+    using Splinter.Contracts.DTOs;
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// Parses the opencover results
     /// </summary>
@@ -64,7 +59,7 @@ namespace Splinter.CoverageRunner.OpenCover
         {
             var session = resultsXml.Root;
 
-            var testBinaryHash = this.HashFile(testBinary);
+            var testBinaryHash = HashFile(testBinary);
 
             var results = new List<TestSubjectMethodRef>();
 
@@ -147,7 +142,7 @@ namespace Splinter.CoverageRunner.OpenCover
             return results;
         }
 
-        private byte[] HashFile(FileInfo file)
+        private static byte[] HashFile(FileInfo file)
         {
             using (var sr = file.OpenRead())
             {
@@ -158,7 +153,7 @@ namespace Splinter.CoverageRunner.OpenCover
             }
         }
 
-        private byte[] HashFromString(string dashDelimitedHexNumbers)
+        private static byte[] HashFromString(string dashDelimitedHexNumbers)
         {
             if (string.IsNullOrWhiteSpace(dashDelimitedHexNumbers))
             {
@@ -166,7 +161,7 @@ namespace Splinter.CoverageRunner.OpenCover
             }
 
             return dashDelimitedHexNumbers.Split('-')
-                .Select(ch => byte.Parse(ch, System.Globalization.NumberStyles.HexNumber))
+                .Select(ch => byte.Parse(ch, NumberStyles.HexNumber))
                 .ToArray();
         }
     }

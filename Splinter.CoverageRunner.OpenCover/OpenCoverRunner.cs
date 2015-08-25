@@ -1,23 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using System.ComponentModel.Composition;
-using Microsoft.Win32;
-
-using log4net;
-
-using Splinter.Contracts;
-using Splinter.Contracts.DTOs;
-using Splinter.Utils;
-
-namespace Splinter.CoverageRunner.OpenCover
+﻿namespace Splinter.CoverageRunner.OpenCover
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Linq;
+
+    using log4net;
+
+    using Microsoft.Win32;
+
+    using Mono.Options;
+
+    using Splinter.Contracts;
+    using Splinter.Contracts.DTOs;
+    using Splinter.Utils;
+
     /// <summary>
     /// The OpenCover coverage plugin
     /// </summary>
@@ -53,7 +50,7 @@ namespace Splinter.CoverageRunner.OpenCover
         /// Sets up the command line options.
         /// </summary>
         /// <param name="options"></param>
-        public void SetupCommandLineOptions(Mono.Options.OptionSet options)
+        public void SetupCommandLineOptions(OptionSet options)
         {
         }
 
@@ -69,7 +66,7 @@ namespace Splinter.CoverageRunner.OpenCover
                 this.ncoverExe = this.executableUtils.FindExecutable(OpenCoverExeName, paths);
                 var exitCode = this.executableUtils.RunProcessAndWaitForExit(this.ncoverExe, "OpenCover Discovery", new[] { "-?" });
 
-                //we'd love to check exitCode but it's unfortunately always 1 on a dry run, even when we do specify -?
+                // we'd love to check exitCode but it's unfortunately always 1 on a dry run, even when we do specify -?
 
                 unavailableMessage = null;
                 return true;

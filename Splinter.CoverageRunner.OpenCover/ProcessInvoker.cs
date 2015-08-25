@@ -1,23 +1,17 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Collections.Concurrent;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Xml.Serialization;
-using System.Xml.Linq;
-using System.Diagnostics;
-using System.Security.Cryptography;
-
-using log4net;
-
-using Splinter.Contracts;
-using Splinter.Contracts.DTOs;
-using Splinter.Utils;
-
-namespace Splinter.CoverageRunner.OpenCover
+﻿namespace Splinter.CoverageRunner.OpenCover
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Xml.Linq;
+
+    using log4net;
+
+    using Splinter.Contracts;
+    using Splinter.Contracts.DTOs;
+    using Splinter.Utils;
+
     /// <summary>
     /// Runs the OpenCover process
     /// </summary>
@@ -34,7 +28,7 @@ namespace Splinter.CoverageRunner.OpenCover
     /// </summary>
     public class ProcessInvoker : IProcessInvoker
     {
-        public const string outputFileName = "opencover.results.xml";
+        public const string OutputFileName = "opencover.results.xml";
 
         private readonly ILog log;
 
@@ -53,22 +47,22 @@ namespace Splinter.CoverageRunner.OpenCover
         /// Runs opencover.exe and reads its xml output
         /// </summary>
         public XDocument RunTestsAndGetOutput(FileInfo openCoverExe, DirectoryInfo modelDirectory, ITestRunner testRunner, FileInfo testBinary, out string shadowDirFullName, out IReadOnlyCollection<TestMethodRef> testMethods)
-        {
+        { 
+            const string OperationId = "OpenCover";
             var runnerName = testRunner.Name;
-            const string operationId = "OpenCover";
 
-            using (var sd = new ShadowDirectory(this.log, modelDirectory, operationId))
+            using (var sd = new ShadowDirectory(this.log, modelDirectory, OperationId))
             {
                 try
                 {
                     this.log.InfoFormat("Running tests contained in '{0}', to extract test-subject mapping.", testBinary.Name);
 
                     var openCoverProcessInfo = this.CreateOpenCoverStartInfo(openCoverExe, testRunner, testBinary, sd);
-                    var processResult = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, operationId);
+                    var processResult = this.executableUtils.RunProcessAndWaitForExit(openCoverProcessInfo, OperationId);
 
                     if (processResult.ExitCode != 0)
                     {
-                        //TODO: parse the usual suspects (some tests failed, no tests run)
+                        // TODO: parse the usual suspects (some tests failed, no tests run)
                         throw new Exception("OpenCover runner exitcode != 0. Check the logs.");
                     }
 
@@ -76,7 +70,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
                     //not using DirectoryInfo as the out value because the directory won't exist by the time
                     shadowDirFullName = sd.Shadow.FullName;
-                    var resultsXml = XDocument.Load(Path.Combine(shadowDirFullName, outputFileName));
+                    var resultsXml = XDocument.Load(Path.Combine(shadowDirFullName, OutputFileName));
                     return resultsXml;
                 }
                 catch (Exception e)
@@ -97,7 +91,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
             var testRunnerProcessInfo = testRunner.GetProcessInfoToRunTests(sd.Shadow, shadowTestBinary);
 
-            var staticArgs = "-register:user -returntargetcode -mergebyhash -output:" + outputFileName; // -log:All
+            const string StaticArgs = "-register:user -returntargetcode -mergebyhash -output:" + OutputFileName; // -log:All
             var target = string.Format("\"-target:{0}\"", CmdLine.EncodeArgument(testRunnerProcessInfo.FileName));
             var targetArgs = string.Format("\"-targetargs:{0}\"", CmdLine.EncodeArgument(testRunnerProcessInfo.Arguments));
             var filter = string.Format("\"-filter:+[*]* -[{0}]*\"", CmdLine.EncodeArgument(Path.GetFileNameWithoutExtension(testBinary.Name)));
@@ -105,7 +99,7 @@ namespace Splinter.CoverageRunner.OpenCover
 
             var openCoverProcessInfo = new ProcessStartInfo(
                 fileName: openCoverExe.FullName,
-                arguments: string.Join(" ", staticArgs, target, targetArgs, filter, coverbytest))
+                arguments: string.Join(" ", StaticArgs, target, targetArgs, filter, coverbytest))
             {
                 WorkingDirectory = sd.Shadow.FullName,
                 //UseShellExecute = false,

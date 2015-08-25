@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Microsoft.Practices.Unity;
 
-using Splinter.Phase0_Boot;
-
 using Mono.Options;
+
+using Splinter.Phase0_Boot;
 
 namespace Splinter
 {
-    class Program
+    public class Program
     {
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             var iocContainer = new UnityBootstrapper().CreateContainer();
 
@@ -33,7 +29,7 @@ namespace Splinter
                 var cmdLine = splinterSession.SetupCommandLineOptions(os);
 
                 bool showHelp = false;
-                os.Add("h|?|help", "Show this message and exit.", (string v) => showHelp = v != null);
+                os.Add("h|?|help", "Show this message and exit.", v => showHelp = v != null);
 
                 os.Parse(args);
 

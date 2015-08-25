@@ -52,6 +52,8 @@ namespace Splinter
 
         private readonly IWindowsErrorReporting errorReportingSwitch;
 
+        public static readonly IPluginFactory<IMutationTestsOrderingStrategy> DefaultTestOrderingStrategyFactory = new TestOrderingByRunTimePluginFactory();
+
         public SplinterSession(
             ILog log,
             IPluginsContainer plugins,
@@ -135,8 +137,7 @@ namespace Splinter
             }
             else
             {
-                // this is the default
-                testOrderingStrategyFactory = new TestOrderingByRunTimePluginFactory();
+                testOrderingStrategyFactory = DefaultTestOrderingStrategyFactory;
             }
 
             return testOrderingStrategyFactory;

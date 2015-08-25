@@ -26,7 +26,7 @@ namespace Splinter.Utils.Cecil
     /// </summary>
     public class CodeCache : ICodeCache
     {
-        public static CodeCache Instance = new CodeCache();
+        public static readonly CodeCache Instance = new CodeCache();
 
         private readonly ConcurrentDictionary<FileInfo, AssemblyCode> assemblies =
             new ConcurrentDictionary<FileInfo, AssemblyCode>(new FileSystemInfoComparer());

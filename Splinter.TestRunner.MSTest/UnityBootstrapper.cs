@@ -1,27 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Configuration;
-
-using Microsoft.Practices.Unity;
-
-using Splinter.Utils.Cecil;
-
-namespace Splinter.TestRunner.MsTest
+﻿namespace Splinter.TestRunner.MsTest
 {
+    using log4net;
+
+    using Microsoft.Practices.Unity;
+
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// Bootstraps unity
     /// </summary>
     public class UnityBootstrapper
     {
-        private log4net.ILog log;
+        private readonly ILog log;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnityBootstrapper"/> class.
         /// </summary>
-        public UnityBootstrapper(log4net.ILog log)
+        public UnityBootstrapper(ILog log)
         {
             this.log = log;
         }

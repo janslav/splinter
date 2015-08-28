@@ -96,16 +96,18 @@ namespace Splinter.Phase3_Reporting
                 //this.RenderCodeLine(result);
             }
 
-            //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
             var allPassing = results.SelectMany(r => r.PassingTests).Distinct().ToArray();
             var allFailing = results.SelectMany(r => r.FailingTests).Distinct().ToArray();
+            var allTimeouted = results.SelectMany(r => r.TimeoutedTests).Distinct().ToArray();
+
+            //now we want to write out tests that killed no mutants - those which never failed. Including those for which there were no mutants.
             var neverFailing = allPassing.Except(allFailing).ToArray();
 
-            var testsNotGivenChanceToFail = realRunsResults.SelectMany(r => r.NotRunTests).Intersect(neverFailing).Distinct().ToArray(); ;
+            var testsNotGivenChanceToFail = realRunsResults.SelectMany(r => r.NotRunTests).Intersect(neverFailing).Distinct().ToArray();
             if (testsNotGivenChanceToFail.Length > 0)
             {
-                this.log.WarnFormat("Some tests were not run against all mutations. The 'never failing' test list could be incomplete. "
-                    + "For a complete lis, run Splinter with -detectUnusedTests switch.");
+                this.log.WarnFormat("Some tests were not run against all mutations. The 'never failing' test list is thus not to be trusted. "
+                    + "For a complete list, run Splinter with -detectUnusedTests switch.");
             }
 
             foreach (var useless in neverFailing.Except(testsNotGivenChanceToFail))
@@ -113,7 +115,7 @@ namespace Splinter.Phase3_Reporting
                 this.log.WarnFormat("Never failing test: {0}", useless.FullName);
             }
 
-            foreach (var timeouted in results.SelectMany(r => r.TimeoutedTests).Distinct())
+            foreach (var timeouted in allTimeouted)
             {
                 this.log.WarnFormat("Timeouted test: {0}", timeouted.FullName);
             }
@@ -127,14 +129,14 @@ namespace Splinter.Phase3_Reporting
                 survivingMutants.Length,
                 100.0 - ((survivingMutants.Length * 100.0) / realRunsResults.Length));
 
-            var uniqueTests = allPassing.Union(allFailing).Count();
+            var uniqueTestsCount = allPassing.Union(allFailing).Union(allTimeouted).Count();
 
             this.log.InfoFormat(
                 "Out of {1} tests, {2} didn't contribute to killing mutants.{0}That's {3:0.0}% usefulness.",
                 Environment.NewLine,
-                uniqueTests,
+                uniqueTestsCount,
                 neverFailing.Length,
-                100.0 - ((neverFailing.Length * 100.0) / uniqueTests));
+                100.0 - ((neverFailing.Length * 100.0) / uniqueTestsCount));
         }
 
         private void RenderCodeLine(SingleMutationTestResult result)

@@ -56,6 +56,11 @@ namespace Splinter.Utils.Cecil
         MethodDefinition GetMethodByClassAndMethodName(string classFullName, string methodName);
 
         /// <summary>
+        /// Gets the method definition by its metadata token number.
+        /// </summary>
+        MethodDefinition GetMethodByMetaDataToken(uint token);
+
+        /// <summary>
         /// Loads debug information.
         /// </summary>
         void LoadDebugInformation();
@@ -85,6 +90,8 @@ namespace Splinter.Utils.Cecil
         private static readonly object Locker = new object();
 
         private readonly ConcurrentDictionary<string, MethodDefinition> methodsByFullName = new ConcurrentDictionary<string, MethodDefinition>();
+
+        private readonly ConcurrentDictionary<uint, MethodDefinition> methodsByMetaDataToken = new ConcurrentDictionary<uint, MethodDefinition>();
 
         private readonly ConcurrentDictionary<string, TypeDefinition> classesByFullName = new ConcurrentDictionary<string, TypeDefinition>();
 
@@ -130,7 +137,31 @@ namespace Splinter.Utils.Cecil
                             .SelectMany(m => m.Types)
                             .SelectMany(ListNestedTypesRecursively)
                             .SelectMany(t => t.Methods);
+
                         return allMethods.Single(m => m.FullName.Equals(n));
+                    }
+                });
+        }
+
+        /// <summary>
+        /// Gets the method definition by its metadata token number.
+        /// </summary>
+        public MethodDefinition GetMethodByMetaDataToken(uint token)
+        {
+            return this.methodsByMetaDataToken.GetOrAdd(
+                token,
+                n =>
+                {
+                    lock (Locker)
+                    {
+                        var allMethods = this.AssemblyDefinition.Modules
+                            .SelectMany(m => m.Types)
+                            .SelectMany(ListNestedTypesRecursively)
+                            .SelectMany(t => t.Methods);
+
+                        var mt = new MetadataToken(n);
+
+                        return allMethods.Single(m => m.MetadataToken.Equals(mt));
                     }
                 });
         }

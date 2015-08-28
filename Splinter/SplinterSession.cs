@@ -132,7 +132,7 @@ namespace Splinter
                 testOrderingStrategyFactory = this.plugins.DiscoveredTestOrderingStrategyFactories.SingleOrDefault(cr => string.Equals(cmdLine.TestOrderingStrategy, cr.Name, StringComparison.OrdinalIgnoreCase));
                 if (testOrderingStrategyFactory == null)
                 {
-                    throw new Exception(string.Format("Test ordering strategy '{0}' not known.", cmdLine.CoverageRunner));
+                    throw new Exception(string.Format("Test ordering strategy '{0}' not known.", cmdLine.TestOrderingStrategy));
                 }
             }
             else

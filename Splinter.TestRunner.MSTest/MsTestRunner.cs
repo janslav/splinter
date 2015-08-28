@@ -177,7 +177,7 @@
 
             var r = new ProcessStartInfo(
                     this.msTestExe.FullName,
-                    string.Format("/noisolation /testcontainer:\"{0}\"", escapedTestBinary))
+                    string.Format("/testcontainer:\"{0}\"", escapedTestBinary))
                     {
                         WorkingDirectory = workingDirectory.FullName
                     };
@@ -199,7 +199,7 @@
 
             var r = new ProcessStartInfo(
                     this.msTestExe.FullName,
-                    string.Format("/noisolation /testcontainer:\"{0}\" /test:\"{1}\"", escapedTestBinary, escapedTestName))
+                    string.Format("/testcontainer:\"{0}\" /test:\"{1}\"", escapedTestBinary, escapedTestName))
                     {
                         WorkingDirectory = workingDirectory.FullName
                     };

@@ -63,21 +63,14 @@
 
             var results = new List<TestSubjectMethodRef>();
 
-            var testMethodsDictionary = new Dictionary<uint, TestMethodRef>();
-
             var testModule = session.Element("Modules").Elements("Module")
                 .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
 
-            foreach (var trackedMethodEl in testModule.Element("TrackedMethods").Elements("TrackedMethod"))
-            {
-                var method = new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value);
-
-                var testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(method));
-                if (testMethod != null)
-                {
-                    testMethodsDictionary.Add((uint)trackedMethodEl.Attribute("uid"), testMethod);
-                }
-            }
+            var testMethodsDictionary = (from trackedMethodEl in testModule.Element("TrackedMethods").Elements("TrackedMethod")
+                                         let testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value)))
+                                         where testMethod != null
+                                         select new { uid = (uint)trackedMethodEl.Attribute("uid"), testMethod })
+                                         .ToDictionary(p => p.uid, p => p.testMethod);
 
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))
             {
@@ -122,8 +115,10 @@
                             if (allTests.Count > 0)
                             {
                                 // we're getting fullname by fullname, or in other words, we're checking that we're able to find the method
+                                var fullName = metodEl.Element("Name").Value;
+
                                 var fullMethodName = this.codeCache.GetAssemblyDefinition(originalAssembly)
-                                    .GetMethodByFullName(metodEl.Element("Name").Value).FullName;
+                                    .GetMethodByMetaDataToken((uint)metodEl.Element("MetadataToken")).FullName;
 
                                 var subjectMethod = new MethodRef(originalAssembly, fullMethodName);
 

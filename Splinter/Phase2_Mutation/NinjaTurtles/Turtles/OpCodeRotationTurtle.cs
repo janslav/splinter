@@ -30,6 +30,8 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An abstract base class for implementations of
     /// <see cref="IMethodTurtle" /> that operator by replacing a number of
@@ -42,8 +44,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </remarks>
     public abstract class OpCodeRotationTurtle : MethodTurtleBase
     {
-        public OpCodeRotationTurtle(log4net.ILog log)
-            : base(log)
+        public OpCodeRotationTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
         }
 

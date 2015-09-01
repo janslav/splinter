@@ -30,9 +30,9 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
             var fakeRunner = new Mock<ITestRunner>();
             fakeRunner.Setup(r => r.Equals(fakeRunner.Object)).Returns(true);
 
-            var passingTest = new TestMethodRef(new MethodRef(new FileInfo("file"), "passing"), fakeRunner.Object, TimeSpan.Zero);
-            var failingTest = new TestMethodRef(new MethodRef(new FileInfo("file"), "failing"), fakeRunner.Object, TimeSpan.Zero);
-            var timeoutingTest = new TestMethodRef(new MethodRef(new FileInfo("file"), "timeouting"), fakeRunner.Object, TimeSpan.Zero);
+            var passingTest = new TestMethodRef(new MethodRef(new FileInfo("file"), 1), fakeRunner.Object, TimeSpan.Zero);
+            var failingTest = new TestMethodRef(new MethodRef(new FileInfo("file"), 2), fakeRunner.Object, TimeSpan.Zero);
+            var timeoutingTest = new TestMethodRef(new MethodRef(new FileInfo("file"), 3), fakeRunner.Object, TimeSpan.Zero);
 
             var sut = new TestOrderingByFrags();
 
@@ -52,8 +52,8 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
             var fakeRunner = new Mock<ITestRunner>();
             fakeRunner.Setup(r => r.Equals(fakeRunner.Object)).Returns(true);
 
-            var slowTest = new TestMethodRef(new MethodRef(new FileInfo("file"), "slow"), fakeRunner.Object, TimeSpan.Zero);
-            var fastTest = new TestMethodRef(new MethodRef(new FileInfo("file"), "fast"), fakeRunner.Object, TimeSpan.Zero);
+            var slowTest = new TestMethodRef(new MethodRef(new FileInfo("file"), 1), fakeRunner.Object, TimeSpan.Zero);
+            var fastTest = new TestMethodRef(new MethodRef(new FileInfo("file"), 2), fakeRunner.Object, TimeSpan.Zero);
 
             var sut = new TestOrderingByRunTime();
 

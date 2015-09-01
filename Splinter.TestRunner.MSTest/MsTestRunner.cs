@@ -188,9 +188,9 @@
         /// <summary>
         /// Gets the process information to run one test from a binary.
         /// </summary>
-        public ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, string methodFullName)
+        public ProcessStartInfo GetProcessInfoToRunTest(DirectoryInfo workingDirectory, FileInfo testBinary, uint methodMetadataToken)
         {
-            var testMethodDef = this.codeCache.GetAssemblyDefinition(testBinary).GetMethodByFullName(methodFullName);
+            var testMethodDef = this.codeCache.GetAssemblyDefinition(testBinary).GetMethodByMetaDataToken(methodMetadataToken);
 
             var escapedTestBinary = CmdLine.EncodeArgument(testBinary.FullName);
 
@@ -244,7 +244,7 @@
 
             var resultsXmlDoc = XDocument.Load(resultsXmlFile.FullName);
 
-            var unitTestsByDefinitionId = new Dictionary<string, Tuple<string, TimeSpan>>();
+            var unitTestsByDefinitionId = new Dictionary<string, Tuple<uint, TimeSpan>>();
 
             var assemblyDef = this.codeCache.GetAssemblyDefinition(testBinary);
 
@@ -260,7 +260,7 @@
 
                 var method = assemblyDef.GetMethodByClassAndMethodName(classFullName, methodName);
 
-                unitTestsByDefinitionId.Add(id, Tuple.Create(method.FullName, TimeSpan.Zero));
+                unitTestsByDefinitionId.Add(id, Tuple.Create(method.MetadataToken.ToUInt32(), TimeSpan.Zero));
             }
 
             foreach (var unitTestResultElement in resultsXmlDoc.Root.Element(XName.Get("Results", ns)).Elements(XName.Get("UnitTestResult", ns)))

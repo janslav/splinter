@@ -67,7 +67,7 @@
                 .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
 
             var testMethodsDictionary = (from trackedMethodEl in testModule.Element("TrackedMethods").Elements("TrackedMethod")
-                                         let testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(new MethodRef(testBinary, trackedMethodEl.Attribute("name").Value)))
+                                         let testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(new MethodRef(testBinary, (uint)trackedMethodEl.Attribute("name"))))
                                          where testMethod != null
                                          select new { uid = (uint)trackedMethodEl.Attribute("uid"), testMethod })
                                          .ToDictionary(p => p.uid, p => p.testMethod);
@@ -115,12 +115,16 @@
                             if (allTests.Count > 0)
                             {
                                 // we're getting fullname by fullname, or in other words, we're checking that we're able to find the method
-                                var fullName = metodEl.Element("Name").Value;
+                                var token = (uint)metodEl.Element("MetadataToken");
+                                var method = this.codeCache.GetAssemblyDefinition(originalAssembly)
+                                    .GetMethodByMetaDataToken(token);
 
-                                var fullMethodName = this.codeCache.GetAssemblyDefinition(originalAssembly)
-                                    .GetMethodByMetaDataToken((uint)metodEl.Element("MetadataToken")).FullName;
+                                if (!string.Equals(method.FullName, metodEl.Element("Name").Value))
+                                {
+                                    throw new Exception(string.Format("The method found under metadataToken {0} is not called '{1}' as expected.", token, method.FullName));
+                                }
 
-                                var subjectMethod = new MethodRef(originalAssembly, fullMethodName);
+                                var subjectMethod = new MethodRef(originalAssembly, token);
 
                                 var subject = new TestSubjectMethodRef(
                                     subjectMethod,

@@ -69,11 +69,14 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     {
         private readonly ILog log;
 
+        private readonly ICodeCache codeCache;
+
         private static int counter;
 
-        public MethodTurtleBase(ILog log)
+        protected MethodTurtleBase(ILog log, ICodeCache codeCache)
         {
             this.log = log;
+            this.codeCache = codeCache;
         }
 
         public IReadOnlyCollection<Mutation> TryCreateMutants(DirectoryInfo modelDirectory, TestSubjectMethodRef subject)
@@ -141,13 +144,12 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 
         private IEnumerable<Mutation> MutateMethod(DirectoryInfo modelDirectory, TestSubjectMethodRef subject)
         {
-            var methodName = subject.Method.FullName;
             var assemblyToMutate = new AssemblyCode(subject.Method.Assembly);
             assemblyToMutate.LoadDebugInformation();
 
             var instructionOffsetsToMutate = subject.TestMethodsBySequencePointInstructionOffset.Select(t => t.Item1).ToArray();
 
-            var methodToMutate = assemblyToMutate.GetMethodByFullName(methodName);
+            var methodToMutate = assemblyToMutate.GetMethodByMetaDataToken(subject.Method.MetadataToken);
 
             int[] originalOffsets = methodToMutate.Body.Instructions.Select(i => i.Offset).ToArray();
 
@@ -198,7 +200,7 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
             this.log.DebugFormat(
                 "{0}: Creating mutation of method '{1}' from assembly '{2}: {3}.'",
                 mutationId,
-                subject.Method.FullName,
+                this.codeCache.GetAssemblyDefinition(subject.Method.Assembly).GetMethodByMetaDataToken(subject.Method.MetadataToken).FullName,
                 subject.Method.Assembly.Name,
                 description);
 

@@ -25,6 +25,8 @@ using Mono.Cecil.Cil;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An implementation of <see cref="IMethodTurtle"/> that replaces each of
     /// the bitwise operators <see cref="OpCodes.Or" />,
@@ -36,8 +38,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// <summary>
         /// Initializes a new instance of <see cref="BitwiseOperatorTurtle" />.
         /// </summary>
-        public BitwiseOperatorTurtle(log4net.ILog log)
-            : base(log)
+        public BitwiseOperatorTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
             this.opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
             {

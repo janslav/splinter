@@ -31,6 +31,8 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An implementation of <see cref="IMethodTurtle" /> that identifies local
     /// variables of the same type, and permutes any assignments to them. For
@@ -40,8 +42,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public class VariableWriteTurtle : MethodTurtleBase
     {
-        public VariableWriteTurtle(log4net.ILog log)
-            : base(log)
+        public VariableWriteTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
         }
 

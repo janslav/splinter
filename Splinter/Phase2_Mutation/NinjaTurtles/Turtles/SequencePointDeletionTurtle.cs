@@ -30,6 +30,8 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An implementation of <see cref="IMethodTurtle" /> that removes from the
     /// compiled IL each sequence point in turn (with the exception of
@@ -37,8 +39,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public class SequencePointDeletionTurtle : MethodTurtleBase
     {
-        public SequencePointDeletionTurtle(log4net.ILog log)
-            : base(log)
+        public SequencePointDeletionTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
         }
 

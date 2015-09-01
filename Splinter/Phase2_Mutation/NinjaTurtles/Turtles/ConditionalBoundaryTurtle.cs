@@ -30,6 +30,8 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An implementation of <see cref="IMethodTurtle"/> that changes
     /// whether or not equality is included in comparison operators, so
@@ -39,8 +41,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public class ConditionalBoundaryTurtle : MethodTurtleBase
     {
-        public ConditionalBoundaryTurtle(log4net.ILog log)
-            : base(log)
+        public ConditionalBoundaryTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
         }
 

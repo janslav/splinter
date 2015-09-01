@@ -11,13 +11,13 @@ namespace Splinter.Contracts.DTOs
     /// <summary>
     /// Represents a method
     /// </summary>
-    [DebuggerDisplay("Method {FullName}")]
+    [DebuggerDisplay("Method {MetadataToken}")]
     public class MethodRef
     {
-        public MethodRef(FileInfo assembly, string fullName)
+        public MethodRef(FileInfo assembly, uint metadataToken)
         {
             this.Assembly = assembly;
-            this.FullName = string.Intern(fullName);
+            this.MetadataToken = metadataToken;
         }
 
         /// <summary>
@@ -26,9 +26,10 @@ namespace Splinter.Contracts.DTOs
         public FileInfo Assembly { get; private set; }
 
         /// <summary>
-        /// Gets the full name of the method, as produced by Mono.Cecil.MethodReference.FullName
+        /// Gets the metadata token number of the method, as produced by Mono.Cecil.MethodReference.MetadataToken.ToUInt32()
+        /// It should uniquely identify the method within the assembly
         /// </summary>
-        public string FullName { get; private set; }
+        public uint MetadataToken { get; private set; }
 
         #region Equals & GetHashCode
         /// <summary>
@@ -53,7 +54,7 @@ namespace Splinter.Contracts.DTOs
             var o = (MethodRef)obj;
 
             return string.Equals(this.Assembly.FullName, o.Assembly.FullName, StringComparison.OrdinalIgnoreCase) &&
-                 string.Equals(this.FullName, o.FullName);
+                 string.Equals(this.MetadataToken, o.MetadataToken);
         }
 
         /// <summary>
@@ -66,7 +67,7 @@ namespace Splinter.Contracts.DTOs
         {
             var fileHash = StringComparer.OrdinalIgnoreCase.GetHashCode(this.Assembly.FullName);
 
-            return fileHash * 17 + this.FullName.GetHashCode();
+            return fileHash * 17 + this.MetadataToken.GetHashCode();
         }
         #endregion
     }

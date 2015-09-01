@@ -13,6 +13,8 @@ using Splinter.Utils.Cecil;
 
 namespace Splinter.Phase3_Reporting
 {
+    using Mono.Cecil;
+
     /// <summary>
     /// Factory for the ResultsLogger "plugin"
     /// </summary>
@@ -90,7 +92,7 @@ namespace Splinter.Phase3_Reporting
             {
                 this.log.WarnFormat(
                     "Missed mutation: method '{0}', mutation '{1}'.",
-                    result.Subject.FullName,
+                    this.GetMethodFullName(result.Subject),
                     result.MutationDescription);
 
                 //this.RenderCodeLine(result);
@@ -112,12 +114,12 @@ namespace Splinter.Phase3_Reporting
 
             foreach (var useless in neverFailing.Except(testsNotGivenChanceToFail))
             {
-                this.log.WarnFormat("Never failing test: {0}", useless.FullName);
+                this.log.WarnFormat("Never failing test: {0}", this.GetMethodFullName(useless));
             }
 
             foreach (var timeouted in allTimeouted)
             {
-                this.log.WarnFormat("Timeouted test: {0}", timeouted.FullName);
+                this.log.WarnFormat("Timeouted test: {0}", this.GetMethodFullName(timeouted));
             }
 
             this.log.Info("= = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =");
@@ -139,10 +141,15 @@ namespace Splinter.Phase3_Reporting
                 100.0 - ((neverFailing.Length * 100.0) / uniqueTestsCount));
         }
 
+        private string GetMethodFullName(MethodRef methodRef)
+        {
+            return this.codeCache.GetAssemblyDefinition(methodRef.Assembly).GetMethodByMetaDataToken(methodRef.MetadataToken).FullName;
+        }
+
         private void RenderCodeLine(SingleMutationTestResult result)
         {
             var a = this.codeCache.GetAssemblyDefinition(result.Subject.Assembly);
-            var sp = a.GetNearestSequencePoint(result.Subject.FullName, result.InstructionOffset);
+            var sp = a.GetNearestSequencePoint(result.Subject.MetadataToken, result.InstructionOffset);
             var source = a.GetSourceFile(sp.Document);
             string line = source.Lines[sp.StartLine];
 

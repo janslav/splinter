@@ -46,11 +46,6 @@ namespace Splinter.Utils.Cecil
         AssemblyDefinition AssemblyDefinition { get; }
 
         /// <summary>
-        /// Gets a method definition by its full name.
-        /// </summary>
-        MethodDefinition GetMethodByFullName(string fullName);
-
-        /// <summary>
         /// Gets a method definition by its class full name and method name.
         /// </summary>
         MethodDefinition GetMethodByClassAndMethodName(string classFullName, string methodName);
@@ -68,12 +63,12 @@ namespace Splinter.Utils.Cecil
         /// <summary>
         /// Gets the sequence point (line of code) of the specified instruction.
         /// </summary>
-        SequencePoint GetNearestSequencePoint(string methodFullName, int instructionOffset);
+        SequencePoint GetNearestSequencePoint(uint methodMetadataToken, int instructionOffset);
 
         /// <summary>
         /// Gets the offset of the first instruction of the nearest sequence point (line of code) of the specified instruction.
         /// </summary>
-        int GetNearestSequencePointInstructionOffset(string methodFullName, int instructionOffset);
+        int GetNearestSequencePointInstructionOffset(uint methodMetadataToken, int instructionOffset);
 
         /// <summary>
         /// Gets the source file loaded using the specified Document instance.
@@ -95,8 +90,8 @@ namespace Splinter.Utils.Cecil
 
         private readonly ConcurrentDictionary<string, TypeDefinition> classesByFullName = new ConcurrentDictionary<string, TypeDefinition>();
 
-        private readonly ConcurrentDictionary<Tuple<string, int>, Tuple<int, SequencePoint>> sequencePointsByInstruction =
-            new ConcurrentDictionary<Tuple<string, int>, Tuple<int, SequencePoint>>();
+        private readonly ConcurrentDictionary<Tuple<uint, int>, Tuple<int, SequencePoint>> sequencePointsByInstruction =
+            new ConcurrentDictionary<Tuple<uint, int>, Tuple<int, SequencePoint>>();
 
         private readonly ConcurrentDictionary<byte[], SourceFile> sourceFilesByHash =
             new ConcurrentDictionary<byte[], SourceFile>();
@@ -119,29 +114,6 @@ namespace Splinter.Utils.Cecil
         /// Gets the <see cref="AssemblyDefinition" />.
         /// </summary>
         public AssemblyDefinition AssemblyDefinition { get; private set; }
-
-        /// <summary>
-        /// Gets the method definition by its full name.
-        /// </summary>
-        /// <param name="fullName"></param>
-        /// <returns></returns>
-        public MethodDefinition GetMethodByFullName(string fullName)
-        {
-            return this.methodsByFullName.GetOrAdd(
-                string.Intern(fullName),
-                n =>
-                {
-                    lock (Locker)
-                    {
-                        var allMethods = this.AssemblyDefinition.Modules
-                            .SelectMany(m => m.Types)
-                            .SelectMany(ListNestedTypesRecursively)
-                            .SelectMany(t => t.Methods);
-
-                        return allMethods.Single(m => m.FullName.Equals(n));
-                    }
-                });
-        }
 
         /// <summary>
         /// Gets the method definition by its metadata token number.
@@ -218,9 +190,9 @@ namespace Splinter.Utils.Cecil
         /// <summary>
         /// Gets the sequence point (line of code) of the specified instruction.
         /// </summary>
-        public SequencePoint GetNearestSequencePoint(string methodFullName, int instructionOffset)
+        public SequencePoint GetNearestSequencePoint(uint methodMetadataToken, int instructionOffset)
         {
-            var indexAndSp = this.GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
+            var indexAndSp = this.GetNearestSequencePointWithIndex(methodMetadataToken, instructionOffset);
 
             return indexAndSp.Item2;
         }
@@ -228,24 +200,24 @@ namespace Splinter.Utils.Cecil
         /// <summary>
         /// Gets the offset of the first instruction of the nearest sequence point (line of code) of the specified instruction.
         /// </summary>
-        public int GetNearestSequencePointInstructionOffset(string methodFullName, int instructionOffset)
+        public int GetNearestSequencePointInstructionOffset(uint methodMetadataToken, int instructionOffset)
         {
-            var indexAndSp = this.GetNearestSequencePointWithIndex(methodFullName, instructionOffset);
+            var indexAndSp = this.GetNearestSequencePointWithIndex(methodMetadataToken, instructionOffset);
 
             return indexAndSp.Item1;
         }
 
-        private Tuple<int, SequencePoint> GetNearestSequencePointWithIndex(string methodFullName, int instructionOffset)
+        private Tuple<int, SequencePoint> GetNearestSequencePointWithIndex(uint methodMetadataToken, int instructionOffset)
         {
             var indexAndSp = this.sequencePointsByInstruction.GetOrAdd(
-                Tuple.Create(string.Intern(methodFullName), instructionOffset),
+                Tuple.Create(methodMetadataToken, instructionOffset),
                 t =>
                 {
                     lock (Locker)
                     {
                         this.LoadDebugInformation();
 
-                        var method = this.GetMethodByFullName(t.Item1);
+                        var method = this.GetMethodByMetaDataToken(t.Item1);
                         var instructions = method.Body.Instructions.ToList();
 
                         var offset = t.Item2;

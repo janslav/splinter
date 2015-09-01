@@ -197,11 +197,11 @@ namespace Splinter.Phase2_Mutation
         private List<TestMethodRef> GetTestsCoveringThisMutation(Mutation mutation)
         {
             var assembly = this.codeCache.GetAssemblyDefinition(mutation.Subject.Method.Assembly);
-            var spOfMutation = assembly.GetNearestSequencePointInstructionOffset(mutation.Subject.Method.FullName, mutation.InstructionOffset);
+            var spOfMutation = assembly.GetNearestSequencePointInstructionOffset(mutation.Subject.Method.MetadataToken, mutation.InstructionOffset);
             var testsCoveringThisSequencePoint = mutation.Subject.TestMethodsBySequencePointInstructionOffset
                 .Where(t =>
                 {
-                    var spOfTest = assembly.GetNearestSequencePointInstructionOffset(mutation.Subject.Method.FullName, t.Item1);
+                    var spOfTest = assembly.GetNearestSequencePointInstructionOffset(mutation.Subject.Method.MetadataToken, t.Item1);
                     return spOfMutation == spOfTest;
                 }).SelectMany(t => t.Item2).Distinct().ToList();
             return testsCoveringThisSequencePoint;
@@ -236,20 +236,25 @@ namespace Splinter.Phase2_Mutation
         private ProcessRunResult RunTestOnMutation(Mutation mutation, TestMethodRef test)
         {
             var shadowedTestAssembly = mutation.TestDirectory.GetEquivalentShadowPath(test.Method.Assembly);
-            var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.FullName);
+            var processInfo = test.Runner.GetProcessInfoToRunTest(mutation.TestDirectory.Shadow, shadowedTestAssembly, test.Method.MetadataToken);
 
             this.log.DebugFormat(
                 "{0}: Running test '{1}' for mutation '{2}' in method '{3}'.",
                 mutation.Id,
-                test.Method.FullName,
+                this.GetMethodFullName(test.Method),
                 mutation.Description,
-                mutation.Subject.Method.FullName);
+                this.GetMethodFullName(mutation.Subject.Method));
 
             var timeout = TimeSpan.FromSeconds(this.configuration.MaxMutationRunningTimeConstantInSeconds) +
                 TimeSpan.FromTicks(this.configuration.MaxMutationRunningTimeFactor * test.LongestRunningTime.Ticks);
 
             var result = this.executableUtils.RunProcessAndWaitForExit(processInfo, mutation.Id, timeout);
             return result;
+        }
+
+        private string GetMethodFullName(MethodRef testMethod)
+        {
+            return this.codeCache.GetAssemblyDefinition(testMethod.Assembly).GetMethodByMetaDataToken(testMethod.MetadataToken).FullName;
         }
 
         private static void ReportTestRunFinished(IProgress<Tuple<int, int, int>> progress, int testsCount, ref int testsFinishedCount, ref int testsInProgressCount)
@@ -278,11 +283,6 @@ namespace Splinter.Phase2_Mutation
                 Interlocked.Add(ref testsCount, mutants.Count * subject.AllTestMethods.Count);
                 progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
             }
-        }
-
-        private MethodDefinition GetMethodDef(MethodRef method)
-        {
-            return this.codeCache.GetAssemblyDefinition(method.Assembly).GetMethodByFullName(method.FullName);
         }
     }
 }

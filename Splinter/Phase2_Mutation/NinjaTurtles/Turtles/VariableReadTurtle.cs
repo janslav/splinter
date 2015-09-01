@@ -31,6 +31,8 @@ using Splinter.Contracts.DTOs;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An implementation of <see cref="IMethodTurtle" /> that identifies local
     /// variables, method parameters and fields of the same type, and permutes
@@ -41,8 +43,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
     /// </summary>
     public class VariableReadTurtle : MethodTurtleBase
     {
-        public VariableReadTurtle(log4net.ILog log)
-            : base(log)
+        public VariableReadTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
         }
 

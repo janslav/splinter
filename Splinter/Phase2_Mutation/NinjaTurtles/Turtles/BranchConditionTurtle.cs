@@ -25,6 +25,8 @@ using Mono.Cecil.Cil;
 
 namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
 {
+    using Splinter.Utils.Cecil;
+
     /// <summary>
     /// An implementation of <see cref="IMethodTurtle"/> that replaces the
     /// conditional branch operators
@@ -37,8 +39,8 @@ namespace Splinter.Phase2_Mutation.NinjaTurtles.Turtles
         /// <summary>
         /// Initializes a new instance of <see cref="BranchConditionTurtle" />.
         /// </summary>
-        public BranchConditionTurtle(log4net.ILog log)
-            : base(log)
+        public BranchConditionTurtle(log4net.ILog log, ICodeCache codeCache)
+            : base(log, codeCache)
         {
             this.opCodes = new Dictionary<OpCode, IEnumerable<OpCode>>
             {

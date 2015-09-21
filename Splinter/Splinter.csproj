@@ -103,6 +103,7 @@
     <Compile Include="Phase3_Reporting\ResultsLogger.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SingleMutationTestResultExtensions.cs" />
     <Compile Include="SplinterSession.cs" />
     <Compile Include="Phase0_Boot\UnityBootstrapper.cs" />
     <Compile Include="Phase2_Mutation\NinjaTurtles\Turtles\ArithmeticOperatorTurtle.cs" />

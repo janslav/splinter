@@ -61,7 +61,12 @@ namespace Splinter
             finally
             {
                 log.Debug("Splinter terminating.");
+                if (System.Diagnostics.Debugger.IsAttached)
+                {
+                    Console.ReadLine();
+                }
             }
+
         }
 
         static void ShowHelp(OptionSet p, string msg = null)

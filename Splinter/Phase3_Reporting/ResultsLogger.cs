@@ -11,9 +11,14 @@ using Splinter.Contracts.DTOs;
 using Splinter.Utils;
 using Splinter.Utils.Cecil;
 
+using System.IO;
+
+using Mono.Cecil.Cil;
+using Mono.Cecil;
+
 namespace Splinter.Phase3_Reporting
 {
-    using Mono.Cecil;
+
 
     /// <summary>
     /// Factory for the ResultsLogger "plugin"
@@ -95,7 +100,7 @@ namespace Splinter.Phase3_Reporting
                     this.GetMethodFullName(result.Subject),
                     result.MutationDescription);
 
-                //this.RenderCodeLine(result);
+                this.RenderCodeLine(result);
             }
 
             var allPassing = results.SelectMany(r => r.PassingTests).Distinct().ToArray();
@@ -148,32 +153,15 @@ namespace Splinter.Phase3_Reporting
 
         private void RenderCodeLine(SingleMutationTestResult result)
         {
-            var a = this.codeCache.GetAssemblyDefinition(result.Subject.Assembly);
-            var sp = a.GetNearestSequencePoint(result.Subject.MetadataToken, result.InstructionOffset);
-            var source = a.GetSourceFile(sp.Document);
-            string line = source.Lines[sp.StartLine];
+            var cli = result.ToCodeLineInfo(this.codeCache);
 
-            string beginning = line.Substring(0, sp.StartColumn - 1);
-            string highlight;
-            string ending;
-
-            if (sp.StartLine == sp.EndLine)
-            {
-                highlight = line.Substring(sp.StartColumn - 1, sp.EndColumn - sp.StartColumn);
-                ending = line.Substring(sp.EndColumn - 1, line.Length - (sp.EndColumn - 1));
-            }
-            else
-            {
-                highlight = line.Substring(sp.StartColumn - 1);
-                ending = "";
-            }
-
+            Console.Write("{0}:", cli.SourceReference);
             var color = Console.BackgroundColor;
-            Console.Write(beginning);
+            Console.Write(cli.Before);
             Console.BackgroundColor = ConsoleColor.DarkGray;
-            Console.Write(highlight);
+            Console.Write(string.Join(Environment.NewLine, cli.Affected));
             Console.BackgroundColor = color;
-            Console.WriteLine(ending);
+            Console.WriteLine(cli.After);
         }
 
         #region IPlugin implementation

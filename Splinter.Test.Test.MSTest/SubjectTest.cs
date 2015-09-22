@@ -18,6 +18,48 @@ namespace Splinter.Test.Test.MSTest
             new Subj.Subject().Multiply(3, 7);
         }
 
+       /* [TestMethod]
+        public void ThisTestDoesntAssertOnMultiLineMethod()
+        {
+            new Subj.Subject().MultiplyMultiLine(3, 7);
+        }
+
+        [TestMethod]
+        public void ThisTestDoesntAssertOnTwoLineMethod()
+        {
+            new Subj.Subject().MultiplyTwoLines(3, 7);
+        }
+
+        [TestMethod]
+        public void ThisTestDoesntAssertOnSingleLineMethod()
+        {
+            new Subj.Subject().MultiplySingleLine(3, 7);
+        }
+        
+                    ///* To test output formating */
+        //public int MultiplyMultiLine(int left, int right)
+        //{
+        //    /* Before */ return 
+        //        left 
+        //        * 
+        //        right; /*After*/
+        //}
+
+        ///* To test output formating */
+        //public int MultiplySingleLine(int left, int right)
+        //{
+        //    /* Before */ return left * right; /*After*/
+        //}
+
+        ///* To test output formating */
+        //public int MultiplyTwoLines(int left, int right)
+        //{
+        //    /* Before */
+        //    return left * 
+        //        right; /*After*/
+        //}
+            
+
         [TestMethod]
         public void ThisTestUsesImproperTestingData()
         {

@@ -67,7 +67,7 @@
                 .Single(m => testBinaryHash.SequenceEqual(HashFromString(m.Attribute("hash").Value)));
 
             var testMethodsDictionary = (from trackedMethodEl in testModule.Element("TrackedMethods").Elements("TrackedMethod")
-                                         let testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(new MethodRef(testBinary, (uint)trackedMethodEl.Attribute("name"))))
+                                         let testMethod = knownTestMethods.SingleOrDefault(tm => tm.Method.Equals(new MethodRef(testBinary, (uint)trackedMethodEl.Attribute("token"))))
                                          where testMethod != null
                                          select new { uid = (uint)trackedMethodEl.Attribute("uid"), testMethod })
                                          .ToDictionary(p => p.uid, p => p.testMethod);
@@ -99,18 +99,11 @@
                                     testsByOffset.Add(offset, list);
                                 }
 
-                                foreach (var trackedMethodRefEl in sequencePointElement.Descendants("TrackedMethodRef"))
-                                {
-                                    list.Add((uint)trackedMethodRefEl.Attribute("uid"));
-                                }
+                                list.AddRange(sequencePointElement.Descendants("TrackedMethodRef").Select(trackedMethodRefEl => (uint)trackedMethodRefEl.Attribute("uid")));
                             }
 
                             //then we read all the tests, including the above
-                            var allTests = new List<uint>();
-                            foreach (var trackedMethodRefEl in metodEl.Descendants("TrackedMethodRef"))
-                            {
-                                allTests.Add((uint)trackedMethodRefEl.Attribute("uid"));
-                            }
+                            var allTests = metodEl.Descendants("TrackedMethodRef").Select(trackedMethodRefEl => (uint)trackedMethodRefEl.Attribute("uid")).ToList();
 
                             if (allTests.Count > 0)
                             {

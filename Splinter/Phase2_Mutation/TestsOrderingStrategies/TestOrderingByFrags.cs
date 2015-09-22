@@ -50,7 +50,7 @@ namespace Splinter.Phase2_Mutation.TestsOrderingStrategies
                 var top = list.Max(i =>
                 {
                     int score;
-                    testsByScore.TryGetValue(i.Method, out score);
+                    this.testsByScore.TryGetValue(i.Method, out score);
                     return new TestScoreComparable { score = score, method = i };
                 });
 

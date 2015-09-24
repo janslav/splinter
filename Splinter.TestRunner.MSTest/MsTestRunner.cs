@@ -207,7 +207,7 @@
             return r;
         }
 
-        private static readonly Regex ResulsFileLineRe = new Regex(@"Results file:\s*(?<fileName>.+)", RegexOptions.Compiled | RegexOptions.Singleline);
+        private static readonly Regex ResultsFileLineRe = new Regex(@"Results file:\s*(?<fileName>.+)", RegexOptions.Compiled | RegexOptions.Singleline);
 
         /// <summary>
         /// Extracts the test methods with additional metadata (such as test run time) using the console output of the coverage process.
@@ -222,7 +222,7 @@
 
             while (null != (line = reader.ReadLine()))
             {
-                var match = ResulsFileLineRe.Match(line);
+                var match = ResultsFileLineRe.Match(line);
                 if (match.Success)
                 {
                     resultsXmlFileName = match.Groups["fileName"].Value;
@@ -244,24 +244,29 @@
 
             var resultsXmlDoc = XDocument.Load(resultsXmlFile.FullName);
 
-            var unitTestsByDefinitionId = new Dictionary<string, Tuple<uint, TimeSpan>>();
+            if ((resultsXmlDoc == null) || (resultsXmlDoc.Root == null))
+            {
+                throw new Exception(string.Format("Failed to read XML from '{0}'.", resultsXmlFileName));
+            }
 
             var assemblyDef = this.codeCache.GetAssemblyDefinition(testBinary);
 
             var ns = resultsXmlDoc.Root.GetDefaultNamespace().NamespaceName;
 
             //there is a TestDefinitions element with the method/class names and then Results with the start/finish times
-            foreach (var unitTestElement in resultsXmlDoc.Root.Element(XName.Get("TestDefinitions", ns)).Elements(XName.Get("UnitTest", ns)))
-            {
-                var id = unitTestElement.Attribute("id").Value;
-                var testMethodElement = unitTestElement.Element(XName.Get("TestMethod", ns));
-                var classFullName = testMethodElement.Attribute("className").Value;
-                var methodName = testMethodElement.Attribute("name").Value;
+            var unitTestsByDefinitionId = resultsXmlDoc.Root.Element(XName.Get("TestDefinitions", ns)).Elements(XName.Get("UnitTest", ns))
+                .ToDictionary(
+                unitTestElement => unitTestElement.Attribute("id").Value,
+                unitTestElement =>
+                {
+                    var testMethodElement = unitTestElement.Element(XName.Get("TestMethod", ns));
+                    var classFullName = testMethodElement.Attribute("className").Value;
+                    var methodName = testMethodElement.Attribute("name").Value;
 
-                var method = assemblyDef.GetMethodByClassAndMethodName(classFullName, methodName);
+                    var method = assemblyDef.GetMethodByClassAndMethodName(classFullName, methodName);
 
-                unitTestsByDefinitionId.Add(id, Tuple.Create(method.MetadataToken.ToUInt32(), TimeSpan.Zero));
-            }
+                    return Tuple.Create(method.MetadataToken.ToUInt32(), TimeSpan.Zero);
+                });
 
             foreach (var unitTestResultElement in resultsXmlDoc.Root.Element(XName.Get("Results", ns)).Elements(XName.Get("UnitTestResult", ns)))
             {

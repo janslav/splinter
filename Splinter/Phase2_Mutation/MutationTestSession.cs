@@ -31,6 +31,8 @@ using Splinter.Phase0_Boot;
 
 namespace Splinter.Phase2_Mutation
 {
+    using System.Reactive.Linq;
+
     /// <summary>
     /// The creation of mutated assemblies and running tests against them is driven from here.
     /// </summary>
@@ -132,7 +134,11 @@ namespace Splinter.Phase2_Mutation
                         return mutants;
                     }));
 
-                var mutationRuns = mutations.AsParallel()// .WithDegreeOfParallelism(Environment.ProcessorCount * 4)
+                // this dirty trick should make the "mutations" generator evaluate eagerly. 
+                // The point is that the max number of mutation runs is known as soon as possible.
+                var mutationsEagerly = mutations.ToObservable().ToEnumerable();
+
+                var mutationRuns = mutationsEagerly.AsParallel()// .WithDegreeOfParallelism(Environment.ProcessorCount * 4)
                     .Select(mutation =>
                 {
                     var failingTests = new List<MethodRef>();

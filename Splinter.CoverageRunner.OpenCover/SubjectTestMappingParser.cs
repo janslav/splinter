@@ -75,63 +75,72 @@
             foreach (var moduleEl in session.Element("Modules").Elements("Module"))
             {
                 var shadowAssembly = new FileInfo(moduleEl.Element("FullName").Value);
-                if (shadowAssembly.FullName.StartsWith(shadowDirFullName, StringComparison.OrdinalIgnoreCase))
+                if (!shadowAssembly.FullName.StartsWith(shadowDirFullName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var relativePath = shadowAssembly.FullName.Substring(shadowDirFullName.Length);
-                    //the file path from the original directory is the one we care about
-                    var originalAssembly = new FileInfo(modelDir + relativePath);
+                    continue;
+                }
 
-                    foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
+                var relativePath = shadowAssembly.FullName.Substring(shadowDirFullName.Length);
+                //the file path from the original directory is the one we care about
+                var originalAssembly = new FileInfo(modelDir + relativePath);
+
+                foreach (var classEl in moduleEl.Element("Classes").Elements("Class"))
+                {
+                    foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
                     {
-                        foreach (var metodEl in classEl.Element("Methods").Elements("Method"))
+                        //first we read the test methods mapped to particular sequence points.
+                        var testsByOffset = ParseTestsForSequencePoints(metodEl);
+
+                        //then we read all the tests, including the above
+                        var allTests = metodEl.Descendants("TrackedMethodRef").Select(trackedMethodRefEl => (uint)trackedMethodRefEl.Attribute("uid")).ToList();
+                        if (allTests.Count <= 0)
                         {
-                            //first we read the test methods mapped to particular sequence points.
-                            var testsByOffset = new Dictionary<int, List<uint>>();
-                            foreach (var sequencePointElement in metodEl.Element("SequencePoints").Elements("SequencePoint"))
-                            {
-                                var offset = (int)sequencePointElement.Attribute("offset");
-
-                                //TODO: convert this (and everything around?) to LINQ. Might get less ugly.
-                                List<uint> list;
-                                if (!testsByOffset.TryGetValue(offset, out list))
-                                {
-                                    list = new List<uint>();
-                                    testsByOffset.Add(offset, list);
-                                }
-
-                                list.AddRange(sequencePointElement.Descendants("TrackedMethodRef").Select(trackedMethodRefEl => (uint)trackedMethodRefEl.Attribute("uid")));
-                            }
-
-                            //then we read all the tests, including the above
-                            var allTests = metodEl.Descendants("TrackedMethodRef").Select(trackedMethodRefEl => (uint)trackedMethodRefEl.Attribute("uid")).ToList();
-
-                            if (allTests.Count > 0)
-                            {
-                                // we're getting fullname by fullname, or in other words, we're checking that we're able to find the method
-                                var token = (uint)metodEl.Element("MetadataToken");
-                                var method = this.codeCache.GetAssemblyDefinition(originalAssembly)
-                                    .GetMethodByMetaDataToken(token);
-
-                                if (!string.Equals(method.FullName, metodEl.Element("Name").Value))
-                                {
-                                    throw new Exception(string.Format("The method found under metadataToken {0} is not called '{1}' as expected.", token, method.FullName));
-                                }
-
-                                var subjectMethod = new MethodRef(originalAssembly, token);
-
-                                var subject = new TestSubjectMethodRef(
-                                    subjectMethod,
-                                    testsByOffset.Select(kvp =>
-                                        Tuple.Create(kvp.Key, (IReadOnlyCollection<TestMethodRef>)kvp.Value.Select(v => testMethodsDictionary[v]).ToArray())).ToArray(),
-                                    allTests.Select(v => testMethodsDictionary[v]).ToArray());
-                                results.Add(subject);
-                            }
+                            continue;
                         }
+
+                        // we're getting fullname by fullname, or in other words, we're checking that we're able to find the method
+                        var token = (uint)metodEl.Element("MetadataToken");
+                        var method = this.codeCache.GetAssemblyDefinition(originalAssembly)
+                            .GetMethodByMetaDataToken(token);
+
+                        if (!string.Equals(method.FullName, metodEl.Element("Name").Value))
+                        {
+                            throw new Exception(string.Format("The method found under metadataToken {0} is not called '{1}' as expected.", token, method.FullName));
+                        }
+
+                        var subject = new TestSubjectMethodRef(
+                            new MethodRef(originalAssembly, token),
+                            testsByOffset.Select(kvp =>
+                                Tuple.Create(kvp.Key, (IReadOnlyCollection<TestMethodRef>)kvp.Value.Select(v => testMethodsDictionary[v]).ToArray())).ToArray(),
+                                allTests.Select(v => testMethodsDictionary[v]).ToArray());
+                        results.Add(subject);
                     }
                 }
             }
 
             return results;
+        }
+
+        private static Dictionary<int, List<uint>> ParseTestsForSequencePoints(XElement metodEl)
+        {
+            var testsByOffset = new Dictionary<int, List<uint>>();
+            foreach (var sequencePointElement in metodEl.Element("SequencePoints").Elements("SequencePoint"))
+            {
+                var offset = (int)sequencePointElement.Attribute("offset");
+
+                //TODO: convert this (and everything around?) to LINQ. Might get less ugly.
+                List<uint> list;
+                if (!testsByOffset.TryGetValue(offset, out list))
+                {
+                    list = new List<uint>();
+                    testsByOffset.Add(offset, list);
+                }
+
+                list.AddRange(
+                    sequencePointElement.Descendants("TrackedMethodRef")
+                        .Select(trackedMethodRefEl => (uint)trackedMethodRefEl.Attribute("uid")));
+            }
+            return testsByOffset;
         }
 
         private static byte[] HashFile(FileInfo file)

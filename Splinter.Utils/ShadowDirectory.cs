@@ -22,10 +22,10 @@ namespace Splinter.Utils
     using log4net;
 
     /// <summary>
-    /// The point of ShadowDirectory is to create a temporary ("shadow") directory by copying the contents of a specified source.
+    /// The point of ShadowDirectory is to create a temporary ("shadow") directory by copying the contents of a specified model.
     /// It then cleans up this directory on calling Dispose()
     /// </summary>
-    [DebuggerDisplay("ShadowDirectory {Source} -> {Shadow}")]
+    [DebuggerDisplay("ShadowDirectory {Model} -> {Shadow}")]
     public class ShadowDirectory : IDisposable
     {
         private readonly ILog log;
@@ -35,22 +35,22 @@ namespace Splinter.Utils
         /// <summary>
         /// Initializes a new instance of the <see cref="ShadowDirectory"/> class.
         /// </summary>
-        public ShadowDirectory(ILog log, DirectoryInfo source, string operationId)
+        public ShadowDirectory(ILog log, DirectoryInfo model, string operationId)
         {
             this.log = log;
-            this.Source = source;
+            this.Model = model;
             this.operationId = operationId;
 
             this.Shadow = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "Splinter", Path.GetRandomFileName()));
 
             this.log.DebugFormat("{0}: Copying root directory to '{1}'.", this.operationId, this.Shadow.FullName);
-            DirectoryCopy(source, this.Shadow);
+            DirectoryCopy(model, this.Shadow);
         }
 
         /// <summary>
-        /// Gets the source directory.
+        /// Gets the model directory.
         /// </summary>
-        public DirectoryInfo Source { get; private set; }
+        public DirectoryInfo Model { get; private set; }
 
         /// <summary>
         /// Gets the shadow directory.
@@ -60,14 +60,18 @@ namespace Splinter.Utils
         /// <summary>
         /// Gets the equivalent shadow path of a specified "source" path
         /// </summary>
+        /// <remarks>
+        /// If the model is "C:\src" and the specified fileInSourceDir is "C:\src\A\B\C\file.txt" and the shadow is "C:\temp\xyz"
+        /// then this method returns "C:\temp\xyz\A\B\C\file.txt"
+        /// </remarks>
         public FileInfo GetEquivalentShadowPath(FileInfo fileInSourceDir)
         {
-            if (!fileInSourceDir.FullName.StartsWith(this.Source.FullName, StringComparison.OrdinalIgnoreCase))
+            if (!fileInSourceDir.FullName.StartsWith(this.Model.FullName, StringComparison.OrdinalIgnoreCase))
             {
-                throw new ArgumentException("Provided file is not part of the source path.", "fileInSourceDir");
+                throw new ArgumentException("Provided file is not part of the model path.", "fileInSourceDir");
             }
 
-            var relativePath = fileInSourceDir.FullName.Substring(this.Source.FullName.Length);
+            var relativePath = fileInSourceDir.FullName.Substring(this.Model.FullName.Length);
             //the file path from the original directory is the one we care about
             var shadowed = new FileInfo(this.Shadow.FullName + relativePath);
 
@@ -102,7 +106,12 @@ namespace Splinter.Utils
                 var s = this.Shadow;
                 if (s != null)
                 {
-                    this.log.DebugFormat("{0}: Deleting directory '{1}'.", this.operationId, this.Shadow.FullName);
+                    var l = this.log;
+                    if (l != null)
+                    {
+                        l.DebugFormat("{0}: Deleting directory '{1}'.", this.operationId, s.FullName);
+                    }
+
                     s.Delete(true);
                     this.Shadow = null;
                 }
@@ -118,7 +127,7 @@ namespace Splinter.Utils
         {
             if (!source.Exists)
             {
-                throw new DirectoryNotFoundException("Source directory does not exist or could not be found: " + source);
+                throw new DirectoryNotFoundException("model directory does not exist or could not be found: " + source);
             }
 
             // If the destination directory doesn't exist, create it. 

@@ -8,18 +8,41 @@ using System.Timers;
 
 namespace Splinter
 {
+    using System.Threading;
+
+    using Timer = System.Timers.Timer;
+
+    public class ProgressCounter
+    {
+        public ProgressCounter(int run = 0, int inProgress = 0, int skipped = 0, int total = 0)
+        {
+            this.run = run;
+            this.inProgress = inProgress;
+            this.total = total;
+            this.skipped = skipped;
+        }
+
+        public int skipped;
+
+        public int run;
+
+        public int inProgress;
+
+        public int total;
+    }
+
     /// <summary>
-    /// Displays a progress bar on the console.
-    /// Stps redrawing when disposed.
+    /// Displays a progress bar on the console. This is a stateful class.
+    /// Stops redrawing when disposed.
     /// </summary>
     public class ConsoleProgressBar : IDisposable
     {
         private readonly Timer timer = new Timer(500);
 
-        private Tuple<int, int, int> progress = new Tuple<int,int,int>(0, 0, 0);
+        private ProgressCounter progress = new ProgressCounter(0, 0, 0);
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ConsoleProgressBar{T}"/> class.
+        /// Initializes a new instance of the <see cref="ConsoleProgressBar"/> class.
         /// </summary>
         public ConsoleProgressBar()
         {
@@ -33,18 +56,24 @@ namespace Splinter
         void OnTimerTick(object sender, ElapsedEventArgs e)
         {
             var values = this.progress;
-            DrawTextProgressBar(values.Item1, values.Item2, values.Item3);
+            DrawTextProgressBar(values.run + values.skipped, values.inProgress, values.total);
         }
 
         /// <summary>
         /// Creates the progress reporting object.
-        /// The numbers to report are "done", "in progress" and "total"
         /// </summary>
-        public Progress<Tuple<int, int, int>> CreateProgressReportingObject()
+        public Progress<ProgressCounter> CreateProgressReportingObject()
         {
             if (Environment.UserInteractive)
             {
-                return new Progress<Tuple<int, int, int>>(t => progress = t);
+                return new Progress<ProgressCounter>(
+                    t =>
+                    {
+                        Interlocked.Add(ref progress.skipped, t.skipped);
+                        Interlocked.Add(ref progress.run, t.run);
+                        Interlocked.Add(ref progress.inProgress, t.inProgress);
+                        Interlocked.Add(ref progress.total, t.total);
+                    });
             }
             else
             {

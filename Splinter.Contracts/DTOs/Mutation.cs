@@ -60,7 +60,7 @@ namespace Splinter.Contracts.DTOs
         /// <summary>
         /// Gets the directory that is being shadowed.
         /// </summary>
-        public DirectoryInfo ModelDirectory  { get; private set; }
+        public DirectoryInfo ModelDirectory { get; private set; }
 
         /// <summary>
         /// Gets the subject method.
@@ -91,7 +91,7 @@ namespace Splinter.Contracts.DTOs
             if (s != null)
             {
                 s.Dispose();
-                s = null;
+                this.TestDirectory = null;
             }
         }
     }

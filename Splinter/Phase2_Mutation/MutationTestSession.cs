@@ -44,7 +44,7 @@ namespace Splinter.Phase2_Mutation
         IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             DirectoryInfo modelDirectory,
             IEnumerable<TestSubjectMethodRef> subjects,
-            IProgress<Tuple<int, int, int>> progress,
+            IProgress<ProgressCounter> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonFailedTests);
     }
@@ -102,7 +102,7 @@ namespace Splinter.Phase2_Mutation
         public IReadOnlyCollection<SingleMutationTestResult> CreateMutantsAndRunTestsOnThem(
             DirectoryInfo modelDirectory,
             IEnumerable<TestSubjectMethodRef> subjects,
-            IProgress<Tuple<int, int, int>> progress,
+            IProgress<ProgressCounter> progress,
             IMutationTestsOrderingStrategy orderingStrategy,
             bool keepTryingNonFailedTests)
         {
@@ -111,10 +111,6 @@ namespace Splinter.Phase2_Mutation
             try
             {
                 var allMutationResults = new List<SingleMutationTestResult>();
-
-                int testsCount = 0;
-                int testsFinishedCount = 0;
-                int testsInProgressCount = 0;
 
                 var mutations = subjects.SelectMany(subject =>
                     this.allTurtles.SelectMany(t =>
@@ -127,7 +123,7 @@ namespace Splinter.Phase2_Mutation
                         }
                         else
                         {
-                            ReportMutantsCreated(subject, progress, mutants, ref testsCount, testsFinishedCount, testsInProgressCount);
+                            ReportMutantsCreated(progress, mutants.Count * subject.AllTestMethods.Count);
                             allMutants.AddRange(mutants);
                         }
 
@@ -152,15 +148,15 @@ namespace Splinter.Phase2_Mutation
                     {
                         if (!keepTryingNonFailedTests && failingTests.Count > 0)
                         {
-                            var testsNotUsedAgainstThisMutant = mutation.Subject.AllTestMethods.Count()
+                            var testsNotUsedAgainstThisMutant = mutation.Subject.AllTestMethods.Count
                                 - (failingTests.Count + passingTests.Count + timeoutedTests.Count);
 
-                            Interlocked.Add(ref testsCount, -testsNotUsedAgainstThisMutant);
+                            ReportTestsSkipped(progress, testsNotUsedAgainstThisMutant);
 
                             break;
                         }
 
-                        ReportTestRunStarting(progress, testsCount, testsFinishedCount, ref testsInProgressCount);
+                        ReportTestRunStarting(progress);
 
                         var timer = Stopwatch.StartNew();
                         var testRunResult = this.RunTestOnMutation(mutation, test);
@@ -182,10 +178,15 @@ namespace Splinter.Phase2_Mutation
                             orderingStrategy.NotifyTestFailed(mutation, test, timer.Elapsed);
                         }
 
-                        ReportTestRunFinished(progress, testsCount, ref testsFinishedCount, ref testsInProgressCount);
+                        ReportTestRunFinished(progress);
                     }
 
-                    return CreateResultObject(mutation, failingTests, passingTests, timeoutedTests);
+                    var result = CreateResultObject(mutation, failingTests, passingTests, timeoutedTests);
+
+                    //this is run once again in the finally block at the end
+                    mutation.Dispose();
+
+                    return result;
                 });
 
                 allMutationResults.AddRange(mutationRuns);
@@ -263,31 +264,35 @@ namespace Splinter.Phase2_Mutation
             return this.codeCache.GetAssemblyDefinition(testMethod.Assembly).GetMethodByMetaDataToken(testMethod.MetadataToken).FullName;
         }
 
-        private static void ReportTestRunFinished(IProgress<Tuple<int, int, int>> progress, int testsCount, ref int testsFinishedCount, ref int testsInProgressCount)
+        private static void ReportTestRunFinished(IProgress<ProgressCounter> progress)
         {
             if (progress != null)
             {
-                Interlocked.Decrement(ref testsInProgressCount);
-                Interlocked.Increment(ref testsFinishedCount);
-                progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
+                progress.Report(new ProgressCounter(run: 1, inProgress: -1));
             }
         }
 
-        private static void ReportTestRunStarting(IProgress<Tuple<int, int, int>> progress, int testsCount, int testsFinishedCount, ref int testsInProgressCount)
+        private static void ReportTestRunStarting(IProgress<ProgressCounter> progress)
         {
             if (progress != null)
             {
-                Interlocked.Increment(ref testsInProgressCount);
-                progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
+                progress.Report(new ProgressCounter(inProgress: 1));
             }
         }
 
-        private static void ReportMutantsCreated(TestSubjectMethodRef subject, IProgress<Tuple<int, int, int>> progress, IReadOnlyCollection<Mutation> mutants, ref int testsCount, int testsFinishedCount, int testsInProgressCount)
+        private static void ReportMutantsCreated(IProgress<ProgressCounter> progress, int testsCount)
         {
             if (progress != null)
             {
-                Interlocked.Add(ref testsCount, mutants.Count * subject.AllTestMethods.Count);
-                progress.Report(Tuple.Create(testsFinishedCount, testsInProgressCount, testsCount));
+                progress.Report(new ProgressCounter(total: testsCount));
+            }
+        }
+
+        private static void ReportTestsSkipped(IProgress<ProgressCounter> progress, int testsSkipped)
+        {
+            if (progress != null)
+            {
+                progress.Report(new ProgressCounter(skipped: testsSkipped));
             }
         }
     }

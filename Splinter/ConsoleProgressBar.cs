@@ -37,9 +37,11 @@ namespace Splinter
     /// </summary>
     public class ConsoleProgressBar : IDisposable
     {
+        private readonly DateTime start = DateTime.Now;
+
         private readonly Timer timer = new Timer(500);
 
-        private ProgressCounter progress = new ProgressCounter(0, 0, 0);
+        private readonly ProgressCounter progress = new ProgressCounter(0, 0, 0);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConsoleProgressBar"/> class.
@@ -56,7 +58,7 @@ namespace Splinter
         void OnTimerTick(object sender, ElapsedEventArgs e)
         {
             var values = this.progress;
-            DrawTextProgressBar(values.run + values.skipped, values.inProgress, values.total);
+            DrawTextProgressBar();
         }
 
         /// <summary>
@@ -69,10 +71,10 @@ namespace Splinter
                 return new Progress<ProgressCounter>(
                     t =>
                     {
-                        Interlocked.Add(ref progress.skipped, t.skipped);
-                        Interlocked.Add(ref progress.run, t.run);
-                        Interlocked.Add(ref progress.inProgress, t.inProgress);
-                        Interlocked.Add(ref progress.total, t.total);
+                        Interlocked.Add(ref this.progress.skipped, t.skipped);
+                        Interlocked.Add(ref this.progress.run, t.run);
+                        Interlocked.Add(ref this.progress.inProgress, t.inProgress);
+                        Interlocked.Add(ref this.progress.total, t.total);
                     });
             }
             else
@@ -81,17 +83,19 @@ namespace Splinter
             }
         }
 
-        const int progressBarWidth = 50;
+        const int progressBarWidth = 20;
 
-        private static void DrawTextProgressBar(int done, int inProgress, int total)
+        private void DrawTextProgressBar()
         {
+            var done = this.progress.run + this.progress.skipped;
+
             //draw empty progress bar
             Console.CursorLeft = 0;
             Console.Write("["); //start
             Console.CursorLeft = progressBarWidth + 2;
             Console.Write("]"); //end
             Console.CursorLeft = 1;
-            float onechunk = ((float)progressBarWidth) / total;
+            float onechunk = ((float)progressBarWidth) / this.progress.total;
 
             //draw filled part
             int position = 1;
@@ -103,7 +107,7 @@ namespace Splinter
             }
 
             //draw filled part
-            for (int i = 0; i < Math.Round(onechunk * inProgress); i++)
+            for (int i = 0; i < Math.Round(onechunk * this.progress.inProgress); i++)
             {
                 Console.BackgroundColor = ConsoleColor.Gray;
                 Console.CursorLeft = position++;
@@ -118,11 +122,29 @@ namespace Splinter
                 Console.Write(" ");
             }
 
+            var elapsed = TimeSpan.Zero;
+            var estimated = TimeSpan.Zero;
+
+            if (this.progress.total > 0 && done > 0)
+            {
+                elapsed = DateTime.Now - this.start;
+                var percentDone = (double)done / this.progress.total;
+
+                estimated = TimeSpan.FromTicks((long)(elapsed.Ticks / percentDone)) - elapsed;
+            }
+
             //draw totals
             Console.CursorLeft = progressBarWidth + 5;
             Console.BackgroundColor = ConsoleColor.Black;
             //blanks at the end remove any excess
-            Console.Write("{0:0000} + {1:0000} of {2:0000} ", done, inProgress, total);
+            Console.Write(
+                @"{0:0000}+{1:0000}+{2:0000}/{3:0000}; elaps {4:hh\:mm\:ss}; est {5:hh\:mm\:ss}",
+                this.progress.run,
+                this.progress.skipped,
+                this.progress.inProgress,
+                this.progress.total,
+                elapsed,
+                estimated);
         }
 
         /// <summary>
